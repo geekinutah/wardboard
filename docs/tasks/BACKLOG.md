@@ -34,3 +34,4 @@ observation / review finding
 | B-002 | P2 | core tests | candidate | assertNever fallback test survives removal of the fallback |
 | B-003 | P2 | tooling | candidate | env-check Node hint can contradict `engines.node` |
 | B-004 | P2 | server | candidate | `parseConfig` strips only one trailing slash from the base URL |
+| B-005 | P2 | agent docs (OpenCode) | candidate | OpenCode v2.1.4: no `agent` subcommand (docs say yes); `debug agents` returns `[]` in a temp-area worktree |
