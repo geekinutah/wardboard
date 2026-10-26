@@ -339,6 +339,37 @@ describe('schema', () => {
     ).toBe(2);
   });
 
+  it('proposal status is draft or accepted', () => {
+    const db = migratedDb();
+    insertBaseline(db, 'baseline-a');
+    db.prepare(
+      `INSERT INTO boards (
+         id, kind, name, status, baseline_board_id, created_at, updated_at
+       ) VALUES ('proposal-draft', 'proposal', 'Draft', 'draft', 'baseline-a', ?, ?)`,
+    ).run(NOW, NOW);
+    db.prepare(
+      `INSERT INTO boards (
+         id, kind, name, status, baseline_board_id, created_at, updated_at
+       ) VALUES ('proposal-accepted', 'proposal', 'Accepted', 'accepted', 'baseline-a', ?, ?)`,
+    ).run(NOW, NOW);
+
+    expect(() => {
+      db.prepare(
+        `INSERT INTO boards (
+           id, kind, name, baseline_board_id, created_at, updated_at
+         ) VALUES ('proposal-null', 'proposal', 'Missing status', 'baseline-a', ?, ?)`,
+      ).run(NOW, NOW);
+    }).toThrow(/CHECK constraint failed/);
+
+    expect(db.prepare("SELECT status FROM boards WHERE id = 'proposal-draft'").get()?.['status']).toBe(
+      'draft',
+    );
+    expect(
+      db.prepare("SELECT status FROM boards WHERE id = 'proposal-accepted'").get()?.['status'],
+    ).toBe('accepted');
+    expect(db.prepare("SELECT id FROM boards WHERE id = 'proposal-null'").get()).toBeUndefined();
+  });
+
   it('assignment type and origin are constrained', () => {
     const db = migratedDb();
     insertMember(db, 'member-ada', 'Ada Example');

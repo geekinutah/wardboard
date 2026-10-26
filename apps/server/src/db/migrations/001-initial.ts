@@ -81,7 +81,7 @@ CREATE TABLE boards (
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
   CHECK (
-    (kind = 'proposal' AND status IN ('draft', 'accepted'))
+    (kind = 'proposal' AND status IS NOT NULL AND status IN ('draft', 'accepted'))
     OR (kind <> 'proposal' AND status IS NULL)
   ),
   CHECK (
