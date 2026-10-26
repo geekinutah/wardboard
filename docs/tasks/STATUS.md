@@ -10,4 +10,4 @@ Candidate and discovered work that has not yet been promoted into a task contrac
 | T-003 | Web skeleton, e2e harness, and GUI capture pipeline | 1 — Foundations | done | 2 | iPhone shell render (after T-063) |
 | T-004 | Design tokens and base components | 1 — Foundations | in progress | 0 | gallery look on desktop and phone |
 | T-005 | SQLite schema and migrations | 1 — Foundations | done | 2 | none |
-| T-006 | Docker image | 1 — Foundations | todo | 0 | compose up/restart on the Mac Studio with OrbStack |
+| T-006 | Docker image | 1 — Foundations | in progress | 0 | compose up/restart on the Mac Studio with OrbStack |
