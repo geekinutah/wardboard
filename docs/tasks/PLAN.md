@@ -105,11 +105,11 @@ scripts/verify.sh    The single quality gate
 | T-054 | Members without Callings parser | T-052 | `packages/importer/src/reports/without-callings.*` | Candidate members extracted; disallowed columns dropped at parse time |
 | T-055 | Out-of-Unit Callings parser | T-052 | `packages/importer/src/reports/out-of-unit.*` | Three sections recognized by header; serving unit and calling captured; external service never becomes a ward placement |
 | T-056 | Allow-list and leakage checks | T-053, T-054, T-055 | `packages/importer/src/allowlist/` | Only allow-listed fields leave the importer; canary contact details, birth dates and record numbers in fixtures never appear in output or logs |
-| T-057 ⚑ | Identity reconciliation | T-056 | `packages/importer/src/reconcile/` | Cross-report matching and duplicate-report detection; ambiguous names surfaced, never merged; youth/adult mapping per the agreed rule (SPEC §15 OPEN) |
+| T-057 ⚑ | Identity reconciliation | T-056 | `packages/importer/src/reconcile/` | Cross-report matching and duplicate-report detection; ambiguous names surfaced, never merged; youth/adult mapping per SPEC §15 (adult 18+, youth 11–17, under 11 excluded); identity key per the source-key policy (still open) |
 | T-058 | Import replace on the server | T-057, T-023 | `apps/server/src/import/` | Preview, then atomic replacement of Current; catalog (vacant and custom positions) preserved; notes/tags kept for confirmed matches; removed members get `removed_date`; proposals untouched |
 | T-059 | Import preview UI | T-058, T-030 | `apps/web/src/features/import/` | Sources, counts, identity decisions, discarded fields, gated replace (artboard 8) |
 | T-060 | Photo upload and comparison | T-027, T-037 | `apps/web/src/features/photos/`, `apps/server/src/photos/` (routes) | Direct upload; side-by-side Keep Current / Use New Photo for any replacement, one at a time in batches (artboard 14) |
-| T-061 ⚑ | Directory photo collector | T-060 | `tools/collector/` | Runs in the user's signed-in browser; individual portraits only; match preview; no credentials, session state or extra fields retained; resumable and cleans up (SPEC §15) |
+| T-061 | Directory photo collector | T-060 | `tools/collector/` | Runs in the user's signed-in browser; individual portraits only; match preview; no credentials, session state or extra fields retained; resumable and cleans up (SPEC §15) |
 | T-062 | Import guide and AI-operator prompt | T-058 | `docs/import/` | Versioned human guide with real commands and the copyable operator prompt from SPEC §15 |
 
 ## Milestone 7 — Deployment
