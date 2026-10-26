@@ -30,3 +30,20 @@ Quick start from a fresh clone:
 ```
 
 `node scripts/env-check.mjs` checks the toolchain on its own and prints a fix for anything missing or out of range. CI (`.github/workflows/ci.yml`) runs the same two scripts on every push and pull request.
+
+## Run with Docker
+
+The whole app — server and built web client — runs in one container ([`docker/Dockerfile`](docker/Dockerfile)). The port is published on loopback only (`127.0.0.1`); `tailscale serve` on the host forwards tailnet traffic to it. SQLite and photos persist in the `wardboard-data` named volume.
+
+```sh
+WARDBOARD_BASE_URL=http://localhost \
+  docker compose -f docker/compose.yaml up -d --build
+```
+
+`WARDBOARD_BASE_URL` is required (the app's URL as the outside sees it; it has no default), and `WARDBOARD_PORT` defaults to 8080. `docker compose -f docker/compose.yaml down` stops it; add `-v` to also delete the data volume.
+
+To build the image and run the end-to-end smoke test (health check, web shell, non-root user, `/data` persistence across a restart, no real fixtures in the image):
+
+```sh
+./scripts/docker-smoke.sh
+```

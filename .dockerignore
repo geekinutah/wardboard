@@ -1,0 +1,12 @@
+node_modules
+**/node_modules
+.git
+apps/web/dist
+apps/web/gui-artifacts
+**/test-results
+**/playwright-report
+data/
+*.sqlite*
+.env
+fixtures/
+docs/
