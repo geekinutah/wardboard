@@ -8,10 +8,10 @@ Work that **cannot** be finished by an agent: accounts, decisions, Church guidan
 
 | # | What | Why an agent stopped | What to do |
 |---|---|---|---|
-| 1 | Sign-in method | SPEC §10 leaves local accounts vs verified Tailscale identity OPEN; blocks T-021. | Decide, then update SPEC §10. |
+| 1 | ~~Sign-in method~~ **DONE 2026-10-25** | — | Tailscale identity via `tailscale serve`, behind a replaceable identity-provider module (SPEC §10). |
 | 2 | Youth/adult mapping rule | SPEC §15 requires an agreed rule before implementation; blocks T-057. | Define how age (used transiently) maps to youth/adult. |
 | 3 | Identity source-key policy | SPEC §15: identity keys are collected only after the policy is settled. | Decide whether any source key may be stored, and which. |
 | 4 | Church guidance on data handling | SPEC §9: confirm storage, access, photo use and export against applicable Church guidance before real data is used. | Review before the first real import. |
 | 5 | Directory photo collection | SPEC §14–15: automated directory collection is desired, but authorization is unverified; affects T-061. | Confirm it is acceptable before T-061 is promoted. |
 | 6 | Fictional/anonymized PDF samples | Parsers must be tested on fixtures that match real layouts without real member data. | Provide or approve anonymized layout samples for T-053–T-055. |
-| 7 | Tailscale and Mac Studio | Account and device setup. | Needed for T-063 and first install. |
+| 7 | Tailscale and Mac Studio | Account and device setup. | Needed for T-063 and first install. Give each counselor tailnet access to the Mac Studio (tailnet member or machine sharing), confirm your Tailscale plan covers it, and confirm their requests carry identity headers. |

@@ -54,8 +54,8 @@ scripts/verify.sh    The single quality gate
 
 | ID | Title | Depends on | Scope | Done when |
 |---|---|---|---|---|
-| T-021 ⚑ | Authentication and sessions | T-005 | `apps/server/src/auth/` | Sign-in per the chosen method (local accounts or verified Tailscale identity — SPEC §10 OPEN); every route except health requires a session; tests prove unauthenticated requests fail |
-| T-022 | Invitations and admins | T-021 | `apps/server/src/access/` | Invite, accept, revoke; make admin; transfer admin; removing the last admin is refused |
+| T-021 | Identity provider interface and Tailscale provider | T-005 | `apps/server/src/identity/` | One `IdentityProvider` interface; a Tailscale-header provider and a test fixture provider; server binds to localhost only; middleware rejects any HTTP route or WebSocket upgrade (except health) without a verified identity; tests prove missing, malformed and spoofed-path requests are refused and that nothing outside this module reads identity headers |
+| T-022 | Authorization: users, roles and invitations | T-021 | `apps/server/src/access/` | User list maps a verified login to Editor, Admin or no access; invite by login, revoke, make admin, transfer admin, last-admin removal refused; depends only on the `IdentityProvider` interface, with tests run against the fixture provider |
 | T-023 | Board persistence | T-005, T-007 | `apps/server/src/store/` | Load/save Current, proposals and members; creating or duplicating a proposal snapshots its baseline; Current is read-only to ordinary edits |
 | T-024 | Operation channel | T-023, T-009 | `apps/server/src/ws/` | WebSocket per client; each operation validated by core and committed in one SQLite transaction; versioned; stale operations rejected visibly; committed result broadcast to clients on the same board only |
 | T-025 | Proposal lifecycle | T-023, T-017, T-018 | `apps/server/src/proposals/` | Create from Current or duplicate; rename and rationale; Draft ↔ Accepted (refused while removed items remain); Accepted is read-only; summary frozen while Accepted and regenerated on re-accept; accepted list |
