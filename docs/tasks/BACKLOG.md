@@ -36,3 +36,4 @@ observation / review finding
 | B-004 | P2 | server | candidate | `parseConfig` strips only one trailing slash from the base URL |
 | B-005 | P2 | agent docs (OpenCode) | candidate | OpenCode v2.1.4: no `agent` subcommand (docs say yes); `debug agents` returns `[]` in a temp-area worktree |
 | B-006 | P2 | web e2e harness | candidate | e2e server teardown (data dir removal, port close) is not tested |
+| B-007 | P2 | server | candidate | `removed_date` accepts impossible `YYYY-MM-DD` dates |
