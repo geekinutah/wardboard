@@ -6,6 +6,8 @@ The roadmap from `SPEC.md` §16, broken into small, independently verifiable tas
 
 **Shared files.** Barrel exports (`packages/core/src/index.ts`, `apps/web/src/features/index.ts`) and the migration list are shared. Each task adds only its own export/migration line; the controller resolves those one-line conflicts at merge.
 
+**Report fixtures.** `fixtures/lcr-reports/` holds anonymized copies of the three real LCR reports with their exact layout; T-052–T-058 test against them. See its README.
+
 **Needs a decision.** Rows marked ⚑ depend on an open question in `SPEC.md` and stay blocked until Mike answers it (also listed in `HUMAN_BACKLOG.md`).
 
 ## Planned layout
@@ -100,7 +102,7 @@ scripts/verify.sh    The single quality gate
 
 | ID | Title | Depends on | Scope | Done when |
 |---|---|---|---|---|
-| T-052 | PDF extraction harness and fictional fixtures | T-001 | `packages/importer/` (harness, fixtures) | Deterministic text/position extraction; generator for fictional multi-page report PDFs with page breaks, wrapped titles and mixed tables |
+| T-052 | PDF extraction harness | T-001 | `packages/importer/` (harness) | Deterministic text/position extraction proven against the real-layout anonymized reports in `fixtures/lcr-reports/` (page breaks, wrapped names, mixed calling and roster tables); small synthetic PDFs only for edge cases those reports lack |
 | T-053 | Callings by Organization parser | T-052 | `packages/importer/src/reports/organizations.*` | Organizations, groups, occupied and vacant positions across page breaks; member-roster sections ignored; row counts reconciled |
 | T-054 | Members without Callings parser | T-052 | `packages/importer/src/reports/without-callings.*` | Candidate members extracted; disallowed columns dropped at parse time |
 | T-055 | Out-of-Unit Callings parser | T-052 | `packages/importer/src/reports/out-of-unit.*` | Three sections recognized by header; serving unit and calling captured; external service never becomes a ward placement |

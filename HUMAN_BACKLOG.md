@@ -13,5 +13,5 @@ Work that **cannot** be finished by an agent: accounts, decisions, Church guidan
 | 3 | ~~Identity source-key policy~~ **DONE 2026-10-25** | — | No Church identifiers; match by name, with confirmation for ambiguous cases (SPEC §8, §15). |
 | 4 | ~~Church guidance on data handling~~ **Reviewed 2026-10-25** | SPEC §9: confirm storage, access, photo use and export against applicable Church guidance before real data is used. | Review before the first real import. |
 | 5 | ~~Directory photo collection~~ **Confirmed acceptable 2026-10-25** | — | T-061 may be promoted. |
-| 6 | Anonymized PDF samples | Parsers must be tested on fixtures that match real layouts without real member data. | In progress: Mike has the three ward reports; anonymize them locally, then Mike reviews before anything is committed. |
+| 6 | ~~Anonymized PDF samples~~ **DONE 2026-10-25** | — | Committed to `fixtures/lcr-reports/` after Mike's review. |
 | 7 | Tailscale and Mac Studio | Account and device setup. | Needed for T-063 and first install. Counselors asked to install Tailscale (2026-10-25); invite them to the machine and expose the service once it runs. Give each counselor tailnet access to the Mac Studio (tailnet member or machine sharing), confirm your Tailscale plan covers it, and confirm their requests carry identity headers. |
