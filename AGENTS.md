@@ -76,7 +76,7 @@ Finding an issue does not expand the current task's scope.
 | One package's tests | `pnpm --filter <pkg> test` |
 | Typecheck | `pnpm -r typecheck` |
 | Lint | `pnpm -r lint` |
-| Web e2e (Playwright/Chromium) | `pnpm --filter web run test:e2e` (also run by `./scripts/verify.sh`) |
+| Web e2e (Playwright: Chromium + WebKit) | `pnpm --filter web run test:e2e` (also run by `./scripts/verify.sh`) |
 | GUI screenshots | `pnpm --filter web run gui:capture` (see `docs/gui-verification.md`) |
 
 `./scripts/verify.sh` must pass before any task is reported done. Never skip, disable, or weaken it.
@@ -86,7 +86,7 @@ Finding an issue does not expand the current task's scope.
 - `packages/core`, `packages/importer`: Vitest.
 - `apps/server`: Vitest against a real SQLite database in a temporary directory and a real WebSocket server on an ephemeral port. No hand-rolled mocks of SQLite or the WebSocket library.
 - `apps/web`: Vitest + Testing Library (jsdom).
-- End-to-end: Playwright (Chromium only, headless) against a locally started server, at the desktop, phone, and TV viewports defined in `docs/gui-verification.md`.
+- End-to-end: Playwright (headless) against a locally started server, at the desktop, phone, and TV viewports defined in `docs/gui-verification.md`. Desktop and TV run in Chromium; the phone viewport runs in both Chromium and WebKit (iPhone browsers use WebKit).
 - Fixtures are fictional. Never use real member data in tests, fixtures, screenshots, or logs.
 
 ## Testing rules (mandatory)
