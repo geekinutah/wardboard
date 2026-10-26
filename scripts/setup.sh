@@ -21,7 +21,10 @@ else
 fi
 
 # --- extension point: later setup steps go below, in order ---------------
-# T-006: check for a Docker CLI.
+# T-006: Docker is optional for development and the quality gate; hint only.
+if ! command -v docker >/dev/null 2>&1; then
+  echo "Docker not found — install OrbStack on macOS, or Docker Engine, to build and run the image."
+fi
 # --- end extension point --------------------------------------------------
 
 echo "==> [setup] done. Next: ./scripts/verify.sh"

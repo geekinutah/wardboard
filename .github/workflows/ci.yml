@@ -32,3 +32,14 @@ jobs:
 
       - name: Quality gate
         run: ./scripts/verify.sh
+
+  docker-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v7
+
+      # Docker ships with GitHub runners. The smoke script builds the image,
+      # runs the end-to-end checks, and cleans up after itself.
+      - name: Docker smoke test
+        run: ./scripts/docker-smoke.sh
