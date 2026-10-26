@@ -166,7 +166,7 @@ Static TOML/YAML parsing and reference checks prove adapter structure, not runti
 
 The gate needs Playwright's pinned Chromium **and** WebKit. The steps below are written for Chromium; a blocked WebKit download fails the same way and has the same preferred fix. The Chromium-mapping fallback does not apply to WebKit: if WebKit can't be installed, phone-viewport checks are BLOCKED.
 
-`./scripts/verify.sh` downloads Playwright's pinned Chromium as part of the web e2e step (its `ensure_playwright_browsers` step runs `pnpm --filter web exec playwright install chromium webkit`, then `pnpm --filter web run test:e2e:playwright`). Some sandboxed agent environments — for example a Claude Code cloud session — block outbound access to `cdn.playwright.dev`, so that download fails and the gate cannot run from the documented steps alone. A sandboxed OpenCode session can hit the same block: same symptom, same preferred fix, same WebKit caveat. Do not improvise around this by weakening, skipping, or disabling the gate; use the fallback below, or get the block lifted.
+`./scripts/verify.sh` downloads Playwright's pinned Chromium and WebKit as part of the web e2e step (its `ensure_playwright_browsers` step runs `pnpm --filter web exec playwright install chromium webkit`, then `pnpm --filter web run test:e2e:playwright`). Some sandboxed agent environments — for example a Claude Code cloud session — block outbound access to `cdn.playwright.dev`, so that download fails and the gate cannot run from the documented steps alone. A sandboxed OpenCode session can hit the same block: same symptom, same preferred fix, same WebKit caveat. Do not improvise around this by weakening, skipping, or disabling the gate; use the fallback below, or get the block lifted.
 
 ### Symptom
 
