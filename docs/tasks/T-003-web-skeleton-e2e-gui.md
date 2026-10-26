@@ -19,7 +19,7 @@
   - `test:e2e:playwright` — builds, then runs `playwright test` excluding `e2e/gui/`.
   - `test:e2e` — ensures Playwright Chromium and WebKit are installed (`playwright install chromium webkit`), then runs `test:e2e:playwright`.
   - `gui:capture` — builds, then runs the scenarios in `e2e/gui/`, writing `apps/web/gui-artifacts/<scenario>/<viewport>-<browser>.png` (e.g. `shell/desktop-chromium.png`, `shell/phone-webkit.png`). Clears that scenario's old images first.
-- **e2e smoke (`apps/web/e2e/smoke.spec.ts`)**, run in all four projects: page loads from the real server, header shows `WardBoard`, status line reaches `Server: ok`, and the document has no horizontal overflow (`document.documentElement.scrollWidth <= window.innerWidth`).
+- **e2e smoke (`apps/web/e2e/smoke.spec.ts`)**, run in all four projects: page loads from the real server, header shows `WardBoard`, status line reaches `Server: ok`, and the document has no horizontal overflow (`document.documentElement.scrollWidth <= document.documentElement.clientWidth`; *amended in round 2* — `window.innerWidth` grows to the content width in mobile-emulated Chromium, so it cannot detect overflow there).
 - **GUI capture scenario `shell`** (`apps/web/e2e/gui/shell.capture.ts` or `.spec.ts`): load `/`, wait for `Server: ok`, screenshot full page in all four projects.
 - **`scripts/verify.sh`**: replace T-001's e2e extension point with a step named `ensure_playwright_browsers` (`pnpm --filter web exec playwright install chromium webkit`) followed by `pnpm --filter web run test:e2e:playwright`.
 - **`scripts/setup.sh`**: replace T-001's extension point with the same Playwright browser install so a fresh clone is fully ready.
