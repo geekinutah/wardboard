@@ -28,6 +28,7 @@ docs/agents/        Canonical roles, handoff protocol, and harness startup guide
 .claude/agents/     Claude Code adapters (configuration and shared-role pointers)
 .codex/agents/      Codex adapters (configuration and shared-role pointers)
 .grok/agents/       Grok Build adapters (configuration and shared-role pointers)
+.opencode/agents/    OpenCode adapters (configuration and shared-role pointers)
 scripts/verify.sh   The single quality gate
 SPEC.md             Product spec (source of truth for behavior)
 HUMAN_BACKLOG.md    Work that needs Mike (decisions, Church guidance, accounts, hardware)
@@ -133,7 +134,7 @@ Parallelize by default. Tasks whose file scopes don't overlap, and that don't de
 
 ## Roles, handoffs, and reporting
 
-Start with `docs/agents/README.md` for harness entry points (Claude Code, Codex, Grok Build, Google Antigravity). Canonical role behavior lives in `docs/agents/controller.md`, `implementer.md`, and `verifier.md`; all roles follow `docs/agents/protocol.md` for handoffs, capability requirements, and exact reporting formats. Harness adapters and dynamic delegation configurations contain pointers, not a second copy of the procedure. Model/provider selection belongs to the harness/user, not the canonical workflow.
+Start with `docs/agents/README.md` for harness entry points (Claude Code, Codex, Grok Build, OpenCode, Google Antigravity). Canonical role behavior lives in `docs/agents/controller.md`, `implementer.md`, and `verifier.md`; all roles follow `docs/agents/protocol.md` for handoffs, capability requirements, and exact reporting formats. Harness adapters and dynamic delegation configurations contain pointers, not a second copy of the procedure. Model/provider selection belongs to the harness/user, not the canonical workflow.
 
 Record verification in the task's evidence file per the Evidence record rule in `docs/agents/protocol.md`.
 

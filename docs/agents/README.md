@@ -77,6 +77,43 @@ Record verification in the task's evidence file per the Evidence record rule in 
 
 See the installed Grok Build user guide: subagents in `~/.grok/docs/user-guide/16-subagents.md`, and project agent discovery (`.grok/agents/`) in `~/.grok/docs/user-guide/12-project-rules.md`.
 
+## OpenCode
+
+From the repository root, start the installed/authenticated CLI's main session:
+
+```sh
+opencode
+```
+
+OpenCode ingests `AGENTS.md` natively at startup as its project rule. When both exist, `CLAUDE.md` is ignored, and OpenCode does not expand `@` references in rule files — this repo's `AGENTS.md` contains none, so nothing is lost.
+
+Prompt the main session:
+
+```text
+Read AGENTS.md, docs/agents/protocol.md, and docs/agents/controller.md.
+Act as controller for <requested work/task ID>. Delegate implementation to
+implementer and then independent verification to a fresh verifier, supplying
+the protocol handoff packet. Report any missing capability as BLOCKED.
+```
+
+Select the `controller` agent with Tab in the TUI (a `mode: primary` agent) or `opencode run --agent controller` from the repository root. The controller must be the main session so coordination does not depend on nested delegation.
+
+Project agents in `.opencode/agents/` point to the canonical files (the file name is the agent name; same pointer convention as the Claude and Grok adapters): `controller` is `mode: primary`; `implementer` and `verifier` are `mode: subagent`. Their bodies point at `AGENTS.md`, `docs/agents/protocol.md`, and `docs/agents/controller.md`, `docs/agents/implementer.md`, or `docs/agents/verifier.md` respectively, and contain no second copy of the shared procedure.
+
+The verifier adapter denies file mutation (`edit: deny`, which per the OpenCode docs gates the `write`, `edit`, and `apply_patch` tools) and further delegation (`task: deny`). A verifier with shell access is not OS-enforced read-only; obey the shared candidate/mutation rules.
+
+OpenCode has no per-agent `Stop` hook, so the `./scripts/verify-hook.sh` backstop has no committed equivalent (the closest mechanism is a `.opencode/plugins/` plugin on `session.idle`; documented as an option, not committed). Enforcement remains the implementer's own instructions (run the gate before reporting PASS) and the fresh verifier — the same treatment as the Antigravity section.
+
+If your OpenCode session is sandboxed, the Playwright browser download block in "Sandboxes that block the Playwright browser download" applies — same symptom, same preferred fix, same WebKit caveat.
+
+### Model choice (OpenCode)
+
+No model is pinned in the committed adapters. Subagents inherit the invoking session's model unless the controller passes an explicit per-invocation override; choose the model per handoff based on task complexity and verification risk rather than silently inheriting. Name the actual model in the handoff packet and controller report. Model choice must not weaken any acceptance, quality, mutation, or GUI gate.
+
+Record verification in the task's evidence file per the Evidence record rule in `docs/agents/protocol.md`.
+
+See the official [OpenCode agents documentation](https://opencode.ai/docs/agents/).
+
 ## Google Antigravity
 
 Start the Antigravity session from the repository root workspace. Antigravity ingests `AGENTS.md` natively as a project rule from the repository root at startup. Because Antigravity uses dynamic subagents defined at runtime via tool calls, no static adapter directory (such as `.claude/` or `.grok/`) is required.
@@ -129,7 +166,7 @@ Static TOML/YAML parsing and reference checks prove adapter structure, not runti
 
 The gate needs Playwright's pinned Chromium **and** WebKit. The steps below are written for Chromium; a blocked WebKit download fails the same way and has the same preferred fix. The Chromium-mapping fallback does not apply to WebKit: if WebKit can't be installed, phone-viewport checks are BLOCKED.
 
-`./scripts/verify.sh` downloads Playwright's pinned Chromium as part of the web e2e step (its `ensure_playwright_chromium` step runs `pnpm --filter web exec playwright install chromium`, then `pnpm --filter web run test:e2e:playwright`). Some sandboxed agent environments — for example a Claude Code cloud session — block outbound access to `cdn.playwright.dev`, so that download fails and the gate cannot run from the documented steps alone. Do not improvise around this by weakening, skipping, or disabling the gate; use the fallback below, or get the block lifted.
+`./scripts/verify.sh` downloads Playwright's pinned Chromium as part of the web e2e step (its `ensure_playwright_chromium` step runs `pnpm --filter web exec playwright install chromium`, then `pnpm --filter web run test:e2e:playwright`). Some sandboxed agent environments — for example a Claude Code cloud session — block outbound access to `cdn.playwright.dev`, so that download fails and the gate cannot run from the documented steps alone. A sandboxed OpenCode session can hit the same block: same symptom, same preferred fix, same WebKit caveat. Do not improvise around this by weakening, skipping, or disabling the gate; use the fallback below, or get the block lifted.
 
 ### Symptom
 
