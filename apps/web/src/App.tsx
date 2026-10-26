@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Gallery } from './design/Gallery.tsx';
 import { checkHealth, defaultHealthClient, type HealthClient, type HealthState } from './health.ts';
 
 export type AppProps = {
@@ -12,6 +13,13 @@ const STATUS_TEXT: Readonly<Record<HealthState, string>> = {
 };
 
 export function App({ healthClient = defaultHealthClient }: AppProps) {
+  if (window.location.pathname === '/__gallery') {
+    return <Gallery />;
+  }
+  return <AppShell healthClient={healthClient} />;
+}
+
+function AppShell({ healthClient }: { healthClient: HealthClient }) {
   const [health, setHealth] = useState<HealthState>('pending');
 
   useEffect(() => {

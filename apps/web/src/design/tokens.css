@@ -1,0 +1,55 @@
+:root {
+  --wb-ground: #F3F4F1;
+  --wb-surface: #FFFFFF;
+  --wb-ink: #18212B;
+  --wb-ink-2: #3A444F;
+  --wb-muted: #55606B;
+  --wb-line: #D9DDD8;
+  --wb-line-inner: #E1E4DF;
+  --wb-line-inner-soft: #ECEEEA;
+  --wb-accent: #1D5C68;
+  --wb-accent-soft: #E3EEEF;
+  --wb-accent-dark: #123E47;
+  --wb-vacancy-text: #8A4209;
+  --wb-vacancy-border: #C9772E;
+  --wb-vacancy-fill: #FFF8F1;
+  --wb-vacancy-fill-deep: #FBEFE3;
+  --wb-proposed-text: #1F4E99;
+  --wb-proposed-fill: #E6EDF8;
+  --wb-proposed-fill-soft: #F3F7FD;
+  --wb-release-text: #3A444F;
+  --wb-release-fill: #ECEEEA;
+  --wb-needs-approval-text: #5B2B6E;
+  --wb-needs-approval-fill: #F2EAF5;
+  --wb-removed-hatch-a: #E6E8E5;
+  --wb-removed-hatch-b: #F4F5F3;
+  --wb-removed-border: #8A929A;
+  --wb-removed-hatch: repeating-linear-gradient(135deg, #E6E8E5 0 6px, #F4F5F3 6px 12px);
+  --wb-accepted: #2E5B3A;
+  --wb-tv-ground: #10171E;
+  --wb-tv-card: #18222C;
+  --wb-canvas-dot: #D3D7D1;
+  --wb-canvas-dot-size: 1px;
+  --wb-canvas-dot-spacing: 22px;
+  --wb-font-sans: 'IBM Plex Sans', system-ui, sans-serif;
+  --wb-font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --wb-section-label-size: 11px;
+  --wb-section-label-weight: 600;
+  --wb-section-label-transform: uppercase;
+  --wb-section-label-spacing: 0.06em;
+}
+
+body {
+  background-color: var(--wb-ground);
+  color: var(--wb-ink);
+  font-family: var(--wb-font-sans);
+}
+
+.wb-section-label {
+  margin: 0;
+  font-size: var(--wb-section-label-size);
+  font-weight: var(--wb-section-label-weight);
+  letter-spacing: var(--wb-section-label-spacing);
+  text-transform: var(--wb-section-label-transform);
+  color: var(--wb-muted);
+}
