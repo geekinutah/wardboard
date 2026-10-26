@@ -25,6 +25,9 @@ jobs:
           cache: pnpm
 
       - name: Set up environment
+        env:
+          # Playwright browsers on Ubuntu need system libraries (--with-deps).
+          WARDBOARD_PLAYWRIGHT_WITH_DEPS: '1'
         run: ./scripts/setup.sh
 
       - name: Quality gate

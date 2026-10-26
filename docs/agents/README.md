@@ -166,7 +166,7 @@ Static TOML/YAML parsing and reference checks prove adapter structure, not runti
 
 The gate needs Playwright's pinned Chromium **and** WebKit. The steps below are written for Chromium; a blocked WebKit download fails the same way and has the same preferred fix. The Chromium-mapping fallback does not apply to WebKit: if WebKit can't be installed, phone-viewport checks are BLOCKED.
 
-`./scripts/verify.sh` downloads Playwright's pinned Chromium as part of the web e2e step (its `ensure_playwright_chromium` step runs `pnpm --filter web exec playwright install chromium`, then `pnpm --filter web run test:e2e:playwright`). Some sandboxed agent environments — for example a Claude Code cloud session — block outbound access to `cdn.playwright.dev`, so that download fails and the gate cannot run from the documented steps alone. A sandboxed OpenCode session can hit the same block: same symptom, same preferred fix, same WebKit caveat. Do not improvise around this by weakening, skipping, or disabling the gate; use the fallback below, or get the block lifted.
+`./scripts/verify.sh` downloads Playwright's pinned Chromium as part of the web e2e step (its `ensure_playwright_browsers` step runs `pnpm --filter web exec playwright install chromium webkit`, then `pnpm --filter web run test:e2e:playwright`). Some sandboxed agent environments — for example a Claude Code cloud session — block outbound access to `cdn.playwright.dev`, so that download fails and the gate cannot run from the documented steps alone. A sandboxed OpenCode session can hit the same block: same symptom, same preferred fix, same WebKit caveat. Do not improvise around this by weakening, skipping, or disabling the gate; use the fallback below, or get the block lifted.
 
 ### Symptom
 
@@ -178,7 +178,7 @@ The same failure shows up for the `chromium-headless-shell` and `ffmpeg` sibling
 
 ### Preferred fix
 
-Ask the environment's owner (Mike, for a Claude Code cloud session) to allow `cdn.playwright.dev` in that sandbox's network policy. This is a setting on the sandbox/harness, not anything in this repo. Once it's allowed, the plain `pnpm --filter web exec playwright install chromium` (what `scripts/verify.sh` already calls) downloads Chromium itself and the fallback below isn't needed.
+Ask the environment's owner (Mike, for a Claude Code cloud session) to allow `cdn.playwright.dev` in that sandbox's network policy. This is a setting on the sandbox/harness, not anything in this repo. Once it's allowed, the plain `pnpm --filter web exec playwright install chromium webkit` (what `scripts/verify.sh` already calls) downloads Chromium and WebKit itself and the fallback below isn't needed.
 
 ### Fallback: map a preinstalled Chromium into the expected layout
 
@@ -233,7 +233,7 @@ Then, in the same shell (so the `PLAYWRIGHT_BROWSERS_PATH` export survives), run
 ./scripts/verify.sh
 ```
 
-`scripts/verify.sh`'s own `ensure_playwright_chromium` step calls `pnpm --filter web exec playwright install chromium` before the e2e suite; with the scratch directory above already populated and marked complete, that call recognizes the browsers as already installed and makes no network request, and `pnpm --filter web run test:e2e:playwright` then runs against the mapped binaries.
+`scripts/verify.sh`'s own `ensure_playwright_browsers` step calls `pnpm --filter web exec playwright install chromium webkit` before the e2e suite; with the scratch directory above already populated and marked complete, that call recognizes the mapped Chromium as already installed and makes no network request for it (WebKit still needs its real download; see above), and `pnpm --filter web run test:e2e:playwright` then runs against the mapped binaries.
 
 `chrome-linux64` / `chrome-headless-shell-linux64` are the directory names Playwright's own registry (`packages/playwright-core/src/server/registry/index.ts`'s `EXECUTABLE_PATHS`, vendored into `playwright-core`'s bundled `lib/coreBundle.js`) uses for a `linux-x64` host. A `linux-arm64` host uses `chrome-linux-arm64` / `chrome-headless-shell-linux-arm64` instead — same script, substitute those two directory names (`uname -m` tells you which you're on). Other host platforms (for example testing this fallback locally on macOS before relying on it in a Linux sandbox) use that same registry's own platform-specific names, which differ enough — a macOS Chrome-for-Testing build is a full, code-signed `.app` bundle, not a flat binary — that the whole platform subdirectory should be symlinked from an existing local Playwright cache instead of a single renamed executable file; `docs/tasks/evidence/T-135.md` records that variant and a real run of it.
 

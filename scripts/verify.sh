@@ -44,6 +44,8 @@ pnpm run lint
 step "test: pnpm -r test"
 pnpm -r test
 
-# --- extension point: steps after unit tests go below ----------------------
-# T-003: web end-to-end tests (pnpm --filter web run test:e2e).
-# --- end extension point ----------------------------------------------------
+step "ensure_playwright_browsers: pnpm --filter web exec playwright install chromium webkit"
+pnpm --filter web exec playwright install chromium webkit
+
+step "e2e: pnpm --filter web run test:e2e:playwright"
+pnpm --filter web run test:e2e:playwright

@@ -18,6 +18,7 @@ The toolchain is declared in machine-readable files; they are the source of trut
 - **pnpm** — the version in `packageManager` in [`package.json`](package.json); the accepted range is `engines.pnpm`. Install it with `npm install -g pnpm@<version>` or see <https://pnpm.io/installation> (newer Node releases do not bundle corepack).
 - **OrbStack, or any Docker engine** — needed from T-006 (container image) onward.
 - **Playwright browsers** — installed by `./scripts/setup.sh` from T-003 onward; nothing to do by hand.
+- **Web e2e and GUI capture** — `pnpm --filter web run test:e2e` runs the headless Playwright smoke suite (Chromium and WebKit; also part of `./scripts/verify.sh`); `pnpm --filter web run gui:capture` writes screenshots to `apps/web/gui-artifacts/` (see [`docs/gui-verification.md`](docs/gui-verification.md)).
 
 Dependencies are pinned by the committed `pnpm-lock.yaml`; scripts and CI only ever run `pnpm install --frozen-lockfile`. `.npmrc` sets `engine-strict=true`, so pnpm refuses to install with the wrong toolchain.
 

@@ -2,7 +2,7 @@
 
 WardBoard runs in desktop browsers and phone browsers, plus a presentation mode for a laptop driving a TV. Every UI-touching task (anything under `apps/web/src/`) must be rendered and looked at, not just unit tested. This document is the procedure implementers and verifiers follow; `AGENTS.md` makes it mandatory.
 
-> **Status:** the pipeline described here is built by T-003 (web skeleton and e2e harness). Until T-003 is done, UI tasks cannot satisfy this gate and must be reported BLOCKED rather than verified another way.
+> **Status:** the pipeline described here exists (built by T-003, web skeleton and e2e harness). `pnpm --filter web run gui:capture` runs it; the first scenario is `shell` (`apps/web/e2e/gui/shell.capture.ts`). Seeding the fictional fixture ward is a no-op seam until the board model exists.
 
 ## Viewports
 
