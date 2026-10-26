@@ -14,6 +14,6 @@ Candidate and discovered work that has not yet been promoted into a task contrac
 | T-007 | Domain model and fictional fixture ward | 2 — Board domain | done | 1 | none |
 | T-021 | Identity provider interface and Tailscale provider | 3 — Server and collaboration | in progress | 0 | tailscale serve sign-in and direct-localhost refusal (after T-063) |
 | T-008 | Derived views | 2 — Board domain | todo | 0 | none |
-| T-009 | Move and fill (and the operation conventions) | 2 — Board domain | in progress | 1 | none |
+| T-009 | Move and fill (and the operation conventions) | 2 — Board domain | done | 1 | none |
 | T-017 | Removed state and acceptance eligibility | 2 — Board domain | todo | 0 | none |
 | T-020 | Tags and affinities | 2 — Board domain | todo | 0 | none |
