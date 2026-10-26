@@ -38,3 +38,7 @@ observation / review finding
 | B-006 | P2 | web e2e harness | candidate | e2e server teardown (data dir removal, port close) is not tested |
 | B-007 | P2 | server | candidate | `removed_date` accepts impossible `YYYY-MM-DD` dates |
 | B-008 | P2 | server | candidate | `baseline_board_id` does not require the target board's kind to be `baseline` |
+| B-009 | P2 | task contracts | candidate | `test -- <name>` acceptance commands don't filter in Vitest |
+| B-010 | P1 | core model | candidate | Extra overseers of the priests quorum and duplicate oversight entries accepted |
+| B-011 | P2 | core model | candidate | `createProposal` keeps unknown `accepted` keys; baseline/board may share an id |
+| B-012 | P1 | core model | candidate | No place for Current's import date or proposal reopen audit |
