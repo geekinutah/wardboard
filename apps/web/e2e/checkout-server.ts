@@ -1,7 +1,7 @@
 import { access, mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { startServer } from '@wardboard/server';
+import { fixtureIdentityProvider, startServer } from '@wardboard/server';
 
 /** Env var global setup uses to hand the server's bound URL to the workers. */
 export const BASE_URL_ENV = 'WARDBOARD_E2E_BASE_URL';
@@ -42,13 +42,21 @@ export async function startCheckoutServer(): Promise<CheckoutServer> {
   const dataDir = await mkdtemp(path.join(tmpdir(), 'wardboard-e2e-'));
   try {
     await seedFixtureWard(dataDir);
-    const server = await startServer({
-      dataDir,
-      baseUrl: 'http://127.0.0.1',
-      port: 0,
-      host: '127.0.0.1',
-      webDir: webDistDir,
-    });
+    const server = await startServer(
+      {
+        dataDir,
+        baseUrl: 'http://127.0.0.1',
+        port: 0,
+        host: '127.0.0.1',
+        webDir: webDistDir,
+      },
+      {
+        identityProvider: fixtureIdentityProvider({
+          login: 'e2e-editor@example.test',
+          displayName: 'E2E Editor',
+        }),
+      },
+    );
     return {
       url: server.url,
       dataDir,
