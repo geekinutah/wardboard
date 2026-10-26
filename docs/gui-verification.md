@@ -1,0 +1,39 @@
+# GUI verification
+
+WardBoard runs in desktop browsers and phone browsers, plus a presentation mode for a laptop driving a TV. Every UI-touching task (anything under `apps/web/src/`) must be rendered and looked at, not just unit tested. This document is the procedure implementers and verifiers follow; `AGENTS.md` makes it mandatory.
+
+> **Status:** the pipeline described here is built by T-003 (web skeleton and e2e harness). Until T-003 is done, UI tasks cannot satisfy this gate and must be reported BLOCKED rather than verified another way.
+
+## Viewports
+
+Each contract names the viewports it changes. Verify every one it names.
+
+| Name | Size (CSS px) | Playwright settings | Covers |
+|---|---|---|---|
+| `desktop` | 1440 × 900 | default Chromium | Desktop board, dialogs, settings |
+| `phone` | 390 × 844 | `isMobile: true`, `hasTouch: true`, `deviceScaleFactor: 3` | Phone layout, bottom tabs, sheets, tap-to-move |
+| `tv` | 1920 × 1080 | default Chromium | Presentation mode on an office TV |
+
+## Pipeline
+
+1. **Start a checkout-scoped app.** `pnpm --filter web run gui:capture` starts the server on an ephemeral port with a temporary data directory seeded from the fictional fixture ward, serves the web build, and runs the capture scenarios. Nothing is shared between worktrees, so concurrent runs in separate worktrees do not collide.
+2. **Drive real interaction.** Capture scenarios live in `apps/web/e2e/gui/`. Use real Playwright input: clicks, `dragTo` or mouse down/move/up for drag and drop, touch taps on the phone viewport, keyboard for zoom shortcuts and Esc. Never set component state directly to reach a screen.
+3. **Capture.** Screenshots go to `apps/web/gui-artifacts/<scenario>/<viewport>.png` (gitignored). Capture each changed state: before and after an action, every dialog or sheet, every zoom level the task touches.
+4. **Look.** Open every captured image with the harness's image-viewing capability and compare it with the matching artboard in `docs/design/` (artboard numbers are listed in `docs/design/README.md`). A screenshot path in a report is not evidence that anyone looked at it.
+5. **Record.** In the report, list each scenario and viewport, the screenshots inspected, and what was checked. Keep large images as artifact paths.
+
+If image viewing, Chromium, or the capture command is unavailable, report BLOCKED with the missing capability. Do not substitute DOM assertions or test output for looking at the screen.
+
+## What counts as a real finding
+
+A finding is a bug when it contradicts the task's acceptance criteria, `SPEC.md`, the rules in `docs/design/README.md`, or correctness of the changed behavior. Examples:
+
+- Overlap or clipping of text, cards, dialogs, or sheets.
+- Horizontal scrolling at the phone viewport.
+- A state change that is not visible (selected, dragging, drop target, proposed, vacant, removed).
+- Color used as the only signal (a vacancy without the word "Vacant", a release without "−").
+- Touch targets under 44 px at the phone viewport.
+- Notes visible anywhere other than the opened notes view, or Needs approval visible on the TV while the Admin setting is off.
+- The persistent search bar missing from a desktop screen.
+
+These are not bugs on their own: spacing, color, or wording you would personally choose differently when the design and `SPEC.md` say nothing about it. Report those as notes, not FAILs.

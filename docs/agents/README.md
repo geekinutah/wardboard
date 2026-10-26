@@ -119,11 +119,7 @@ Open the repository in the chosen harness and explicitly ask it to read AGENTS.m
 
 Record verification in the task's evidence file per the Evidence record rule in `docs/agents/protocol.md`.
 
-The receiving verifier must obtain the exact candidate and implementation evidence, then execute its own checks. Do not reuse the implementer's conversation and rename its role. Missing execution, image viewing, or iOS tooling is a recorded blocker, not permission to skip verification.
-
-## Gate Python
-
-`./scripts/verify.sh` chooses its own Python through `scripts/gate-python.sh`: `$WARDBOARD_PYTHON`, else `~/.venvs/wardboard-gate/bin/python3`, else `python3` on PATH. It must be 3.11+ (`tomllib`) and must not stall on reverse lookups (Homebrew's framework `Python.app` can, B-153). On each new machine run once: `uv venv --python 3.14 ~/.venvs/wardboard-gate` (no packages needed). The gate prepends the chosen interpreter to PATH for its own run only and never changes your default interpreter or shell profile.
+The receiving verifier must obtain the exact candidate and implementation evidence, then execute its own checks. Do not reuse the implementer's conversation and rename its role. Missing execution, image viewing, or browser tooling is a recorded blocker, not permission to skip verification.
 
 ## Validate an installation
 
@@ -131,7 +127,7 @@ Static TOML/YAML parsing and reference checks prove adapter structure, not runti
 
 ## Sandboxes that block the Playwright browser download
 
-`./scripts/verify.sh` downloads Playwright's pinned Chromium as part of the web e2e step (its `ensure_playwright_chromium` step runs `pnpm --filter mobile exec playwright install chromium`, then `pnpm --filter mobile run test:e2e:playwright`). Some sandboxed agent environments — for example a Claude Code cloud session — block outbound access to `cdn.playwright.dev`, so that download fails and the gate cannot run from the documented steps alone. Do not improvise around this by weakening, skipping, or disabling the gate; use the fallback below, or get the block lifted.
+`./scripts/verify.sh` downloads Playwright's pinned Chromium as part of the web e2e step (its `ensure_playwright_chromium` step runs `pnpm --filter web exec playwright install chromium`, then `pnpm --filter web run test:e2e:playwright`). Some sandboxed agent environments — for example a Claude Code cloud session — block outbound access to `cdn.playwright.dev`, so that download fails and the gate cannot run from the documented steps alone. Do not improvise around this by weakening, skipping, or disabling the gate; use the fallback below, or get the block lifted.
 
 ### Symptom
 
@@ -139,15 +135,15 @@ Static TOML/YAML parsing and reference checks prove adapter structure, not runti
 Error: Download failed: server returned code 403 body '...'. URL: https://cdn.playwright.dev/builds/cft/<version>/<platform>/chrome-<platform>.zip
 ```
 
-The same failure shows up for the `chromium-headless-shell` and `ffmpeg` sibling downloads that `apps/mobile`'s pinned `@playwright/test` also needs — same 403, different filename in the URL.
+The same failure shows up for the `chromium-headless-shell` and `ffmpeg` sibling downloads that `apps/web`'s pinned `@playwright/test` also needs — same 403, different filename in the URL.
 
 ### Preferred fix
 
-Ask the environment's owner (Mike, for a Claude Code cloud session) to allow `cdn.playwright.dev` in that sandbox's network policy. This is a setting on the sandbox/harness, not anything in this repo. Once it's allowed, the plain `pnpm --filter mobile exec playwright install chromium` (what `scripts/verify.sh` already calls) downloads Chromium itself and the fallback below isn't needed.
+Ask the environment's owner (Mike, for a Claude Code cloud session) to allow `cdn.playwright.dev` in that sandbox's network policy. This is a setting on the sandbox/harness, not anything in this repo. Once it's allowed, the plain `pnpm --filter web exec playwright install chromium` (what `scripts/verify.sh` already calls) downloads Chromium itself and the fallback below isn't needed.
 
 ### Fallback: map a preinstalled Chromium into the expected layout
 
-If `cdn.playwright.dev` can't be allowed, and the sandbox has *some* Chromium-family binary already available (a system/apt package, or an older Chromium a previous `@playwright/test` version already cached on the same machine/image), map it into the exact directory layout the pinned Playwright version (`apps/mobile/package.json`'s `@playwright/test`) expects, under a scratch `PLAYWRIGHT_BROWSERS_PATH` — never inside the default cache, and never by editing `scripts/verify.sh`, `apps/mobile/e2e/playwright.config.ts`, or the pinned `@playwright/test` version.
+If `cdn.playwright.dev` can't be allowed, and the sandbox has *some* Chromium-family binary already available (a system/apt package, or an older Chromium a previous `@playwright/test` version already cached on the same machine/image), map it into the exact directory layout the pinned Playwright version (`apps/web/package.json`'s `@playwright/test`) expects, under a scratch `PLAYWRIGHT_BROWSERS_PATH` — never inside the default cache, and never by editing `scripts/verify.sh`, `apps/web/e2e/playwright.config.ts`, or the pinned `@playwright/test` version.
 
 Copy-paste this from the repo root (written for a Linux x64 sandbox — the platform these blocked environments actually run):
 
@@ -159,9 +155,9 @@ set -euo pipefail
 #    Never point this at the real default cache.
 export PLAYWRIGHT_BROWSERS_PATH="$(mktemp -d)"
 
-# 1. Ask the pinned Playwright which exact revisions apps/mobile needs.
+# 1. Ask the pinned Playwright which exact revisions apps/web needs.
 #    --dry-run makes no network request; it only prints the install plan.
-DRYRUN="$(pnpm --filter mobile exec playwright install --dry-run chromium)"
+DRYRUN="$(pnpm --filter web exec playwright install --dry-run chromium)"
 echo "$DRYRUN"
 CHROMIUM_DIR="$(echo "$DRYRUN" | grep -o 'chromium-[0-9]\+' | head -1)"
 SHELL_DIR="$(echo "$DRYRUN" | grep -o 'chromium_headless_shell-[0-9]\+' | head -1)"
@@ -198,7 +194,7 @@ Then, in the same shell (so the `PLAYWRIGHT_BROWSERS_PATH` export survives), run
 ./scripts/verify.sh
 ```
 
-`scripts/verify.sh`'s own `ensure_playwright_chromium` step calls `pnpm --filter mobile exec playwright install chromium` before the e2e suite; with the scratch directory above already populated and marked complete, that call recognizes the browsers as already installed and makes no network request, and `pnpm --filter mobile run test:e2e:playwright` then runs against the mapped binaries.
+`scripts/verify.sh`'s own `ensure_playwright_chromium` step calls `pnpm --filter web exec playwright install chromium` before the e2e suite; with the scratch directory above already populated and marked complete, that call recognizes the browsers as already installed and makes no network request, and `pnpm --filter web run test:e2e:playwright` then runs against the mapped binaries.
 
 `chrome-linux64` / `chrome-headless-shell-linux64` are the directory names Playwright's own registry (`packages/playwright-core/src/server/registry/index.ts`'s `EXECUTABLE_PATHS`, vendored into `playwright-core`'s bundled `lib/coreBundle.js`) uses for a `linux-x64` host. A `linux-arm64` host uses `chrome-linux-arm64` / `chrome-headless-shell-linux-arm64` instead — same script, substitute those two directory names (`uname -m` tells you which you're on). Other host platforms (for example testing this fallback locally on macOS before relying on it in a Linux sandbox) use that same registry's own platform-specific names, which differ enough — a macOS Chrome-for-Testing build is a full, code-signed `.app` bundle, not a flat binary — that the whole platform subdirectory should be symlinked from an existing local Playwright cache instead of a single renamed executable file; `docs/tasks/evidence/T-135.md` records that variant and a real run of it.
 
@@ -207,4 +203,4 @@ Then, in the same shell (so the `PLAYWRIGHT_BROWSERS_PATH` export survives), run
 - The e2e suite then runs against whatever Chromium the fallback found, not the version CI downloads fresh — very likely an older Chromium than CI's. That's an accepted tradeoff to make the gate runnable at all in a sandbox that can't reach `cdn.playwright.dev`, not a substitute for actually running the pinned version somewhere that can.
 - CI on GitHub is unaffected: it always installs the real pinned Chromium from `cdn.playwright.dev`.
 - Evidence/reports produced this way must record which Chromium build actually ran — for example `"$CHROME_BIN" --version` alongside the pinned version the dry-run printed — since it's not the pinned one.
-- Never edit `scripts/verify.sh`, `apps/mobile/e2e/playwright.config.ts`, or the pinned `@playwright/test` version to work around this; the fallback only ever adds files under a scratch `PLAYWRIGHT_BROWSERS_PATH`.
+- Never edit `scripts/verify.sh`, `apps/web/e2e/playwright.config.ts`, or the pinned `@playwright/test` version to work around this; the fallback only ever adds files under a scratch `PLAYWRIGHT_BROWSERS_PATH`.

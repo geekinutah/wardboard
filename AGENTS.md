@@ -13,21 +13,27 @@ Rules for every agent working in this repo: the controller, implementers, verifi
 
 ## Repo layout
 
+WardBoard is a web app for desktop browsers and mobile browsers (phones), plus a presentation mode for a laptop driving a TV.
+
 ```
-apps/mobile/        Expo app (iOS, web, TV)
-apps/api/           Cloudflare Worker (Hono) + D1 migrations
-packages/core/      Pure TypeScript domain logic, no React, no I/O
-docs/tasks/         Task contracts, backlog index/items, and STATUS.md ledger
+packages/core/      Pure TypeScript domain logic: board model, planning operations, diff, rules, search, summary. No React, no I/O
+packages/importer/  Deterministic PDF parsing, normalization, allow-list, identity reconciliation. No network
+apps/server/        Node server: HTTP + WebSocket operation channel, SQLite, auth, photos, backup/restore
+apps/web/           React web client: desktop canvas, phone layout, presentation mode
+tools/collector/    Local collection tool run in the user's signed-in browser session
+docker/             Container build and compose files
+docs/design/        Visual reference: tokens, rules, and the UI artboards
+docs/tasks/         Task plan, contracts, backlog index/items, and STATUS.md ledger
 docs/agents/        Canonical roles, handoff protocol, and harness startup guide
 .claude/agents/     Claude Code adapters (configuration and shared-role pointers)
 .codex/agents/      Codex adapters (configuration and shared-role pointers)
 .grok/agents/       Grok Build adapters (configuration and shared-role pointers)
 scripts/verify.sh   The single quality gate
 SPEC.md             Product spec (source of truth for behavior)
-HUMAN_BACKLOG.md    Work that needs Mike (accounts, stores, hardware, parked secrets)
+HUMAN_BACKLOG.md    Work that needs Mike (decisions, Church guidance, accounts, hardware)
 ```
 
-Put logic in `packages/core` whenever possible: the shuffled deck, task state transitions (done, archive, recurring), sync merge and conflict resolution, validation. Pure functions are cheap to unit test. UI and Worker code should be thin layers over `core`.
+Put logic in `packages/core` whenever possible: moves, swaps and releases, dugout membership, position changes, the presidency release rule, second-calling detection, needs-approval rules, net diff against the baseline, removed-member and removed-position flags, oversight grouping and the accepted summary, search. Pure functions are cheap to unit test. Server and web code should be thin layers over `core`; the server applies `core` operations, it does not reimplement them.
 
 ## Work state and backlog
 
@@ -70,18 +76,18 @@ Finding an issue does not expand the current task's scope.
 | One package's tests | `pnpm --filter <pkg> test` |
 | Typecheck | `pnpm -r typecheck` |
 | Lint | `pnpm -r lint` |
-| Web e2e (Playwright/Chromium) | `pnpm --filter mobile run test:e2e` (also run by `./scripts/verify.sh` after `export:web`) |
+| Web e2e (Playwright/Chromium) | `pnpm --filter web run test:e2e` (also run by `./scripts/verify.sh`) |
+| GUI screenshots | `pnpm --filter web run gui:capture` (see `docs/gui-verification.md`) |
 
 `./scripts/verify.sh` must pass before any task is reported done. Never skip, disable, or weaken it.
 
-**Gate Python.** The gate needs Python 3.11+ (`tomllib`) whose reverse lookups do not stall. Homebrew's framework `Python.app` can take about 35 s per `socket.getfqdn('127.0.0.1')` (B-153). `scripts/gate-python.sh` picks the interpreter: `$WARDBOARD_PYTHON`, else `~/.venvs/wardboard-gate/bin/python3` (override the directory with `WARDBOARD_GATE_VENV`), else `python3` on PATH. It fails fast with the setup command if the choice is too old or stalls. One-time setup per machine (no packages needed): `uv venv --python 3.14 ~/.venvs/wardboard-gate`. `./scripts/verify.sh` puts the choice first on PATH as `python3` for its own run only; nobody's default interpreter or shell profile changes.
-
 ## Test stack
 
-- `packages/core`: Vitest.
-- `apps/api`: Vitest with `@cloudflare/vitest-pool-workers` (real D1/KV bindings in tests, no hand-rolled mocks of Cloudflare APIs).
-- `apps/mobile`: Jest (jest-expo preset) + React Native Testing Library.
-- End-to-end: Playwright (Chromium only, headless) against the web export; `./scripts/verify.sh` runs it after `export:web`.
+- `packages/core`, `packages/importer`: Vitest.
+- `apps/server`: Vitest against a real SQLite database in a temporary directory and a real WebSocket server on an ephemeral port. No hand-rolled mocks of SQLite or the WebSocket library.
+- `apps/web`: Vitest + Testing Library (jsdom).
+- End-to-end: Playwright (Chromium only, headless) against a locally started server, at the desktop, phone, and TV viewports defined in `docs/gui-verification.md`.
+- Fixtures are fictional. Never use real member data in tests, fixtures, screenshots, or logs.
 
 ## Testing rules (mandatory)
 
@@ -95,17 +101,17 @@ Finding an issue does not expand the current task's scope.
 
 ## Things that cannot be unit tested
 
-Some requirements are about feel: "pressing the button feels great", animation smoothness, sound design. Agents must not claim to have verified these. Instead:
-- Unit test everything underneath them (e.g. the press state machine handles rapid presses without queuing; sound and haptics respect settings).
-- Mark the remainder as a **human check** in the task report, with exact steps for Mike to try on a device.
+Some requirements are about feel: how dragging a card feels, whether zoom transitions are smooth, whether the TV view is readable from across the room. Agents must not claim to have verified these. Instead:
+- Unit test everything underneath them (e.g. a drop resolves to the right operation; zoom level changes at the defined thresholds; presentation mode hides notes).
+- Mark the remainder as a **human check** in the task report, with exact steps for Mike to try in a desktop browser, on a phone, or on the office TV.
 
 ## GUI verification (mandatory for UI-touching tasks)
 
-Unit tests (Jest/RNTL) prove props, callbacks, and accessibility state are wired correctly. They do not prove a screen actually looks right — a control can pass an `accessibilityState={{selected}}` assertion while looking visually identical whether selected or not; a button can pass every interaction test while rendering as a full-width bar that looks like a navigation header. This happened for real in Milestone 2 (the Tasks screen's category selector) and slipped past implementer, verifier, and the full test suite because nothing in the loop ever rendered and looked at the screen.
+Unit tests (Vitest/Testing Library) prove props, callbacks, and accessibility state are wired correctly. They do not prove a screen actually looks right — a control can pass an `aria-pressed` assertion while looking identical whether pressed or not; a button can pass every interaction test while rendering as a full-width bar. In a sibling project this exact failure slipped past implementer, verifier, and the full test suite because nothing in the loop ever rendered and looked at the screen.
 
-The fix is not a human in the loop — it's `docs/gui-verification.md`: a working, scripted pipeline (iOS Simulator + `idb` for real taps/typed text + `ffmpeg`/BlackHole for audio + screenshot/video capture) that any agent can drive from the command line, no GUI window or human interaction required. **Any task whose scope touches `apps/mobile/app/**` or `apps/mobile/src/components/**` requires this**, for both the implementer (self-check before reporting PASS) and the verifier (independent check before marking the task done — see `docs/agents/verifier.md`'s check 8). A verifier that only re-runs the test suite for a UI task has not done its job.
+The fix is `docs/gui-verification.md`: a scripted Playwright pipeline that starts the app with fictional data, drives real clicks, drags, taps and typing, and captures screenshots at the desktop, phone, and TV viewports, with no human interaction required. **Any task whose scope touches `apps/web/src/**`** requires it, for both the implementer (self-check before reporting PASS) and the verifier (independent check before marking the task done — see `docs/agents/verifier.md`'s check 8). A verifier that only re-runs the test suite for a UI task has not done its job. Compare against the matching artboard in `docs/design/`.
 
-If a rendering defect is found that contradicts the task’s acceptance criteria, applicable `SPEC.md` requirements for the task, or correctness of the changed behavior (stretched/mis-styled controls, missing safe-area insets, invisible state changes, overlap, clipping), that's a real bug — cite file:line and the relevant SPEC.md section, and send it back through the normal implementer/verifier loop like any other FAIL. Don't escalate to Mike for these; escalate only when SPEC.md itself is genuinely ambiguous or silent on what's correct. Aesthetic taste calls with no SPEC.md basis (spacing you'd personally choose differently, color preference) are not bugs to file — see `docs/gui-verification.md`'s "what counts as a real finding" section.
+If a rendering defect is found that contradicts the task's acceptance criteria, applicable `SPEC.md` requirements for the task, or correctness of the changed behavior (overlap, clipping, horizontal scroll on a phone, a state change that isn't visible, color used as the only signal, touch targets under 44px), that's a real bug — cite file:line and the relevant SPEC.md section, and send it back through the normal implementer/verifier loop like any other FAIL. Don't escalate to Mike for these; escalate only when SPEC.md itself is genuinely ambiguous or silent on what's correct. Aesthetic taste calls with no SPEC.md or `docs/design/` basis are not bugs to file — see `docs/gui-verification.md`'s "what counts as a real finding" section.
 
 ## Scope discipline
 
@@ -116,8 +122,10 @@ If a rendering defect is found that contradicts the task’s acceptance criteria
 
 ## Security rules
 
-- Every API query is scoped to the session's `account_id` via the Worker's auth middleware. Every endpoint gets a test proving another account's token can't read or modify data.
-- Never commit secrets. Use `wrangler secret` and `.dev.vars` (gitignored).
+- Every HTTP route and WebSocket connection except the health check requires a signed-in session. Every route and message type gets a test proving an unauthenticated or revoked session is refused; admin-only actions get a test proving an Editor is refused.
+- Never commit secrets. Use a gitignored `.env`.
+- Never commit real member data, real photos, real PDFs, or anything harvested from Church systems. Fixtures are fictional.
+- Imports and collectors keep only allow-listed fields (SPEC §15); discarded fields must not reach storage, logs, or backups.
 
 ## Parallel work
 

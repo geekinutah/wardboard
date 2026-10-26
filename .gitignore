@@ -25,3 +25,4 @@ staging/
 .vscode/*
 !.vscode/extensions.json
 .idea/
+apps/web/gui-artifacts/
