@@ -226,7 +226,7 @@ Stable lineage IDs may connect corresponding positions for comparison, but must 
 
 **CONFIRMED:** Primary roster inputs are the three verified PDF report routes described in section 15. Direct photo upload and user-initiated automated directory photo scraping are supported. CSV and a photos folder remain optional convenience inputs; TSV/XLSX are deferred unless needed. Automated PDF harvesting and photo scraping use deterministic local code. No Church credentials are stored by the app or collectors. Section 15 supersedes earlier exploratory input suggestions.
 
-Member identity matching must not silently merge namesakes. Local IDs or an approved source key can reconcile identities; normalized names alone are not sufficient for ambiguous cases. Do not assume a membership record number is an acceptable stored key.
+Member identity matching must not silently merge namesakes. Local IDs or an approved source key can reconcile identities; normalized names alone are not sufficient for ambiguous cases. **CONFIRMED:** Matching uses name comparison only, never a Church identifier. An exact, unique name match reuses the existing local member; namesakes, changed names, and new names resembling existing members are presented for explicit confirmation in the import preview.
 
 **CONFIRMED:** Preserve brief notes and tags for positively matched members across replacement. Do not preserve previous current placements or silently transfer context across ambiguous identities. **OPEN:** Cleanup of removed members and orphaned photos/context.
 
@@ -475,7 +475,7 @@ Separate acquisition from processing. A local collector drives the supported off
 
 ### Data collection and retention boundary
 
-Collect only the agreed ward's allowed planning data: names, individual portraits, youth/adult classification, organization/calling/roster-position structure and placements (including vacancies), and external calling context. Tags and brief notes are Bishopric-entered app data, not harvested confidential records. Collect identity keys only after the source-key policy is explicitly settled; membership record numbers are not implicitly allowed. Do not expand collection to other wards or unrelated reports.
+Collect only the agreed ward's allowed planning data: names, individual portraits, youth/adult classification, organization/calling/roster-position structure and placements (including vacancies), and external calling context. Tags and brief notes are Bishopric-entered app data, not harvested confidential records. **CONFIRMED:** No Church identifiers (membership record numbers or any other Church-issued ID) are collected or stored; they are proprietary. Identity is reconciled by name comparison against WardBoard's own local member IDs (section 8). Do not expand collection to other wards or unrelated reports.
 
 Official PDFs may contain additional fields. Such files are permitted only as temporary local source inputs: process locally, discard non-allow-listed fields before persistent app storage, and never retain raw PDF text, full-page screenshots, contact details, addresses, birth dates, coordinates, pastoral information, or unrelated membership data as collector output. Age may be used transiently for an explicitly defined youth/adult mapping; do not persist age or birth date. **CONFIRMED mapping rule:** age 18 or older is adult; age 11 through 17 is youth; members under 11 are not imported as candidates (Primary children are out of scope, section 2). Age is used only during import to apply this rule and is then discarded.
 

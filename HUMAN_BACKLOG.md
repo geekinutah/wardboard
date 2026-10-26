@@ -10,7 +10,7 @@ Work that **cannot** be finished by an agent: accounts, decisions, Church guidan
 |---|---|---|---|
 | 1 | ~~Sign-in method~~ **DONE 2026-10-25** | — | Tailscale identity via `tailscale serve`, behind a replaceable identity-provider module (SPEC §10). |
 | 2 | ~~Youth/adult mapping rule~~ **DONE 2026-10-25** | — | Adult 18+, youth 11–17, under 11 not imported (SPEC §15). |
-| 3 | Identity source-key policy | SPEC §15: identity keys are collected only after the policy is settled. | Decide whether any source key may be stored, and which. |
+| 3 | ~~Identity source-key policy~~ **DONE 2026-10-25** | — | No Church identifiers; match by name, with confirmation for ambiguous cases (SPEC §8, §15). |
 | 4 | ~~Church guidance on data handling~~ **Reviewed 2026-10-25** | SPEC §9: confirm storage, access, photo use and export against applicable Church guidance before real data is used. | Review before the first real import. |
 | 5 | ~~Directory photo collection~~ **Confirmed acceptable 2026-10-25** | — | T-061 may be promoted. |
 | 6 | Anonymized PDF samples | Parsers must be tested on fixtures that match real layouts without real member data. | In progress: Mike has the three ward reports; anonymize them locally, then Mike reviews before anything is committed. |
