@@ -175,7 +175,7 @@ Examples include strengths and availability constraints. Separately from tags, a
 
 **CONFIRMED:** A member with `needs_approval` set requires explicit approval each time they are proposed for a calling. Any Editor or Admin may approve the proposed placement. Approval is specific to that member, calling position, and proposal; it is not blanket permission for a calling type or future assignments. Ordinary affinities cannot bypass this special rule. **PROPOSED:** Store the approving user and time with the placement, and require fresh approval when its member or calling position changes. **CONFIRMED (v0.19):** Setting `needs_approval` on a member makes their existing proposed placements (suggested callings relative to the baseline) in Draft proposals require approval; Accepted proposals are unaffected until returned to Draft, when Draft rules apply again. Clearing the flag removes the requirement from that member's placements. Duplicating a proposal never copies approvals: placements in the duplicate that need approval require fresh approval. This generic local flag must not be treated as a precise official membership status or as authority to override Church restrictions. Consult the applicable Handbook requirements outside this planning model; the app does not certify eligibility.
 
-**CONFIRMED:** `needs_approval` is a member property, not a tag. It does not appear in the tag library, cannot be used as a calling affinity, and is not affected by tag operations. **PROPOSED:** Only Editors and Admins can set or clear it, explicitly from the member profile. **CONFIRMED:** Whether it is shown in presentation mode is controlled by the single presentation setting, Show Needs approval, which only Admins can change (section 10).
+**CONFIRMED:** `needs_approval` is a member property, not a tag. It does not appear in the tag library, cannot be used as a calling affinity, and is not affected by tag operations. **CONFIRMED (v0.19):** Only Admins can set or clear it, explicitly from the member profile; an Editor's attempt is refused. **CONFIRMED:** Whether it is shown in presentation mode is controlled by the single presentation setting, Show Needs approval, which only Admins can change (section 10).
 
 **PROPOSED:** Deleting a tag removes it from all members and from calling preferences in Current and every proposal, without notices. Deletion requires confirmation showing how many members and calling preferences use it.
 
@@ -245,7 +245,7 @@ Member identity matching must not silently merge namesakes. Local IDs or an appr
 
 A proposal containing any affected placement or position is not eligible for acceptance (section 3). It becomes eligible once ordinary edits leave no affected placements or positions.
 
-**CONFIRMED (v0.19):** When an import matches a member who has a `removed_date`, the import preview asks for explicit confirmation that this is the same person returning. Confirming clears `removed_date` (removed markers in proposals disappear, since removal is derived); declining imports them as a new member. Nothing clears `removed_date` without that confirmation. **OPEN:** Whether removed members appear in global search.
+**CONFIRMED (v0.19):** When an import matches a member who has a `removed_date`, the import preview asks for explicit confirmation that this is the same person returning. Confirming clears `removed_date` (removed markers in proposals disappear, since removal is derived); declining imports them as a new member. Nothing clears `removed_date` without that confirmation. **CONFIRMED (v0.19):** Removed members never appear in global search results.
 
 Unfilled calling slots may not appear in roster exports. **CONFIRMED:** Start with Handbook-based defaults and support custom callings/assignments. **CONFIRMED:** Imports replace occupants while preserving the configured applicable slot/assignment catalog, including vacant and custom positions; preview reconciles unfamiliar callings. Do not infer deletion of an unoccupied position merely from its absence in an occupant roster. Explicit catalog changes to current produce divergence notices in older proposals.
 
@@ -287,6 +287,8 @@ Only shared domain-data changes (callings, members, roster positions, placements
 ### Global search
 
 **CONFIRMED:** A persistent search bar appears on every desktop screen and finds people, callings, and tags. **PROPOSED:** Also search organization/group names, custom assignments, and external calling titles. Group results by type, show organization and Current/proposal context, support partial case-insensitive matches, and navigate/zoom to a selected result. A person result shows all their placements, dugout state, and an Add to dugout action. Selecting a tag filters/highlights matching people. Search is scoped to the active tab's board by default; search across proposals can be an explicit option. Do not include confidential note bodies in global search by default.
+
+**CONFIRMED (v0.19):** Removed members (non-null `removed_date`) are excluded from search results.
 
 **PROPOSED filters:** Vacant positions, people without callings, youth/adult, and selected tags. Filters preserve organization context and do not edit placements.
 
@@ -338,6 +340,8 @@ These describe intended outcomes, not claims that software exists or has been ve
 - Duplicating a proposal produces independent roster positions, placements, calling affinities, and dugout state.
 - Calling affinities display preferred member-tag matches without treating preferences as mandatory qualifications.
 - Deleting a tag after confirmation removes it from members and calling preferences everywhere without notices; `needs_approval` is unaffected by tag operations.
+- Only an Admin can set or clear a member's `needs_approval`; an Editor's attempt is refused.
+- A member with a `removed_date` never appears in global search results.
 - Proposing a calling for a member with `needs_approval` set requires explicit approval by an Editor or Admin; approval is specific to that placement and does not grant blanket permission.
 - Multiple admins can manage invitations and transfer administration; all invited users can edit proposals.
 - Filling a vacancy clears its indicator without creating a duplicate slot.
@@ -365,7 +369,7 @@ These describe intended outcomes, not claims that software exists or has been ve
 6. Is a CSV proposal summary useful, or is visual brainstorming sufficient? (Printing is out of scope.)
 7. Which privacy, retention, account, and backup defaults should be adopted before real data is used?
 8. Resolved (v0.17): Draft/Accepted status, read-only when accepted, reversible by changing status (section 3).
-9. Partly resolved (v0.19): a returning member clears `removed_date` only after explicit confirmation in the import preview (section 8). Still open: should removed members appear in search?
+9. Resolved (v0.19): a returning member clears `removed_date` only after explicit confirmation in the import preview; removed members never appear in search (section 8).
 
 ### Product modules
 

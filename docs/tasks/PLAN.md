@@ -49,7 +49,7 @@ scripts/verify.sh    The single quality gate
 | T-016 | Net diff | T-008 | `packages/core/src/diff/` | Suggested callings/releases and added/removed positions versus the baseline; repeated experimental moves reduce to the net change; moving back cancels it |
 | T-017 | Removed state and acceptance eligibility | T-007 | `packages/core/src/rules/removed.*` | Placements of members with `removed_date` and positions whose lineage is gone from Current are flagged; a proposal with any flag is ineligible for acceptance |
 | T-018 | Oversight and accepted summary | T-016 | `packages/core/src/summary/` | Fixed bishop → priests quorum; editable counselor oversight; summary text grouped by overseeing bishopric member, with Elders Quorum presidency (stake presidency) and other Elders Quorum callings separated, per SPEC §3 |
-| T-019 | Search and filters | T-008 | `packages/core/src/search/` | Partial, case-insensitive search over people, callings, tags and groups, scoped to a board or all; filters for vacant, no calling, youth/adult, tag; note bodies never searched |
+| T-019 | Search and filters | T-008 | `packages/core/src/search/` | Partial, case-insensitive search over people, callings, tags and groups, scoped to a board or all; filters for vacant, no calling, youth/adult, tag; note bodies never searched; removed members never returned |
 | T-020 | Tags and affinities | T-007 | `packages/core/src/tags/` | Ward-wide member tags; deleting a tag removes it from members and calling preferences everywhere; per-board calling tags and preferences; preference match computation |
 
 ## Milestone 3 — Server and collaboration
@@ -61,7 +61,7 @@ scripts/verify.sh    The single quality gate
 | T-023 | Board persistence | T-005, T-007 | `apps/server/src/store/` | Load/save Current, proposals and members; creating or duplicating a proposal snapshots its baseline; Current is read-only to ordinary edits |
 | T-024 | Operation channel | T-023, T-009 | `apps/server/src/ws/` | WebSocket per client; each operation validated by core and committed in one SQLite transaction; versioned; stale operations rejected visibly; committed result broadcast to clients on the same board only |
 | T-025 | Proposal lifecycle | T-023, T-017, T-018 | `apps/server/src/proposals/` | Create from Current or duplicate; rename and rationale; Draft ↔ Accepted (refused while removed items remain); Accepted is read-only; summary frozen while Accepted and regenerated on re-accept; accepted list |
-| T-026 | Member profile service | T-023, T-020 | `apps/server/src/members/` | Shared edits to name, note, tags and `needs_approval` broadcast to every board; Show Needs approval setting changeable by Admins only |
+| T-026 | Member profile service | T-023, T-020 | `apps/server/src/members/` | Shared edits to name, note, tags and `needs_approval` broadcast to every board; `needs_approval` and the Show Needs approval setting changeable by Admins only (Editors refused) |
 | T-027 | Photo storage | T-002 | `apps/server/src/photos/` | Validate type/size, process and store locally, serve only to signed-in users |
 | T-028 | Backup and restore | T-005, T-027 | `apps/server/src/backup/` | Consistent SQLite snapshot plus photos and settings in one archive; restore validates first and is atomic (a failed restore leaves data unchanged) |
 | T-029 | Web sync layer | T-024, T-003 | `apps/web/src/sync/` | Client sends operations and applies only committed results; offline/stale banner; resync on reconnect; camera, tab and selection state stay local |
@@ -79,7 +79,7 @@ scripts/verify.sh    The single quality gate
 | T-036 | Dugout panel | T-030, T-011 | `apps/web/src/features/dugout/` | Dugout list with filters; drop target; explicit inclusions show remaining callings |
 | T-037 | Person inspector and notes | T-030, T-026 | `apps/web/src/features/person/` | Inspector with callings in this proposal, tags, note; double-click a member card opens notes; notes never shown otherwise |
 | T-038 | Search and filters UI | T-030, T-019 | `apps/web/src/features/search/` | Grouped results dropdown, scope switch, filter chips, Add to dugout per person, navigate/zoom to a result (artboard 11) |
-| T-039 | Tags and affinities editor | T-037, T-020 | `apps/web/src/features/tags/` | Member tags, Needs approval setting, calling tags and preferences, tag library with delete confirmation (artboard 10) |
+| T-039 | Tags and affinities editor | T-037, T-020 | `apps/web/src/features/tags/` | Member tags, Needs approval setting (control shown to Admins only), calling tags and preferences, tag library with delete confirmation (artboard 10) |
 | T-040 | Removed markers and divergence summary | T-034, T-017 | `apps/web/src/features/removed/` | Hatch + watermark + text on affected cards; diff summary at the top of the proposal (artboard 9) |
 | T-041 | Read-only Current and Start proposal | T-030, T-025 | `apps/web/src/features/proposals/` | No drag on Current; Start proposal dialog (from Current or duplicate, name, rationale) (artboard 15) |
 | T-042 | Proposal summary page | T-030, T-016 | `apps/web/src/features/summary/` | Net changes, remaining vacancies, divergence section, CSV download (artboard 7) |
