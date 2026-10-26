@@ -42,3 +42,4 @@ observation / review finding
 | B-010 | P1 | core model | candidate | Extra overseers of the priests quorum and duplicate oversight entries accepted |
 | B-011 | P2 | core model | candidate | `createProposal` keeps unknown `accepted` keys; baseline/board may share an id |
 | B-012 | P1 | core model | candidate | No place for Current's import date or proposal reopen audit |
+| B-013 | P2 | docker | candidate | Docker Engine 29 no longer deletes anonymous volumes on a plain `docker rm` |
