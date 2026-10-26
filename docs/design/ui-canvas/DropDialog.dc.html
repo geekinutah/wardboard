@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Drop on an occupied calling</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+button{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 880px; height: 620px; box-sizing: border-box; background: rgba(24,33,43,0.55); font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #18212B; display: flex; align-items: center; justify-content: center; padding: 40px">
+  <div role="dialog" aria-modal="true" aria-labelledby="dlg-t" style="width: 600px; background: #FFFFFF; border-radius: 14px; box-shadow: 0 24px 60px rgba(0,0,0,0.3); padding: 26px; display: flex; flex-direction: column; gap: 18px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <h2 id="dlg-t" style="margin: 0; font-size: 20px; font-weight: 600">Elders Quorum · 1st Counselor is filled</h2>
+      <p style="margin: 0; font-size: 14px; color: #55606B">You dropped Ravi Mendes onto Arturo Whitaker's calling. Choose what this proposal should show.</p>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 14px; padding: 14px; background: #F3F4F1; border-radius: 10px">
+      <div style="display: flex; align-items: center; gap: 10px; flex: 1">
+        <span style="width: 40px; height: 40px; border-radius: 50%; background: #7A5C2E; color: #FFFFFF; font-weight: 600; display: flex; align-items: center; justify-content: center">RM</span>
+        <div style="display: flex; flex-direction: column"><span style="font-size: 14px; font-weight: 600">Ravi Mendes</span><span style="font-size: 12px; color: #55606B">from Sunday School · Teacher</span></div>
+      </div>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#55606B" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+      <div style="display: flex; align-items: center; gap: 10px; flex: 1">
+        <span style="width: 40px; height: 40px; border-radius: 50%; background: #2F5D8A; color: #FFFFFF; font-weight: 600; display: flex; align-items: center; justify-content: center">AW</span>
+        <div style="display: flex; flex-direction: column"><span style="font-size: 14px; font-weight: 600">Arturo Whitaker</span><span style="font-size: 12px; color: #55606B">also: Ward choir director</span></div>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 10px">
+      <button style="display: flex; gap: 14px; align-items: flex-start; text-align: left; padding: 14px; border: 2px solid #1D5C68; background: #E3EEEF; border-radius: 10px; cursor: pointer">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#123E47" stroke-width="2" aria-hidden="true" style="flex: none; margin-top: 2px"><path d="M7 4 3 8l4 4M3 8h14M17 20l4-4-4-4M21 16H7"></path></svg>
+        <span style="display: flex; flex-direction: column; gap: 3px">
+          <span style="font-size: 15px; font-weight: 600; color: #123E47">Swap</span>
+          <span style="font-size: 13px; color: #3A444F">Ravi becomes 1st Counselor; Arturo moves into Ravi's Sunday School Teacher position.</span>
+        </span>
+      </button>
+      <button style="display: flex; gap: 14px; align-items: flex-start; text-align: left; padding: 14px; border: 1px solid #D9DDD8; background: #FFFFFF; border-radius: 10px; cursor: pointer">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#18212B" stroke-width="2" aria-hidden="true" style="flex: none; margin-top: 2px"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M17 11h6"></path></svg>
+        <span style="display: flex; flex-direction: column; gap: 3px">
+          <span style="font-size: 15px; font-weight: 600">Release occupant</span>
+          <span style="font-size: 13px; color: #3A444F">Ravi becomes 1st Counselor; Arturo is released from it but keeps Ward choir director, so he stays out of the dugout. Ravi's teacher position becomes vacant.</span>
+        </span>
+      </button>
+    </div>
+
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+      <span style="font-size: 12px; color: #55606B">Applied as one change for everyone viewing.</span>
+      <div style="display: flex; gap: 8px">
+        <button style="height: 44px; padding: 0 18px; border: 1px solid #D9DDD8; background: #FFFFFF; border-radius: 8px; font-size: 14px; cursor: pointer; color: #18212B">Cancel</button>
+        <button style="height: 44px; padding: 0 18px; border: none; background: #1D5C68; color: #FFFFFF; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer">Swap</button>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":880,"height":620}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

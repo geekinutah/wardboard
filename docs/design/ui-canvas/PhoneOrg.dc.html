@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Phone — organization</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:inherit}
+button{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #F3F4F1; font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #18212B; display: flex; flex-direction: column">
+  <header style="background: #FFFFFF; border-bottom: 1px solid #D9DDD8; padding: 8px 8px 12px; display: flex; flex-direction: column; gap: 4px">
+    <a href="PhoneHome.dc.html" style="display: inline-flex; align-items: center; gap: 4px; min-height: 44px; padding: 0 8px; font-size: 14px; color: #1D5C68; text-decoration: none; align-self: flex-start">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m15 6-6 6 6 6"></path></svg>Board
+    </a>
+    <div style="display: flex; align-items: baseline; justify-content: space-between; padding: 0 8px">
+      <h1 style="margin: 0; font-size: 22px; font-weight: 600">Primary</h1>
+      <span style="font-size: 12px; font-weight: 600; color: #8A4209">5 vacant</span>
+    </div>
+    <span style="font-size: 12px; color: #55606B; padding: 0 8px">Overseen by 2nd Counselor · M. Sato</span>
+  </header>
+
+  <main style="flex: 1; overflow: hidden; padding: 12px 16px; display: flex; flex-direction: column; gap: 14px">
+    <sc-for list="{{groups}}" as="g" hint-placeholder-count="2">
+      <section style="display: flex; flex-direction: column; gap: 6px">
+        <div style="display: flex; align-items: center; justify-content: space-between">
+          <h2 style="margin: 0; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #55606B">{{g.name}}</h2>
+          <button aria-label="Add a position to {{g.name}}" style="width: 44px; height: 32px; border: 1px solid #D9DDD8; background: #FFFFFF; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#18212B" stroke-width="2.5" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></button>
+        </div>
+        <div style="background: #FFFFFF; border: 1px solid #D9DDD8; border-radius: 12px; overflow: hidden">
+          <sc-for list="{{g.rows}}" as="r" hint-placeholder-count="4">
+            <a href="{{r.href}}" style="display: flex; align-items: center; gap: 10px; min-height: 56px; padding: 6px 12px; border-top: {{r.top}}; background: {{r.bg}}; text-decoration: none; color: #18212B; box-sizing: border-box">
+              <span style="flex: none; width: 34px; height: 34px; border-radius: 50%; background: {{r.avatar}}; border: {{r.avatarBorder}}; box-sizing: border-box; color: #FFFFFF; font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center">{{r.initials}}</span>
+              <span style="display: flex; flex-direction: column; flex: 1; min-width: 0">
+                <span style="font-size: 14px; font-weight: 600; color: {{r.nameColor}}">{{r.who}}</span>
+                <span style="font-size: 12px; color: #55606B">{{r.role}}</span>
+              </span>
+              <sc-if value="{{r.changed}}" hint-placeholder-val="{{false}}">
+                <span style="font-size: 11px; font-weight: 600; color: #1F4E99; background: #E6EDF8; border-radius: 4px; padding: 2px 6px">+ Proposed</span>
+              </sc-if>
+            </a>
+          </sc-for>
+        </div>
+      </section>
+    </sc-for>
+    <p style="margin: 0; font-size: 12px; color: #55606B; text-align: center">Tap a person for options · tap a vacancy to fill it</p>
+  </main>
+
+  <nav aria-label="Main" style="background: #FFFFFF; border-top: 1px solid #D9DDD8; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); height: 72px; padding-bottom: 8px; box-sizing: border-box">
+    <a href="PhoneHome.dc.html" aria-current="page" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 11px; font-weight: 600; color: #1D5C68; text-decoration: none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect></svg>Board</a>
+    <a href="PhoneSearch.dc.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 11px; color: #55606B; text-decoration: none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>Search</a>
+    <a href="PhoneDugout.dc.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 11px; color: #55606B; text-decoration: none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"></path></svg>Dugout · 14</a>
+    <a href="PhoneChanges.dc.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 11px; color: #55606B; text-decoration: none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v6M9 8h6M9 17h6"></path><rect x="3" y="3" width="18" height="18" rx="2"></rect></svg>Changes · 7</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    let first = true;
+    const F = (initials, who, role, avatar, changed, href) => ({ initials, who, role, avatar, avatarBorder: 'none', nameColor: '#18212B', bg: changed ? '#F3F7FD' : '#FFFFFF', changed: !!changed, href: href || 'PhonePerson.dc.html', top: '1px solid #ECEEEA' });
+    const V = (role) => ({ initials: '', who: 'Vacant', role, avatar: '#FFF8F1', avatarBorder: '2px dashed #C9772E', nameColor: '#8A4209', bg: '#FFF8F1', changed: false, href: 'Mobile.dc.html', top: '1px solid #ECEEEA' });
+    const fixTop = (rows) => { rows[0].top = 'none'; return rows; };
+    return {
+      groups: [
+        { name: 'Presidency', rows: fixTop([F('WA', 'Wanjiru Abara', 'President', '#2F5D8A'), F('NK', 'Nora Kowalski', '1st Counselor', '#7A5C2E'), V('2nd Counselor'), F('OD', 'Olivia Dube', 'Secretary', '#3F6E4E')]) },
+        { name: 'Teachers · 9 of 12', rows: fixTop([F('MP', 'Muriel Price', 'Teacher (age 7)', '#7B4A6A'), F('DR', 'Diego Ruiz', 'Teacher (age 8)', '#355C66', true), V('Teacher (age 9)'), F('HS', 'Hana Sato', 'Teacher (age 10)', '#6B5A2F')]) }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

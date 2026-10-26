@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Accepted proposal</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F3F4F1}
+a{color:#1D5C68}a:hover{color:#123E47}
+button{font-family:inherit}
+</style>
+</helmet>
+<div style="min-height: 1360px; background: #F3F4F1; font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #18212B; padding: 28px 24px 48px; box-sizing: border-box">
+  <div style="max-width: 1180px; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start">
+
+    <!-- Accepted list -->
+    <nav aria-label="Accepted proposals" style="flex: 1 1 220px; max-width: 260px; display: flex; flex-direction: column; gap: 6px">
+      <a href="Main.dc.html" style="font-size: 14px; text-decoration: none; margin-bottom: 14px">← Back to board</a>
+      <h2 style="margin: 0 0 6px; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #55606B">Accepted proposals</h2>
+      <sc-for list="{{history}}" as="h" hint-placeholder-count="3">
+        <a href="#" aria-current="{{h.current}}" style="display: flex; flex-direction: column; gap: 2px; min-height: 52px; padding: 8px 12px; border-radius: 8px; background: {{h.bg}}; border: {{h.border}}; text-decoration: none; color: #18212B; box-sizing: border-box">
+          <span style="font-size: 14px; font-weight: 600">{{h.name}}</span>
+          <span style="font-size: 12px; color: #55606B">{{h.date}}</span>
+        </a>
+      </sc-for>
+    </nav>
+
+    <main style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 20px">
+      <header style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px">
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <span style="display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; background: #2E5B3A; color: #FFFFFF; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; padding: 5px 10px; border-radius: 4px">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M5 12l5 5L20 7"></path></svg>ACCEPTED
+          </span>
+          <h1 style="margin: 0; font-size: 30px; font-weight: 600">Spring adjustments</h1>
+          <span style="font-size: 14px; color: #55606B">Accepted Oct 26, 2026 by Mike S. · read-only</span>
+        </div>
+        <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600">
+          Status
+          <select style="height: 44px; padding: 0 12px; border: 1px solid #B9BEC4; border-radius: 8px; font: inherit; font-size: 14px; background: #FFFFFF; color: #18212B; min-width: 200px">
+            <option selected>Accepted (read-only)</option>
+            <option>Draft (editable)</option>
+          </select>
+        </label>
+      </header>
+
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap">
+        <div style="display: flex; flex-direction: column; gap: 4px">
+          <h2 style="margin: 0; font-size: 18px; font-weight: 600">Callings &amp; releases by bishopric member</h2>
+          <span style="font-size: 13px; color: #55606B">Grouped by who extends each calling.</span>
+        </div>
+        <button style="height: 44px; padding: 0 16px; border: 1px solid #D9DDD8; background: #FFFFFF; border-radius: 8px; font-size: 14px; cursor: pointer; color: #18212B">Copy all</button>
+      </div>
+
+      <sc-for list="{{groups}}" as="g" hint-placeholder-count="3">
+        <section style="background: #FFFFFF; border: 1px solid #D9DDD8; border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 12px">
+          <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px">
+            <div style="display: flex; flex-direction: column; gap: 3px">
+              <h3 style="margin: 0; font-size: 16px; font-weight: 600">{{g.who}}</h3>
+              <span style="font-size: 12px; color: #55606B">{{g.areas}}</span>
+            </div>
+            <button style="display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0 14px; border: none; background: #1D5C68; color: #FFFFFF; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; flex: none">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"></rect><path d="M5 15V5a2 2 0 0 1 2-2h10"></path></svg>
+              Copy
+            </button>
+          </div>
+          <pre style="margin: 0; padding: 14px; background: #F3F4F1; border-radius: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 13px; line-height: 1.6; white-space: pre-wrap; color: #18212B">{{g.text}}</pre>
+        </section>
+      </sc-for>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1360}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      history: [
+        { name: 'Spring adjustments', date: 'Accepted Oct 26, 2026', current: 'page', bg: '#E3EEEF', border: '1px solid #1D5C68' },
+        { name: 'Summer youth leaders', date: 'Accepted Jul 12, 2026', current: 'false', bg: 'transparent', border: '1px solid transparent' },
+        { name: 'Elders Quorum reorganization', date: 'Accepted Apr 3, 2026', current: 'false', bg: 'transparent', border: '1px solid transparent' }
+      ],
+      groups: [
+        { who: 'Bishop · D. Halvorsen', areas: 'Priests Quorum · Gatherers of Light · Relief Society',
+          text: 'Spring adjustments — Bishop\n\nCallings\n• Kim Nguyen — Relief Society 2nd Counselor\n• Rosa Valdez — Relief Society Teacher\n\nReleases\n• None' },
+        { who: '1st Counselor · J. Okafor', areas: 'Teachers Quorum · Messengers of Hope · Sunday School',
+          text: 'Spring adjustments — 1st Counselor\n\nCallings\n• Farah Kaur — Sunday School 2nd Counselor\n\nReleases\n• Ravi Mendes — Sunday School Teacher' },
+        { who: '2nd Counselor · M. Sato', areas: 'Deacons Quorum · Builders of Faith · Primary',
+          text: 'Spring adjustments — 2nd Counselor\n\nCallings\n• None\n\nReleases\n• Kim Nguyen — Primary Teacher (age 9)' },
+        { who: 'Stake presidency · via Elders Quorum president', areas: 'Elders Quorum presidency — called by the stake president (Handbook 30.8.1)',
+          text: 'Spring adjustments — Elders Quorum presidency (for the stake presidency)\n\nCallings\n• Ravi Mendes — Elders Quorum 1st Counselor\n\nReleases\n• Arturo Whitaker — Elders Quorum 1st Counselor' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

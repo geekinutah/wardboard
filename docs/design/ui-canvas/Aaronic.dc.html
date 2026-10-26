@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Aaronic Priesthood and bishopric oversight</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#1D5C68}a:hover{color:#123E47}
+button{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 1440px; height: 700px; box-sizing: border-box; background: #F3F4F1; background-image: radial-gradient(#D3D7D1 1px, transparent 1px); background-size: 22px 22px; font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #18212B; display: flex; flex-direction: column">
+
+  <div style="background: #FFFFFF; border-bottom: 1px solid #D9DDD8; padding: 12px 28px; display: flex; align-items: center; gap: 14px">
+    <span style="background: #1D5C68; color: #FFFFFF; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; padding: 4px 8px; border-radius: 4px">PROPOSED</span>
+    <nav aria-label="Breadcrumb" style="display: flex; gap: 8px; font-size: 14px"><a href="Main.dc.html" style="text-decoration: none">Ward</a><span aria-hidden="true" style="color: #8A929A">/</span><strong>Aaronic Priesthood</strong></nav>
+    <span style="flex: 1"></span>
+    <span style="font-size: 13px; color: #55606B">Bishop → Priests Quorum is fixed by office · counselor oversight can be changed</span>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; padding: 24px 28px 0">
+    <sc-for list="{{quorums}}" as="q" hint-placeholder-count="3">
+      <section style="background: #FFFFFF; border: 1px solid #D9DDD8; border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 12px">
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <h2 style="margin: 0; font-size: 17px; font-weight: 600">{{q.name}}</h2>
+          <div style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: #3A444F">
+            <span>Overseen by</span>
+            <span style="display: inline-flex; align-items: center; gap: 5px; background: #E3EEEF; color: #123E47; font-weight: 600; border-radius: 6px; padding: 3px 8px">
+              <sc-if value="{{q.fixed}}" hint-placeholder-val="{{false}}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg></sc-if>
+              {{q.over}}
+            </span>
+            <sc-if value="{{q.editable}}" hint-placeholder-val="{{true}}">
+              <button style="height: 28px; padding: 0 8px; border: 1px solid #D9DDD8; background: #FFFFFF; border-radius: 6px; font-size: 12px; cursor: pointer; color: #18212B">Change</button>
+            </sc-if>
+          </div>
+        </div>
+
+        <sc-for list="{{q.slots}}" as="s" hint-placeholder-count="4">
+          <div style="display: flex; flex-direction: column; gap: 4px">
+            <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #55606B">{{s.role}}</span>
+            <sc-if value="{{s.linked}}" hint-placeholder-val="{{false}}">
+              <div aria-label="Linked reference: {{s.who}}, not a separate calling" style="display: flex; align-items: center; gap: 10px; padding: 9px 10px; border: 1px solid #7FA9B0; background: #F1F6F7; border-radius: 8px">
+                <span style="width: 32px; height: 32px; border-radius: 50%; background: #2F5D8A; color: #FFFFFF; font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center">DH</span>
+                <span style="display: flex; flex-direction: column; flex: 1"><span style="font-size: 14px; font-weight: 600">{{s.who}}</span><span style="font-size: 11px; color: #123E47">Presides by office · linked from Bishopric</span></span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#123E47" stroke-width="2" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"></path></svg>
+              </div>
+            </sc-if>
+            <sc-if value="{{s.filled}}" hint-placeholder-val="{{true}}">
+              <div style="display: flex; align-items: center; gap: 10px; padding: 9px 10px; border: 1px solid #E1E4DF; background: #FBFBFA; border-radius: 8px">
+                <span style="width: 32px; height: 32px; border-radius: 50%; background: {{s.color}}; color: #FFFFFF; font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center">{{s.initials}}</span>
+                <span style="font-size: 14px; font-weight: 500; flex: 1">{{s.who}}</span>
+                <span style="font-size: 11px; color: #55606B">{{s.kind}}</span>
+              </div>
+            </sc-if>
+            <sc-if value="{{s.vacant}}" hint-placeholder-val="{{false}}">
+              <div style="padding: 9px 10px; border: 1px dashed #C9772E; background: #FFF8F1; border-radius: 8px; font-size: 13px; font-weight: 600; color: #8A4209">Vacant</div>
+            </sc-if>
+          </div>
+        </sc-for>
+      </section>
+    </sc-for>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":700}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const C = ['#355C66', '#7A5C2E', '#3F6E4E', '#7B4A6A', '#4B4F8A', '#6B5A2F', '#7A3E3E'];
+    let n = 0;
+    const P = (role, initials, who, kind) => ({ role, initials, who, kind, color: C[(n++) % C.length], filled: true, vacant: false, linked: false });
+    const V = (role) => ({ role, vacant: true, filled: false, linked: false, who: '' });
+    const LK = (role, who) => ({ role, who, linked: true, filled: false, vacant: false });
+    const chip = (label, fixed) => ({ label, fixed: !!fixed, bg: fixed ? '#E3EEEF' : '#FFFFFF', border: fixed ? '1px solid #7FA9B0' : '1px solid #D9DDD8' });
+    return {
+      quorums: [
+        { name: 'Priests Quorum', over: 'Bishop', fixed: true, editable: false, slots: [LK('President', 'Bishop D. Halvorsen'), P('1st Assistant', 'LM', 'Liko Moana', 'Youth'), P('2nd Assistant', 'TB', 'Theo Brooks', 'Youth'), P('Adviser', 'CF', 'Caleb Frost', 'Adult')] },
+        { name: 'Teachers Quorum', over: '1st Counselor · J. Okafor', fixed: false, editable: true, slots: [P('President', 'EC', 'Eli Carter', 'Youth'), V('1st Counselor'), P('2nd Counselor', 'JR', 'Jonah Reyes', 'Youth'), P('Secretary', 'AM', 'Amu Mahe', 'Youth'), P('Adviser', 'RT', 'Russ Tolman', 'Adult')] },
+        { name: 'Deacons Quorum', over: '2nd Counselor · M. Sato', fixed: false, editable: true, slots: [P('President', 'SI', 'Sam Ito', 'Youth'), P('1st Counselor', 'BK', 'Ben Kealoha', 'Youth'), P('2nd Counselor', 'OW', 'Owen Wade', 'Youth'), V('Secretary'), V('Adviser')] }
+      ],
+      oversight: [
+        { role: 'Bishop', who: 'D. Halvorsen', items: [chip('Priests Quorum', true), chip('Gatherers of Light')] },
+        { role: '1st Counselor', who: 'J. Okafor', items: [chip('Teachers Quorum'), chip('Messengers of Hope'), chip('Sunday School')] },
+        { role: '2nd Counselor', who: 'M. Sato', items: [chip('Deacons Quorum'), chip('Builders of Faith'), chip('Primary')] }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

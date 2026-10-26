@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>WardBoard phone — tap to move</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+button{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #F3F4F1; font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #18212B">
+  <header style="background: #FFFFFF; border-bottom: 1px solid #D9DDD8; padding: 14px 16px 12px; display: flex; flex-direction: column; gap: 10px">
+    <div style="display: flex; align-items: center; justify-content: space-between">
+      <button style="display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 12px; border: 1px solid #1D5C68; background: #E3EEEF; border-radius: 8px; font-size: 14px; font-weight: 600; color: #123E47; cursor: pointer">
+        <span style="font-size: 10px; letter-spacing: 0.08em; background: #1D5C68; color: #FFFFFF; padding: 2px 5px; border-radius: 3px">PROPOSED</span>
+        Spring adjustments
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+      </button>
+      <button aria-label="Search" style="width: 44px; height: 44px; border: 1px solid #D9DDD8; border-radius: 8px; background: #FFFFFF; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#18212B" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg></button>
+    </div>
+    <span style="font-size: 12px; color: #55606B">+4 callings · −3 releases · 20 vacant</span>
+  </header>
+
+  <div style="padding: 14px 16px; display: flex; flex-direction: column; gap: 10px">
+    <span style="font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #55606B">Primary</span>
+    <div style="background: #FFFFFF; border: 1px solid #D9DDD8; border-radius: 12px; overflow: hidden">
+      <div style="display: flex; align-items: center; gap: 10px; padding: 12px; border-bottom: 1px solid #ECEEEA">
+        <span style="width: 36px; height: 36px; border-radius: 50%; background: #2F5D8A; color: #FFFFFF; font-weight: 600; font-size: 13px; display: flex; align-items: center; justify-content: center">WA</span>
+        <div style="display: flex; flex-direction: column; flex: 1"><span style="font-size: 14px; font-weight: 600">Wanjiru Abara</span><span style="font-size: 12px; color: #55606B">President</span></div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 10px; padding: 12px; border-bottom: 1px solid #ECEEEA; background: #FFF8F1">
+        <span style="width: 36px; height: 36px; border-radius: 50%; border: 2px dashed #C9772E; box-sizing: border-box"></span>
+        <div style="display: flex; flex-direction: column; flex: 1"><span style="font-size: 14px; font-weight: 600; color: #8A4209">Vacant</span><span style="font-size: 12px; color: #55606B">2nd Counselor</span></div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 10px; padding: 12px; background: #E3EEEF">
+        <span style="width: 36px; height: 36px; border-radius: 50%; background: #355C66; color: #FFFFFF; font-weight: 600; font-size: 13px; display: flex; align-items: center; justify-content: center">KN</span>
+        <div style="display: flex; flex-direction: column; flex: 1"><span style="font-size: 14px; font-weight: 600">Kim Nguyen</span><span style="font-size: 12px; color: #55606B">Teacher (age 9) · selected</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scrim + bottom sheet -->
+  <div style="position: absolute; inset: 0; background: rgba(24,33,43,0.4)"></div>
+  <div role="dialog" aria-labelledby="mv-t" style="position: absolute; left: 0; right: 0; bottom: 0; background: #FFFFFF; border-radius: 18px 18px 0 0; padding: 10px 16px 24px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 -8px 24px rgba(0,0,0,0.15)">
+    <span style="align-self: center; width: 40px; height: 4px; border-radius: 2px; background: #C8CDC7"></span>
+    <div style="display: flex; flex-direction: column; gap: 4px">
+      <h2 id="mv-t" style="margin: 0; font-size: 18px; font-weight: 600">Move Kim Nguyen</h2>
+      <span style="font-size: 13px; color: #55606B">Releases her from Primary · Teacher (age 9). Tap a destination.</span>
+    </div>
+    <label style="display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 12px; border: 1px solid #D9DDD8; border-radius: 8px">
+      <span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Find a calling</span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#55606B" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+      <input type="search" placeholder="Find a calling…" style="border: none; outline: none; font: inherit; font-size: 15px; flex: 1; min-width: 0">
+    </label>
+    <span style="font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #55606B">Vacant positions</span>
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <sc-for list="{{dest}}" as="d" hint-placeholder-count="4">
+        <button style="display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 8px 12px; border: 1px dashed #C9772E; background: #FFF8F1; border-radius: 10px; text-align: left; cursor: pointer; color: #18212B">
+          <span style="display: flex; flex-direction: column; flex: 1; gap: 2px">
+            <span style="font-size: 14px; font-weight: 600">{{d.role}}</span>
+            <span style="font-size: 12px; color: #55606B">{{d.org}}</span>
+          </span>
+          <sc-if value="{{d.match}}" hint-placeholder-val="{{false}}">
+            <span style="font-size: 11px; font-weight: 600; color: #123E47; background: #E3EEEF; border-radius: 4px; padding: 2px 6px">Matches Teaching</span>
+          </sc-if>
+        </button>
+      </sc-for>
+    </div>
+    <div style="display: flex; gap: 8px">
+      <button style="flex: 1; height: 48px; border: 1px solid #D9DDD8; background: #FFFFFF; border-radius: 10px; font-size: 14px; cursor: pointer; color: #18212B">Send to dugout</button>
+      <button style="flex: 1; height: 48px; border: 1px solid #D9DDD8; background: #FFFFFF; border-radius: 10px; font-size: 14px; cursor: pointer; color: #18212B">Cancel</button>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      dest: [
+        { role: '2nd Counselor', org: 'Relief Society · Presidency', match: false },
+        { role: 'Teacher', org: 'Relief Society · Teachers', match: true },
+        { role: 'Compassionate Service Coordinator', org: 'Relief Society', match: false },
+        { role: '1st Counselor', org: 'Young Women · Presidency', match: false }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

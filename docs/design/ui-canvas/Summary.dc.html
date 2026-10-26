@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Proposal summary — Spring adjustments</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F3F4F1}
+a{color:#1D5C68}a:hover{color:#123E47}
+button{font-family:inherit}
+</style>
+</helmet>
+<div style="min-height: 980px; background: #F3F4F1; font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #18212B; padding: 32px 24px 48px; box-sizing: border-box">
+  <div style="max-width: 1120px; margin: 0 auto; display: flex; flex-direction: column; gap: 22px">
+    <a href="Main.dc.html" style="font-size: 14px; text-decoration: none">← Back to board</a>
+
+    <header style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px">
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <span style="font-size: 12px; font-weight: 700; letter-spacing: 0.08em; color: #1D5C68">PROPOSAL SUMMARY</span>
+        <h1 style="margin: 0; font-size: 32px; font-weight: 600; letter-spacing: -0.01em">Spring adjustments</h1>
+        <span style="font-size: 14px; color: #55606B">Compared with baseline captured Oct 19, 2026 · net changes only</span>
+      </div>
+      <div style="display: flex; gap: 8px">
+        <button style="height: 44px; padding: 0 16px; border: 1px solid #D9DDD8; background: #FFFFFF; border-radius: 8px; font-size: 14px; cursor: pointer; color: #18212B">Download CSV</button>
+      </div>
+    </header>
+
+    <section id="div" aria-labelledby="div-t" style="background: #FFFFFF; border: 1px solid #EBC9A6; border-radius: 12px; overflow: hidden">
+      <div style="display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; padding: 14px 18px; background: #FFF8F1; border-bottom: 1px solid #EBC9A6">
+        <h2 id="div-t" style="margin: 0; font-size: 15px; font-weight: 600; color: #5C3209">Current changed since this baseline · 3 differences</h2>
+        <span style="font-size: 13px; color: #6B4A2A">Re-imported Oct 24 · this proposal is unchanged</span>
+      </div>
+      <sc-for list="{{diffs}}" as="g" hint-placeholder-count="3">
+        <details style="border-top: 1px solid #ECEEEA">
+          <summary style="display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 0 18px; cursor: pointer; font-size: 14px">
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 500; width: 20px; text-align: center; color: {{g.signColor}}">{{g.sign}}</span>
+            <span style="font-weight: 600; flex: 1">{{g.headline}}</span>
+            <span style="font-size: 12px; color: #55606B">{{g.count}}</span>
+          </summary>
+          <div style="padding: 0 18px 14px 48px; display: flex; flex-direction: column; gap: 4px">
+            <sc-for list="{{g.lines}}" as="l" hint-placeholder-count="1">
+              <div style="display: flex; flex-wrap: wrap; gap: 4px 12px; font-family: 'IBM Plex Mono', monospace; font-size: 13px; padding: 6px 10px; border-radius: 6px; background: {{g.lineBg}}">
+                <span style="color: #18212B">{{g.sign}} {{l.text}}</span>
+                <span style="font-family: 'IBM Plex Sans', sans-serif; color: #55606B">{{l.note}}</span>
+              </div>
+            </sc-for>
+          </div>
+        </details>
+      </sc-for>
+    </section>
+
+    <section style="background: #FFFFFF; border: 1px solid #D9DDD8; border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 8px">
+      <h2 style="margin: 0; font-size: 13px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #55606B">Rationale</h2>
+      <p style="margin: 0; font-size: 15px; line-height: 1.55; color: #3A444F">[Brief rationale for this proposal]</p>
+    </section>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 18px">
+      <section style="background: #FFFFFF; border: 1px solid #D9DDD8; border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 10px">
+        <h2 style="margin: 0; font-size: 16px; font-weight: 600; color: #1F4E99">+ Suggested callings · 4</h2>
+        <sc-for list="{{calls}}" as="c" hint-placeholder-count="4">
+          <div style="display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid #ECEEEA; font-size: 14px">
+            <span style="font-weight: 600">{{c.who}}</span><span style="color: #3A444F; text-align: right">{{c.what}}</span>
+          </div>
+        </sc-for>
+      </section>
+      <section style="background: #FFFFFF; border: 1px solid #D9DDD8; border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 10px">
+        <h2 style="margin: 0; font-size: 16px; font-weight: 600">− Suggested releases · 3</h2>
+        <sc-for list="{{rels}}" as="c" hint-placeholder-count="3">
+          <div style="display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid #ECEEEA; font-size: 14px">
+            <span style="font-weight: 600">{{c.who}}</span><span style="color: #3A444F; text-align: right">{{c.what}}</span>
+          </div>
+        </sc-for>
+      </section>
+      <section style="background: #FFFFFF; border: 1px solid #D9DDD8; border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 10px">
+        <h2 style="margin: 0; font-size: 16px; font-weight: 600">Position changes · 2</h2>
+        <div style="display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid #ECEEEA; font-size: 14px"><span style="font-weight: 600">Added</span><span style="color: #3A444F">Young Women · Adviser (5th)</span></div>
+        <div style="display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid #ECEEEA; font-size: 14px"><span style="font-weight: 600">Trimmed</span><span style="color: #3A444F">Activities · Committee member</span></div>
+      </section>
+      <section style="background: #FFFFFF; border: 1px solid #D9DDD8; border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 10px">
+        <h2 style="margin: 0; font-size: 16px; font-weight: 600; color: #8A4209">Remaining vacancies · 20</h2>
+        <sc-for list="{{vac}}" as="v" hint-placeholder-count="5">
+          <div style="display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid #ECEEEA; font-size: 14px">
+            <span style="font-weight: 600">{{v.org}}</span><span style="color: #3A444F; text-align: right">{{v.list}}</span>
+          </div>
+        </sc-for>
+      </section>
+    </div>
+
+    <p style="margin: 0; font-size: 13px; color: #55606B; line-height: 1.5">Planning reference only. Callings are extended, sustained, set apart, released and recorded in official tools. Exported files carry the same confidentiality as the app.</p>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":980}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const add = { sign: '+', signColor: '#1F4E99', lineBg: '#EEF3FB' };
+    const rem = { sign: '−', signColor: '#8A4209', lineBg: '#FBF1E8' };
+    return {
+      diffs: [
+        Object.assign({ headline: 'Positions added to Current', count: '1 position', lines: [{ text: 'Primary · Nursery leader (2nd)', note: 'Not in this proposal' }] }, add),
+        Object.assign({ headline: 'Positions removed from Current', count: '1 position', lines: [{ text: 'Activities · Committee chair', note: 'Still vacant in this proposal' }] }, rem),
+        Object.assign({ headline: 'Ward member removed', count: '1 person', lines: [{ text: 'Emilie Hart', note: 'Proposed here as Relief Society · Teacher' }] }, rem)
+      ],
+      calls: [
+        { who: 'Kim Nguyen', what: 'Relief Society · 2nd Counselor' },
+        { who: 'Ravi Mendes', what: 'Elders Quorum · 1st Counselor' },
+        { who: 'Farah Kaur', what: 'Sunday School · 2nd Counselor' },
+        { who: 'Rosa Valdez', what: 'Relief Society · Teacher' }
+      ],
+      rels: [
+        { who: 'Kim Nguyen', what: 'Primary · Teacher (age 9)' },
+        { who: 'Ravi Mendes', what: 'Sunday School · Teacher' },
+        { who: 'Arturo Whitaker', what: 'Elders Quorum · 1st Counselor' }
+      ],
+      vac: [
+        { org: 'Primary', list: '2nd Counselor, 3 teachers, nursery leader' },
+        { org: 'Relief Society', list: 'Compassionate service coord. + assistant' },
+        { org: 'Young Women', list: '1st Counselor, 2 advisers' },
+        { org: 'Elders Quorum', list: 'Secretary, teacher' },
+        { org: 'Other groups', list: '7 positions across 5 groups' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

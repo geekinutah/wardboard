@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Second calling confirmation</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+button{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 880px; height: 620px; box-sizing: border-box; background: rgba(24,33,43,0.55); font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #18212B; padding: 48px 140px; display: flex; align-items: center">
+
+  <!-- Second calling -->
+  <div role="alertdialog" aria-labelledby="sc-t" style="background: #FFFFFF; border-radius: 14px; box-shadow: 0 24px 60px rgba(0,0,0,0.3); padding: 26px; display: flex; flex-direction: column; gap: 16px">
+    <h2 id="sc-t" style="margin: 0; font-size: 20px; font-weight: 600">Give Muriel Price a second calling?</h2>
+    <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: #F3F4F1; border-radius: 10px">
+      <span style="width: 40px; height: 40px; border-radius: 50%; background: #7B4A6A; color: #FFFFFF; font-weight: 600; display: flex; align-items: center; justify-content: center">MP</span>
+      <div style="display: flex; flex-direction: column; gap: 3px; font-size: 13px">
+        <span>Already serves as <strong>Primary · Teacher (age 7)</strong></span>
+        <span>Adding <strong>Relief Society · Teacher</strong></span>
+      </div>
+    </div>
+    <p style="margin: 0; font-size: 14px; color: #3A444F; line-height: 1.5">The General Handbook (30.1.1) says a member generally serves in only one calling at a time.</p>
+    <div style="display: flex; gap: 8px; justify-content: flex-end">
+      <button style="height: 44px; padding: 0 18px; border: 1px solid #D9DDD8; background: #FFFFFF; border-radius: 8px; font-size: 14px; cursor: pointer; color: #18212B">Cancel</button>
+      <button style="height: 44px; padding: 0 18px; border: 1px solid #18212B; background: #FFFFFF; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; color: #18212B">Add second calling</button>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":880,"height":620}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>WardBoard — Ward overview</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F3F4F1}
+a{color:#1D5C68}a:hover{color:#123E47}
+button{font-family:inherit}
+</style>
+</helmet>
+<div style="min-height: 960px; background: #F3F4F1; font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #18212B; display: flex; flex-direction: column">
+
+  <!-- Top bar -->
+  <header style="background: #FFFFFF; border-bottom: 1px solid #D9DDD8; padding: 0 24px; display: flex; flex-wrap: wrap; align-items: center; gap: 16px 24px; min-height: 64px">
+    <div style="display: flex; align-items: center; gap: 10px">
+      <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><rect x="2" y="2" width="10" height="10" rx="2" fill="#1D5C68"></rect><rect x="16" y="2" width="10" height="10" rx="2" fill="none" stroke="#1D5C68" stroke-width="2" stroke-dasharray="3 2"></rect><rect x="2" y="16" width="10" height="10" rx="2" fill="none" stroke="#1D5C68" stroke-width="2"></rect><rect x="16" y="16" width="10" height="10" rx="2" fill="#1D5C68" opacity="0.45"></rect></svg>
+      <div style="display: flex; flex-direction: column; line-height: 1.15">
+        <span style="font-weight: 700; font-size: 17px; letter-spacing: -0.01em">WardBoard</span>
+        <span style="font-size: 12px; color: #55606B">Maple Creek Ward</span>
+      </div>
+    </div>
+    <nav aria-label="Boards" style="display: flex; flex-wrap: wrap; gap: 4px; flex: 1 1 520px">
+      <button style="display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 14px; border: 1px solid #D9DDD8; background: #F3F4F1; border-radius: 8px; font-size: 14px; color: #18212B; cursor: pointer">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="10" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        Current <span style="color: #55606B; font-size: 12px">imported Oct 19</span>
+      </button>
+      <button aria-current="page" style="display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 14px; border: 1px solid #1D5C68; background: #E3EEEF; border-radius: 8px; font-size: 14px; font-weight: 600; color: #123E47; cursor: pointer">
+        Spring adjustments <span style="background: #1D5C68; color: #FFFFFF; border-radius: 10px; padding: 1px 7px; font-size: 11px; font-weight: 600">7</span>
+      </button>
+      <button style="display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 14px; border: 1px solid transparent; background: transparent; border-radius: 8px; font-size: 14px; color: #3A444F; cursor: pointer">
+        Youth focus <span style="background: #E4E7E3; color: #3A444F; border-radius: 10px; padding: 1px 7px; font-size: 11px; font-weight: 600">3</span>
+      </button>
+      <button style="display: flex; align-items: center; gap: 6px; height: 44px; padding: 0 12px; border: 1px dashed #AEB5AE; background: transparent; border-radius: 8px; font-size: 14px; color: #3A444F; cursor: pointer">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
+        New proposal
+      </button>
+    </nav>
+    <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap">
+      <label style="display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 12px; border: 1px solid #D9DDD8; border-radius: 8px; background: #FFFFFF; width: 280px; box-sizing: border-box">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#55606B" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+        <span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Search people, callings, tags</span>
+        <input type="search" placeholder="People, callings, tags…" style="border: none; outline: none; font: inherit; font-size: 14px; flex: 1; min-width: 0; background: transparent; color: #18212B">
+        <kbd style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #55606B; border: 1px solid #D9DDD8; border-radius: 4px; padding: 1px 5px">/</kbd>
+      </label>
+      <div aria-label="Also viewing this proposal: Bishop Halvorsen, Brother Okafor" style="display: flex; align-items: center">
+        <span title="Bishop Halvorsen" style="width: 32px; height: 32px; border-radius: 50%; background: #2F5D8A; color: #FFFFFF; font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center; border: 2px solid #FFFFFF">DH</span>
+        <span title="Brother Okafor" style="width: 32px; height: 32px; border-radius: 50%; background: #7A5C2E; color: #FFFFFF; font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center; border: 2px solid #FFFFFF; margin-left: -8px">JO</span>
+      </div>
+      <button aria-label="Account and admin" style="width: 44px; height: 44px; border-radius: 50%; border: 1px solid #D9DDD8; background: #FFFFFF; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 13px; font-weight: 600; color: #18212B">MS</button>
+    </div>
+  </header>
+
+  <!-- Proposal status strip -->
+  <section aria-label="Proposal status" style="background: #FFFFFF; border-bottom: 1px solid #D9DDD8; padding: 10px 24px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px">
+    <span style="display: inline-flex; align-items: center; gap: 6px; background: #1D5C68; color: #FFFFFF; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; padding: 5px 10px; border-radius: 4px">PROPOSED</span>
+    <span style="font-size: 14px; color: #3A444F">Baseline captured <strong style="color: #18212B">Oct 19, 2026</strong> from Current</span>
+    <span style="display: flex; gap: 8px; flex-wrap: wrap">
+      <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; background: #E6EDF8; color: #1F4E99; padding: 4px 10px; border-radius: 999px; font-weight: 600">+ 4 suggested callings</span>
+      <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; background: #ECEEEA; color: #3A444F; padding: 4px 10px; border-radius: 999px; font-weight: 600">− 3 suggested releases</span>
+      <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; background: #FBEFE3; color: #8A4209; padding: 4px 10px; border-radius: 999px; font-weight: 600; border: 1px dashed #C9772E">20 vacant positions</span>
+    </span>
+    <span style="flex: 1 1 0"></span>
+    <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: #2E6B3A"><svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><circle cx="5" cy="5" r="4" fill="#2E7D44"></circle></svg>Live · synced</span>
+    <a href="Summary.dc.html" style="display: inline-flex; align-items: center; height: 40px; padding: 0 14px; border: 1px solid #D9DDD8; border-radius: 8px; font-size: 14px; color: #18212B; text-decoration: none">Summary</a>
+    <a href="Presentation.dc.html" style="display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0 14px; border-radius: 8px; font-size: 14px; color: #FFFFFF; background: #18212B; text-decoration: none">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="4" width="20" height="13" rx="2"></rect><path d="M8 21h8M12 17v4"></path></svg>
+      Present
+    </a>
+  </section>
+
+  <!-- Body -->
+  <div style="display: flex; flex-wrap: wrap; flex: 1 1 auto; align-items: stretch">
+
+    <!-- Canvas -->
+    <main style="flex: 999 1 640px; min-width: 0; position: relative; padding: 28px 28px 96px; background-color: #F3F4F1; background-image: radial-gradient(#D3D7D1 1px, transparent 1px); background-size: 22px 22px">
+      <div style="display: flex; align-items: baseline; gap: 12px; margin-bottom: 18px; flex-wrap: wrap">
+        <h1 style="margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.01em">Ward at a glance</h1>
+        <span style="font-size: 13px; color: #55606B">Double-click an area to zoom in · drag people between callings</span>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 18px">
+        <sc-for list="{{orgs}}" as="org" hint-placeholder-count="8">
+          <article style="background: #FFFFFF; border: 1px solid #D9DDD8; border-radius: 12px; padding: 16px 16px 14px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 1px 2px rgba(24,33,43,0.04)">
+            <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 8px">
+              <div style="display: flex; flex-direction: column; gap: 2px">
+                <h2 style="margin: 0; font-size: 16px; font-weight: 600">{{org.name}}</h2>
+                <span style="font-size: 12px; color: #55606B">{{org.sub}}</span>
+              </div>
+              <span style="display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; color: #8A4209; background: #FBEFE3; border: 1px dashed #C9772E; border-radius: 6px; padding: 3px 8px; white-space: nowrap">
+                <svg width="11" height="11" viewBox="0 0 12 12" aria-hidden="true"><rect x="1" y="1" width="10" height="10" rx="2" fill="none" stroke="#C9772E" stroke-width="1.5" stroke-dasharray="2 1.5"></rect></svg>
+                {{org.vacant}} vacant
+              </span>
+            </div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap">
+              <sc-for list="{{org.leaders}}" as="l" hint-placeholder-count="3">
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 5px; width: 62px">
+                  <sc-if value="{{l.filled}}" hint-placeholder-val="{{true}}">
+                    <span style="position: relative; width: 48px; height: 48px; border-radius: 50%; background: {{l.bg}}; color: #FFFFFF; font-weight: 600; font-size: 15px; display: flex; align-items: center; justify-content: center">
+                      {{l.initials}}
+                      <sc-if value="{{l.changed}}" hint-placeholder-val="{{false}}">
+                        <span aria-label="Proposed change" style="position: absolute; right: -3px; top: -3px; width: 18px; height: 18px; border-radius: 50%; background: #1F4E99; color: #FFFFFF; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; border: 2px solid #FFFFFF; line-height: 1">+</span>
+                      </sc-if>
+                    </span>
+                    <span style="font-size: 12px; font-weight: 500; text-align: center; line-height: 1.2">{{l.name}}</span>
+                  </sc-if>
+                  <sc-if value="{{l.vacant}}" hint-placeholder-val="{{false}}">
+                    <span style="width: 48px; height: 48px; border-radius: 50%; border: 2px dashed #C9772E; background: #FFF8F1; box-sizing: border-box; display: flex; align-items: center; justify-content: center">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C9772E" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
+                    </span>
+                    <span style="font-size: 12px; font-weight: 600; color: #8A4209">Vacant</span>
+                  </sc-if>
+                  <span style="font-size: 11px; color: #55606B; text-align: center; line-height: 1.2">{{l.role}}</span>
+                </div>
+              </sc-for>
+            </div>
+            <sc-if value="{{org.hasGroups}}" hint-placeholder-val="{{false}}">
+              <div style="display: flex; flex-wrap: wrap; gap: 6px">
+                <sc-for list="{{org.groups}}" as="g" hint-placeholder-count="4">
+                  <span style="font-size: 12px; color: #3A444F; background: #F3F4F1; border: 1px solid #E1E4DF; border-radius: 6px; padding: 3px 8px">{{g.label}}</span>
+                </sc-for>
+              </div>
+            </sc-if>
+            <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #ECEEEA; padding-top: 10px; font-size: 12px; color: #55606B">
+              <span>{{org.total}} positions · {{org.filledCount}} filled</span>
+              <sc-if value="{{org.hasChanges}}" hint-placeholder-val="{{false}}">
+                <span style="color: #1F4E99; font-weight: 600">{{org.changes}} proposed</span>
+              </sc-if>
+            </div>
+          </article>
+        </sc-for>
+      </div>
+
+      <!-- Zoom controls -->
+      <div style="position: absolute; right: 28px; bottom: 24px; display: flex; align-items: center; gap: 4px; background: #FFFFFF; border: 1px solid #D9DDD8; border-radius: 10px; padding: 4px; box-shadow: 0 2px 8px rgba(24,33,43,0.08)">
+        <button aria-label="Zoom out" style="width: 40px; height: 40px; border: none; background: transparent; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#18212B" stroke-width="2" aria-hidden="true"><path d="M5 12h14"></path></svg></button>
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; width: 44px; text-align: center; color: #3A444F">100%</span>
+        <button aria-label="Zoom in" style="width: 40px; height: 40px; border: none; background: transparent; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#18212B" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></button>
+        <span style="width: 1px; height: 24px; background: #D9DDD8"></span>
+        <button style="height: 40px; padding: 0 12px; border: none; background: transparent; border-radius: 6px; cursor: pointer; font-size: 13px; color: #18212B; display: flex; align-items: center; gap: 6px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"></path></svg>Fit ward</button>
+      </div>
+    </main>
+
+    <!-- Dugout -->
+    <aside aria-label="Dugout" style="flex: 1 1 300px; max-width: 100%; background: #FFFFFF; border-left: 1px solid #D9DDD8; padding: 20px; display: flex; flex-direction: column; gap: 14px; box-sizing: border-box">
+      <div style="display: flex; align-items: baseline; justify-content: space-between">
+        <h2 style="margin: 0; font-size: 16px; font-weight: 600">Dugout <span style="color: #55606B; font-weight: 400">· 14</span></h2>
+        <button style="height: 32px; padding: 0 10px; border: 1px solid #D9DDD8; border-radius: 6px; background: #FFFFFF; font-size: 12px; cursor: pointer; color: #18212B">Filter</button>
+      </div>
+      <p style="margin: 0; font-size: 12px; color: #55606B; line-height: 1.45">People with no calling in this proposal, plus anyone placed here on purpose. Not a measure of availability.</p>
+      <div style="display: flex; gap: 6px; flex-wrap: wrap">
+        <button aria-pressed="true" style="height: 30px; padding: 0 10px; border-radius: 999px; border: 1px solid #18212B; background: #18212B; color: #FFFFFF; font-size: 12px; cursor: pointer">All</button>
+        <button aria-pressed="false" style="height: 30px; padding: 0 10px; border-radius: 999px; border: 1px solid #D9DDD8; background: #FFFFFF; color: #3A444F; font-size: 12px; cursor: pointer">Adults</button>
+        <button aria-pressed="false" style="height: 30px; padding: 0 10px; border-radius: 999px; border: 1px solid #D9DDD8; background: #FFFFFF; color: #3A444F; font-size: 12px; cursor: pointer">Youth</button>
+        <button aria-pressed="false" style="height: 30px; padding: 0 10px; border-radius: 999px; border: 1px solid #D9DDD8; background: #FFFFFF; color: #3A444F; font-size: 12px; cursor: pointer">Weekday</button>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <sc-for list="{{dugout}}" as="p" hint-placeholder-count="6">
+          <div style="display: flex; gap: 10px; align-items: flex-start; padding: 10px; border: 1px solid #E1E4DF; border-radius: 10px; background: #FBFBFA; cursor: grab">
+            <span style="flex: none; width: 36px; height: 36px; border-radius: 50%; background: {{p.bg}}; color: #FFFFFF; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center">{{p.initials}}</span>
+            <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0">
+              <span style="font-size: 14px; font-weight: 600">{{p.name}} <span style="font-weight: 400; color: #55606B; font-size: 12px">· {{p.kind}}</span></span>
+              <sc-if value="{{p.hasAlso}}" hint-placeholder-val="{{false}}">
+                <span style="font-size: 12px; color: #3A444F">Placed here · still serves as {{p.also}}</span>
+              </sc-if>
+              <div style="display: flex; gap: 4px; flex-wrap: wrap">
+                <sc-for list="{{p.tags}}" as="t" hint-placeholder-count="2">
+                  <span style="font-size: 11px; color: #3A444F; background: #ECEEEA; border-radius: 4px; padding: 2px 6px">{{t.label}}</span>
+                </sc-for>
+                <sc-if value="{{p.restricted}}" hint-placeholder-val="{{false}}">
+                  <span style="display: inline-flex; align-items: center; gap: 3px; font-size: 11px; color: #5B2B6E; background: #F2EAF5; border-radius: 4px; padding: 2px 6px"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>Needs approval</span>
+                </sc-if>
+              </div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+      <button style="height: 40px; border: none; background: transparent; color: #1D5C68; font-size: 13px; font-weight: 600; cursor: pointer; text-align: left; padding: 0">Show 8 more</button>
+    </aside>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":960}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const C = ['#2F5D8A', '#7A5C2E', '#3F6E4E', '#7B4A6A', '#355C66', '#6B5A2F', '#4B4F8A', '#7A3E3E'];
+    let i = 0;
+    const L = (initials, name, role, opts) => {
+      const o = opts || {};
+      if (o.vacant) return { vacant: true, filled: false, role, name: '', initials: '', bg: '', changed: false };
+      return { filled: true, vacant: false, initials, name, role, bg: C[(i++) % C.length], changed: !!o.changed };
+    };
+    const V = (role) => L('', '', role, { vacant: true });
+    const G = (arr) => arr.map((label) => ({ label }));
+    const org = (name, sub, leaders, groups, vacant, total, changes) => ({
+      name, sub, leaders, groups: G(groups), hasGroups: groups.length > 0,
+      vacant, total, filledCount: total - vacant, changes, hasChanges: changes > 0
+    });
+    const orgs = [
+      org('Bishopric', 'Bishop, counselors · supporting clerks & secretaries', [L('DH', 'D. Halvorsen', 'Bishop'), L('JO', 'J. Okafor', '1st Counselor'), L('MS', 'M. Sato', '2nd Counselor')], ['Clerks', 'Executive secretary'], 1, 7, 0),
+      org('Elders Quorum', 'Presidency · teachers', [L('TL', 'T. Lindqvist', 'President'), L('RM', 'R. Mendes', '1st Counselor', { changed: true }), L('AW', 'A. Whitaker', '2nd Counselor'), V('Secretary')], ['Teachers'], 2, 9, 1),
+      org('Relief Society', 'Presidency · teachers · committees', [L('HB', 'H. Brandt', 'President'), L('LF', 'L. Ferreira', '1st Counselor'), L('KN', 'K. Nguyen', '2nd Counselor', { changed: true }), L('PA', 'P. Adeyemi', 'Secretary')], ['Teachers', 'Compassionate service', 'Music'], 3, 12, 2),
+      org('Aaronic Priesthood', 'Bishop presides · quorum presidencies · advisers', [L('DH', 'Bishop', 'Priests (linked)'), L('EC', 'E. Carter', 'Teachers Pres.'), L('SI', 'S. Ito', 'Deacons Pres.')], ['Advisers', 'Specialists', 'Youth assistants'], 2, 14, 0),
+      org('Young Women', 'Presidency · advisers · class presidencies', [L('CM', 'C. Morales', 'President'), V('1st Counselor'), L('JP', 'J. Petersen', '2nd Counselor')], ['Advisers', 'Class presidencies'], 3, 13, 1),
+      org('Primary', 'Presidency · teachers · nursery · music', [L('WA', 'W. Abara', 'President'), L('NK', 'N. Kowalski', '1st Counselor'), V('2nd Counselor'), L('OD', 'O. Dube', 'Secretary')], ['Teachers', 'Nursery', 'Music'], 5, 24, 1),
+      org('Sunday School', 'Presidency · class teachers', [L('GR', 'G. Rasmussen', 'President'), L('BL', 'B. Laurent', '1st Counselor'), L('FK', 'F. Kaur', '2nd Counselor', { changed: true })], ['Gospel Doctrine', 'Youth classes'], 1, 8, 1),
+      org('Ward-wide Callings', 'Display grouping only — not a single presidency', [L('IV', 'I. Vance', 'Ward Mission Leader'), L('YT', 'Y. Tanaka', 'Music Coord.'), L('QH', 'Q. Hale', 'Temple & FH')], ['Ward Mission', 'Temple & Family History', 'Music', 'Activities', 'Self-Reliance & Welfare', 'Other'], 3, 21, 1)
+    ];
+    const dugout = [
+      { initials: 'AB', name: 'Amara Boateng', kind: 'Adult', bg: '#3F6E4E', tags: [{ label: 'Weekday' }, { label: 'Pianist' }], restricted: false, hasAlso: false },
+      { initials: 'CF', name: 'Caleb Frost', kind: 'Adult', bg: '#4B4F8A', tags: [{ label: 'Evenings only' }], restricted: false, hasAlso: false },
+      { initials: 'RV', name: 'Rosa Valdez', kind: 'Adult', bg: '#7B4A6A', tags: [{ label: 'Teaching' }], restricted: false, hasAlso: true, also: 'Ward choir accompanist' },
+      { initials: 'ML', name: 'Milo Larsen', kind: 'Youth', bg: '#355C66', tags: [{ label: 'Tech' }], restricted: false, hasAlso: false },
+      { initials: 'GW', name: 'Grant Wells', kind: 'Adult', bg: '#6B5A2F', tags: [], restricted: true, hasAlso: false },
+      { initials: 'EP', name: 'Esther Park', kind: 'Adult', bg: '#7A3E3E', tags: [{ label: 'New move-in' }], restricted: false, hasAlso: false }
+    ];
+    return { orgs, dugout };
+  }
+}
+</script>
+</body>
+</html>

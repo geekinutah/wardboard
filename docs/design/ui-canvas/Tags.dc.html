@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Editing tags and calling affinities</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+button{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 1280px; height: 900px; box-sizing: border-box; background: #F3F4F1; font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #18212B; padding: 28px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; align-items: start">
+
+  <!-- Member tags -->
+  <section aria-labelledby="mt" style="background: #FFFFFF; border: 1px solid #D9DDD8; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 16px">
+    <div style="display: flex; flex-direction: column; gap: 4px">
+      <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: #1D5C68">MEMBER TAGS · WARD-WIDE</span>
+      <h2 id="mt" style="margin: 0; font-size: 17px; font-weight: 600">Amara Boateng</h2>
+    </div>
+    <div style="display: flex; gap: 6px; flex-wrap: wrap">
+      <sc-for list="{{memberTags}}" as="t" hint-placeholder-count="3">
+        <span style="display: inline-flex; align-items: center; gap: 2px; height: 32px; padding: 0 4px 0 10px; border-radius: 6px; background: #ECEEEA; font-size: 13px">
+          {{t.label}}
+          <button aria-label="Remove tag {{t.label}}" style="width: 28px; height: 28px; border: none; background: transparent; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3A444F" stroke-width="2.5" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg></button>
+        </span>
+      </sc-for>
+    </div>
+
+    <!-- Add-tag combobox, open -->
+    <div style="display: flex; flex-direction: column; gap: 0">
+      <label style="display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 12px; border: 2px solid #1D5C68; border-radius: 8px 8px 0 0">
+        <span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Add a tag</span>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#55606B" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
+        <input type="text" value="even" style="border: none; outline: none; font: inherit; font-size: 14px; flex: 1; min-width: 0">
+      </label>
+      <div role="listbox" aria-label="Tag suggestions" style="border: 2px solid #1D5C68; border-top: none; border-radius: 0 0 8px 8px; display: flex; flex-direction: column; padding: 4px">
+        <button role="option" aria-selected="true" style="display: flex; justify-content: space-between; align-items: center; min-height: 40px; padding: 0 10px; border: none; background: #E3EEEF; border-radius: 6px; font-size: 14px; cursor: pointer; text-align: left; color: #18212B"><span>Evenings only</span><span style="font-size: 12px; color: #55606B">9 people</span></button>
+        <button role="option" aria-selected="false" style="display: flex; justify-content: space-between; align-items: center; min-height: 40px; padding: 0 10px; border: none; background: transparent; border-radius: 6px; font-size: 14px; cursor: pointer; text-align: left; color: #18212B"><span>Event planning</span><span style="font-size: 12px; color: #55606B">4 people</span></button>
+        <button role="option" aria-selected="false" style="display: flex; align-items: center; min-height: 40px; padding: 0 10px; border: none; border-top: 1px solid #ECEEEA; background: transparent; font-size: 14px; cursor: pointer; text-align: left; color: #1D5C68; font-weight: 600">Create tag “even…”</button>
+      </div>
+    </div>
+    <p style="margin: 0; font-size: 12px; color: #55606B; line-height: 1.45">Member tags are shared: changes show in Current and every proposal.</p>
+
+    <!-- Needs approval: a member property, not a tag -->
+    <div style="display: flex; flex-direction: column; gap: 8px; border-top: 1px solid #ECEEEA; padding-top: 16px">
+      <h3 style="margin: 0; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #55606B">Placement setting</h3>
+      <label style="display: flex; align-items: flex-start; gap: 12px; padding: 12px; border: 1px solid #E3D4EA; background: #F7F2F9; border-radius: 10px; cursor: pointer">
+        <input type="checkbox" style="width: 20px; height: 20px; margin: 2px 0 0; accent-color: #5B2B6E">
+        <span style="display: flex; flex-direction: column; gap: 3px">
+          <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; color: #5B2B6E">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
+            Needs approval
+          </span>
+          <span style="font-size: 12px; color: #3A444F; line-height: 1.45">Every proposed placement must be approved by an Editor. Not a tag · shown on TV only if an Admin allows it.</span>
+        </span>
+      </label>
+    </div>
+  </section>
+
+  <!-- Calling tags & affinities -->
+  <section aria-labelledby="ct" style="background: #FFFFFF; border: 1px solid #D9DDD8; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 16px">
+    <div style="display: flex; flex-direction: column; gap: 4px">
+      <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: #1D5C68">CALLING · THIS PROPOSAL ONLY</span>
+      <h2 id="ct" style="margin: 0; font-size: 17px; font-weight: 600">Deacons Quorum Adviser</h2>
+      <span style="font-size: 13px; color: #55606B">Aaronic Priesthood · list · 2 of 3 filled</span>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <h3 style="margin: 0; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #55606B">Calling tags</h3>
+      <div style="display: flex; gap: 6px; flex-wrap: wrap">
+        <sc-for list="{{callingTags}}" as="t" hint-placeholder-count="2">
+          <span style="display: inline-flex; align-items: center; gap: 2px; height: 32px; padding: 0 4px 0 10px; border-radius: 6px; background: #ECEEEA; font-size: 13px">
+            {{t.label}}
+            <button aria-label="Remove calling tag {{t.label}}" style="width: 28px; height: 28px; border: none; background: transparent; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3A444F" stroke-width="2.5" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg></button>
+          </span>
+        </sc-for>
+        <button style="height: 32px; padding: 0 10px; border: 1px dashed #AEB5AE; background: transparent; border-radius: 6px; font-size: 13px; cursor: pointer; color: #3A444F">+ Tag</button>
+      </div>
+      <span style="font-size: 12px; color: #55606B">Describe the calling itself.</span>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <h3 style="margin: 0; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #55606B">Prefers members tagged</h3>
+      <div style="display: flex; gap: 6px; flex-wrap: wrap">
+        <sc-for list="{{affinities}}" as="t" hint-placeholder-count="2">
+          <span style="display: inline-flex; align-items: center; gap: 2px; height: 32px; padding: 0 4px 0 10px; border-radius: 6px; background: #E3EEEF; color: #123E47; font-size: 13px; font-weight: 600">
+            {{t.label}}
+            <button aria-label="Remove preference {{t.label}}" style="width: 28px; height: 28px; border: none; background: transparent; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#123E47" stroke-width="2.5" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg></button>
+          </span>
+        </sc-for>
+        <button style="height: 32px; padding: 0 10px; border: 1px dashed #7FA9B0; background: transparent; border-radius: 6px; font-size: 13px; cursor: pointer; color: #123E47">+ Preference</button>
+      </div>
+      <span style="font-size: 12px; color: #55606B">Preferences, not requirements — a missing tag never blocks a placement.</span>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 10px; padding: 12px; background: #F3F4F1; border-radius: 8px">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#123E47" stroke-width="2.5" aria-hidden="true"><path d="M5 12l5 5L20 7"></path></svg>
+      <span style="font-size: 13px; flex: 1">4 people in the dugout match a preference</span>
+      <button style="height: 32px; padding: 0 10px; border: 1px solid #D9DDD8; background: #FFFFFF; border-radius: 6px; font-size: 12px; cursor: pointer; color: #18212B">Highlight</button>
+    </div>
+    <p style="margin: 0; font-size: 12px; color: #55606B; line-height: 1.45">Changes apply to <strong>Spring adjustments</strong>. Current and other proposals keep their own calling tags.</p>
+  </section>
+
+  <!-- Tag library -->
+  <section aria-labelledby="tl" style="background: #FFFFFF; border: 1px solid #D9DDD8; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 14px">
+    <div style="display: flex; align-items: baseline; justify-content: space-between">
+      <h2 id="tl" style="margin: 0; font-size: 17px; font-weight: 600">Tag library</h2>
+      <button style="height: 36px; padding: 0 12px; border: 1px solid #D9DDD8; background: #FFFFFF; border-radius: 8px; font-size: 13px; cursor: pointer; color: #18212B">+ New tag</button>
+    </div>
+    <div style="display: grid; grid-template-columns: minmax(0, 1fr) 70px; gap: 0; font-size: 13px">
+      <span style="padding: 8px 0; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #55606B; border-bottom: 1px solid #ECEEEA">Tag</span>
+      <span style="padding: 8px 0; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #55606B; border-bottom: 1px solid #ECEEEA">Used</span>
+      <sc-for list="{{library}}" as="t" hint-placeholder-count="6">
+        <button style="padding: 10px 0; border: none; border-bottom: 1px solid #ECEEEA; background: transparent; text-align: left; font-size: 14px; cursor: pointer; color: #18212B">{{t.label}}</button>
+        <span style="padding: 10px 0; border-bottom: 1px solid #ECEEEA; color: #55606B; display: flex; align-items: center">{{t.used}}</span>
+      </sc-for>
+    </div>
+
+    <!-- Delete confirmation -->
+    <div role="alertdialog" aria-labelledby="del-t" style="display: flex; flex-direction: column; gap: 12px; padding: 16px; background: #FFFFFF; border: 1px solid #B9BEC4; border-radius: 10px; box-shadow: 0 10px 28px rgba(24,33,43,0.16)">
+      <h3 id="del-t" style="margin: 0; font-size: 15px; font-weight: 600">Delete “Evenings only”?</h3>
+      <p style="margin: 0; font-size: 13px; color: #3A444F; line-height: 1.5">Removes it from <strong>9 people</strong> and from the preferences on <strong>3 callings</strong> across Current and 2 proposals. Nothing else changes.</p>
+      <div style="display: flex; gap: 8px; justify-content: flex-end">
+        <button style="height: 40px; padding: 0 14px; border: 1px solid #D9DDD8; background: #FFFFFF; border-radius: 8px; font-size: 13px; cursor: pointer; color: #18212B">Cancel</button>
+        <button style="height: 40px; padding: 0 14px; border: none; background: #18212B; color: #FFFFFF; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer">Delete tag</button>
+      </div>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const L = (a) => a.map((label) => ({ label }));
+    return {
+      memberTags: L(['Weekday', 'Pianist', 'Outdoors']),
+      callingTags: L(['Youth', 'Wednesday evenings']),
+      affinities: L(['Weekday', 'Outdoors']),
+      library: [
+        { label: 'Weekday', used: '18', tv: true },
+        { label: 'Evenings only', used: '9', tv: false },
+        { label: 'Teaching', used: '22', tv: true },
+        { label: 'Pianist', used: '6', tv: true },
+        { label: 'Outdoors', used: '11', tv: true },
+        { label: 'New move-in', used: '5', tv: false },
+        { label: 'Tech', used: '7', tv: true }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

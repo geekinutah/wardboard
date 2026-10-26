@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Import preview</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F3F4F1}
+a{color:#1D5C68}a:hover{color:#123E47}
+button{font-family:inherit}
+</style>
+</helmet>
+<div style="min-height: 980px; background: #F3F4F1; font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #18212B; padding: 32px 24px 48px; box-sizing: border-box">
+  <div style="max-width: 1120px; margin: 0 auto; display: flex; flex-direction: column; gap: 22px">
+    <header style="display: flex; flex-direction: column; gap: 14px">
+      <span style="font-size: 12px; font-weight: 700; letter-spacing: 0.08em; color: #1D5C68">IMPORT · REPLACE CURRENT</span>
+      <h1 style="margin: 0; font-size: 30px; font-weight: 600">Review before replacing Current</h1>
+      <ol aria-label="Import steps" style="list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px">
+        <li style="font-size: 13px; padding: 6px 12px; border-radius: 999px; background: #E4E7E3; color: #3A444F">1 · Sources ✓</li>
+        <li aria-current="step" style="font-size: 13px; padding: 6px 12px; border-radius: 999px; background: #1D5C68; color: #FFFFFF; font-weight: 600">2 · Preview</li>
+        <li style="font-size: 13px; padding: 6px 12px; border-radius: 999px; background: #FFFFFF; border: 1px solid #D9DDD8; color: #3A444F">3 · Photos</li>
+        <li style="font-size: 13px; padding: 6px 12px; border-radius: 999px; background: #FFFFFF; border: 1px solid #D9DDD8; color: #3A444F">4 · Confirm</li>
+      </ol>
+    </header>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px">
+      <sc-for list="{{sources}}" as="s" hint-placeholder-count="4">
+        <div style="background: #FFFFFF; border: 1px solid #D9DDD8; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 8px">
+          <span style="font-size: 14px; font-weight: 600">{{s.name}}</span>
+          <span style="font-size: 13px; color: #55606B">{{s.detail}}</span>
+          <span style="font-size: 12px; font-weight: 600; color: {{s.statusColor}}">{{s.status}}</span>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px">
+      <sc-for list="{{stats}}" as="k" hint-placeholder-count="5">
+        <div style="background: #FFFFFF; border: 1px solid #D9DDD8; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 4px">
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 28px; font-weight: 500">{{k.n}}</span>
+          <span style="font-size: 13px; color: #55606B">{{k.label}}</span>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-start">
+      <section style="flex: 3 1 480px; background: #FFFFFF; border: 1px solid #D9DDD8; border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 12px">
+        <h2 style="margin: 0; font-size: 16px; font-weight: 600">Needs your decision · 2 identities</h2>
+        <p style="margin: 0; font-size: 13px; color: #55606B">Names alone aren't enough to merge. Choose how each row should be matched.</p>
+        <sc-for list="{{amb}}" as="a" hint-placeholder-count="2">
+          <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 12px; border: 1px solid #EBC9A6; background: #FFF8F1; border-radius: 10px">
+            <div style="display: flex; flex-direction: column; gap: 2px; flex: 1 1 220px">
+              <span style="font-size: 14px; font-weight: 600">{{a.name}}</span>
+              <span style="font-size: 12px; color: #55606B">{{a.detail}}</span>
+            </div>
+            <button style="height: 40px; padding: 0 12px; border: 1px solid #D9DDD8; background: #FFFFFF; border-radius: 8px; font-size: 13px; cursor: pointer; color: #18212B">{{a.optA}}</button>
+            <button style="height: 40px; padding: 0 12px; border: 1px solid #D9DDD8; background: #FFFFFF; border-radius: 8px; font-size: 13px; cursor: pointer; color: #18212B">Treat as new person</button>
+          </div>
+        </sc-for>
+      </section>
+      <section style="flex: 2 1 320px; background: #FFFFFF; border: 1px solid #D9DDD8; border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 12px">
+        <h2 style="margin: 0; font-size: 16px; font-weight: 600">Discarded before saving</h2>
+        <p style="margin: 0; font-size: 13px; color: #55606B">Fields outside the allow-list never reach storage, logs or backups.</p>
+        <div style="display: flex; flex-wrap: wrap; gap: 6px">
+          <sc-for list="{{dropped}}" as="d" hint-placeholder-count="6">
+            <span style="font-size: 12px; color: #3A444F; background: #ECEEEA; border-radius: 4px; padding: 3px 8px; text-decoration: line-through">{{d.label}}</span>
+          </sc-for>
+        </div>
+        <h3 style="margin: 6px 0 0; font-size: 13px; font-weight: 600; color: #55606B">Kept</h3>
+        <span style="font-size: 13px; color: #3A444F">Names · youth/adult · callings & positions · vacancies · outside-ward callings</span>
+      </section>
+    </div>
+
+    <section style="background: #FFFFFF; border: 1px solid #D9DDD8; border-radius: 12px; padding: 18px; display: flex; flex-wrap: wrap; align-items: center; gap: 16px">
+      <div style="flex: 1 1 420px; display: flex; flex-direction: column; gap: 4px">
+        <span style="font-size: 15px; font-weight: 600">Replace Current (imported Oct 19) with this preview</span>
+        <span style="font-size: 13px; color: #55606B">2 proposals keep their own baselines and will show divergence notices. Notes and tags carry over only for confirmed matches.</span>
+      </div>
+      <button disabled style="height: 48px; padding: 0 20px; border: none; background: #C8CDC7; color: #3A444F; border-radius: 8px; font-size: 15px; font-weight: 600">Resolve 2 identities to continue</button>
+    </section>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":980}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const ok = '#2E6B3A', opt = '#55606B';
+    return {
+      sources: [
+        { name: 'Callings by Organization', detail: 'PDF · 25 pages · member-roster sections ignored', status: 'Validated', statusColor: ok },
+        { name: 'Members without Callings', detail: 'PDF · 4 pages', status: 'Validated · duplicate file skipped', statusColor: ok },
+        { name: 'Out-of-Unit Callings', detail: 'PDF · 1 page · 3 sections', status: 'Validated', statusColor: ok },
+        { name: 'Directory photos', detail: 'Optional · run next step or upload later', status: 'Not collected yet', statusColor: opt }
+      ],
+      stats: [
+        { n: '[312]', label: 'People' },
+        { n: '[248]', label: 'Calling positions' },
+        { n: '[95]', label: 'Vacant positions' },
+        { n: '[37]', label: 'Outside-ward callings' },
+        { n: '[4]', label: 'Unfamiliar callings to map' }
+      ],
+      amb: [
+        { name: 'J. Sorensen (2 people)', detail: 'Two members share this name in the source reports', optA: 'Match by calling…' },
+        { name: 'Emily Hart', detail: 'Similar to existing “Emilie Hart” with notes and tags', optA: 'Same as Emilie Hart' }
+      ],
+      dropped: [{ label: 'Phone' }, { label: 'Email' }, { label: 'Address' }, { label: 'Birth date' }, { label: 'Age' }, { label: 'Record number' }, { label: 'Class rosters' }, { label: 'Ministering' }]
+    };
+  }
+}
+</script>
+</body>
+</html>

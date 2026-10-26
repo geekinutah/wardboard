@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Add a position</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+button{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 1280px; height: 760px; position: relative; box-sizing: border-box; background: #F3F4F1; background-image: radial-gradient(#D3D7D1 1px, transparent 1px); background-size: 22px 22px; font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #18212B; padding: 28px">
+  <div style="display: flex; align-items: baseline; gap: 12px; margin-bottom: 18px">
+    <h1 style="margin: 0; font-size: 22px; font-weight: 600">Primary</h1>
+    <span style="font-size: 13px; color: #55606B">Spring adjustments · level 3 detail</span>
+    <span style="flex: 1"></span>
+    <button style="height: 40px; padding: 0 14px; border: 1px dashed #AEB5AE; border-radius: 8px; background: #FFFFFF; font-size: 13px; cursor: pointer; color: #3A444F">+ Add group</button>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; align-items: start">
+    <sc-for list="{{groups}}" as="g" hint-placeholder-count="3">
+      <section style="background: #FFFFFF; border: {{g.border}}; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 10px">
+        <div style="display: flex; align-items: center; justify-content: space-between">
+          <h2 style="margin: 0; font-size: 15px; font-weight: 600">{{g.name}}</h2>
+          <button aria-label="Add a position to {{g.name}}" style="width: 36px; height: 36px; border-radius: 8px; border: 1px solid {{g.plusBorder}}; background: {{g.plusBg}}; cursor: pointer; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="{{g.plusColor}}" stroke-width="2.5" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></button>
+        </div>
+        <sc-for list="{{g.rows}}" as="r" hint-placeholder-count="3">
+          <div style="display: flex; justify-content: space-between; gap: 10px; padding: 9px 10px; border: {{r.border}}; background: {{r.bg}}; border-radius: 8px; font-size: 13px">
+            <span style="color: #55606B">{{r.title}}</span><span style="font-weight: 600; color: {{r.color}}">{{r.who}}</span>
+          </div>
+        </sc-for>
+      </section>
+    </sc-for>
+  </div>
+
+  <!-- Popover anchored to Teachers + -->
+  <div role="dialog" aria-labelledby="ap-t" style="position: absolute; left: 700px; top: 120px; width: 380px; background: #FFFFFF; border: 1px solid #B9BEC4; border-radius: 12px; box-shadow: 0 18px 44px rgba(24,33,43,0.22); padding: 18px; display: flex; flex-direction: column; gap: 14px">
+    <h2 id="ap-t" style="margin: 0; font-size: 16px; font-weight: 600">Add a position to Teachers</h2>
+    <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600">
+      Calling title
+      <input type="text" value="Teacher (age 10)" style="height: 42px; padding: 0 12px; border: 1px solid #B9BEC4; border-radius: 8px; font: inherit; font-size: 14px; font-weight: 400">
+    </label>
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <span style="font-size: 13px; font-weight: 600">Type</span>
+      <div role="group" aria-label="Position type" style="display: flex; background: #ECEEEA; border-radius: 8px; padding: 3px">
+        <button aria-pressed="false" style="flex: 1; height: 36px; border: none; border-radius: 6px; background: transparent; font-size: 13px; cursor: pointer; color: #3A444F">Single person</button>
+        <button aria-pressed="true" style="flex: 1; height: 36px; border: none; border-radius: 6px; background: #FFFFFF; font-size: 13px; font-weight: 600; cursor: pointer; color: #18212B; box-shadow: 0 1px 2px rgba(0,0,0,0.08)">List</button>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; justify-content: space-between">
+      <span style="font-size: 13px; font-weight: 600">Positions</span>
+      <div style="display: flex; align-items: center; gap: 4px">
+        <button aria-label="Fewer positions" style="width: 36px; height: 36px; border: 1px solid #D9DDD8; border-radius: 8px; background: #FFFFFF; cursor: pointer; font-size: 16px; color: #18212B">−</button>
+        <span style="width: 36px; text-align: center; font-size: 15px; font-weight: 600">2</span>
+        <button aria-label="More positions" style="width: 36px; height: 36px; border: 1px solid #D9DDD8; border-radius: 8px; background: #FFFFFF; cursor: pointer; font-size: 16px; color: #18212B">+</button>
+      </div>
+    </div>
+    <span style="font-size: 12px; color: #55606B; line-height: 1.45">Adds 2 vacant positions to <strong>Spring adjustments</strong> only. Current and other proposals are unchanged.</span>
+    <div style="display: flex; gap: 8px; justify-content: flex-end">
+      <button style="height: 40px; padding: 0 14px; border: 1px solid #D9DDD8; background: #FFFFFF; border-radius: 8px; font-size: 13px; cursor: pointer; color: #18212B">Cancel</button>
+      <button style="height: 40px; padding: 0 14px; border: none; background: #1D5C68; color: #FFFFFF; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer">Add position</button>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":760}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const F = (title, who) => ({ title, who, color: '#18212B', border: '1px solid #E1E4DF', bg: '#FBFBFA' });
+    const V = (title) => ({ title, who: 'Vacant', color: '#8A4209', border: '1px dashed #C9772E', bg: '#FFF8F1' });
+    const N = (title) => ({ title, who: '+ Added', color: '#1F4E99', border: '1px solid #B9CBE8', bg: '#F3F7FD' });
+    const base = { border: '1px solid #D9DDD8', plusBorder: '#D9DDD8', plusBg: '#FFFFFF', plusColor: '#18212B' };
+    const active = { border: '2px solid #1D5C68', plusBorder: '#1D5C68', plusBg: '#1D5C68', plusColor: '#FFFFFF' };
+    return {
+      groups: [
+        Object.assign({ name: 'Presidency', rows: [F('President', 'W. Abara'), F('1st Counselor', 'N. Kowalski'), V('2nd Counselor'), F('Secretary', 'O. Dube')] }, base),
+        Object.assign({ name: 'Teachers', rows: [F('Teacher (age 7)', 'M. Price'), F('Teacher (age 8)', 'D. Ruiz'), V('Teacher (age 9)'), N('Teacher (age 11)')] }, active),
+        Object.assign({ name: 'Nursery & Music', rows: [F('Nursery leader', 'A. Shah'), V('Nursery leader'), V('Music leader'), F('Pianist', 'B. Cole')] }, base)
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

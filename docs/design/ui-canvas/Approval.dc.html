@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Needs-approval placement</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+button{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 880px; height: 620px; box-sizing: border-box; background: rgba(24,33,43,0.55); font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #18212B; display: flex; align-items: center; justify-content: center; padding: 40px">
+  <div role="dialog" aria-modal="true" aria-labelledby="ap-t" style="width: 580px; background: #FFFFFF; border-radius: 14px; box-shadow: 0 24px 60px rgba(0,0,0,0.3); padding: 26px; display: flex; flex-direction: column; gap: 18px">
+    <div style="display: flex; gap: 14px; align-items: flex-start">
+      <span style="flex: none; width: 44px; height: 44px; border-radius: 10px; background: #F2EAF5; display: flex; align-items: center; justify-content: center">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5B2B6E" stroke-width="2" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
+      </span>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <h2 id="ap-t" style="margin: 0; font-size: 20px; font-weight: 600">Approval needed for this placement</h2>
+        <p style="margin: 0; font-size: 14px; color: #55606B; line-height: 1.5">Grant Wells is marked <strong style="color: #5B2B6E">Needs approval</strong>. Confirm this specific placement before it appears on the proposal.</p>
+      </div>
+    </div>
+
+    <dl style="margin: 0; display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 10px 16px; padding: 16px; background: #F3F4F1; border-radius: 10px; font-size: 14px">
+      <dt style="color: #55606B">Member</dt><dd style="margin: 0; font-weight: 600">Grant Wells</dd>
+      <dt style="color: #55606B">Calling</dt><dd style="margin: 0; font-weight: 600">Sunday School · Gospel Doctrine Teacher</dd>
+      <dt style="color: #55606B">Proposal</dt><dd style="margin: 0; font-weight: 600">Spring adjustments</dd>
+    </dl>
+
+    <p style="margin: 0; font-size: 13px; color: #3A444F; line-height: 1.5">Approval applies only to this member, position and proposal. Moving him elsewhere will ask again. WardBoard does not certify eligibility — consult the Handbook and official records outside this app.</p>
+
+    <label style="display: flex; gap: 10px; align-items: flex-start; font-size: 14px; cursor: pointer">
+      <input type="checkbox" style="width: 20px; height: 20px; margin: 0; accent-color: #1D5C68">
+      <span>I've reviewed this outside WardBoard and approve placing him here for discussion.</span>
+    </label>
+
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+      <span style="font-size: 12px; color: #55606B">Recorded as Mike S. · today</span>
+      <div style="display: flex; gap: 8px">
+        <button style="height: 44px; padding: 0 18px; border: 1px solid #D9DDD8; background: #FFFFFF; border-radius: 8px; font-size: 14px; cursor: pointer; color: #18212B">Cancel</button>
+        <button style="height: 44px; padding: 0 18px; border: none; background: #1D5C68; color: #FFFFFF; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer">Approve placement</button>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":880,"height":620}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

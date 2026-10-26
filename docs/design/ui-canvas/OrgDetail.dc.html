@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>WardBoard — Relief Society detail</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F3F4F1}
+a{color:#1D5C68}a:hover{color:#123E47}
+button{font-family:inherit}
+</style>
+</helmet>
+<div style="min-height: 960px; background: #F3F4F1; font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #18212B; display: flex; flex-direction: column">
+
+  <!-- Compact top bar -->
+  <header style="background: #FFFFFF; border-bottom: 1px solid #D9DDD8; padding: 0 24px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; min-height: 60px">
+    <span style="font-weight: 700; font-size: 17px">WardBoard</span>
+    <nav aria-label="Boards" style="display: flex; gap: 4px; flex-wrap: wrap; flex: 1 1 420px">
+      <button style="height: 40px; padding: 0 12px; border: 1px solid #D9DDD8; background: #F3F4F1; border-radius: 8px; font-size: 13px; color: #18212B; cursor: pointer">Current</button>
+      <button aria-current="page" style="height: 40px; padding: 0 12px; border: 1px solid #1D5C68; background: #E3EEEF; border-radius: 8px; font-size: 13px; font-weight: 600; color: #123E47; cursor: pointer">Spring adjustments</button>
+      <button style="height: 40px; padding: 0 12px; border: 1px solid transparent; background: transparent; border-radius: 8px; font-size: 13px; color: #3A444F; cursor: pointer">Youth focus</button>
+    </nav>
+    <label style="display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 12px; border: 1px solid #D9DDD8; border-radius: 8px; width: 260px; box-sizing: border-box">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#55606B" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+      <span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Search</span>
+      <input type="search" placeholder="People, callings, tags…" style="border: none; outline: none; font: inherit; font-size: 13px; flex: 1; min-width: 0; background: transparent">
+    </label>
+    <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: #2E6B3A"><svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><circle cx="5" cy="5" r="4" fill="#2E7D44"></circle></svg>Live</span>
+  </header>
+
+  <!-- Breadcrumb + context -->
+  <div style="background: #FFFFFF; border-bottom: 1px solid #D9DDD8; padding: 10px 24px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px">
+    <span style="display: inline-flex; background: #1D5C68; color: #FFFFFF; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; padding: 4px 8px; border-radius: 4px">PROPOSED</span>
+    <nav aria-label="Breadcrumb" style="display: flex; align-items: center; gap: 8px; font-size: 14px">
+      <a href="Main.dc.html" style="text-decoration: none">Ward</a>
+      <span aria-hidden="true" style="color: #8A929A">/</span>
+      <span style="font-weight: 600">Relief Society</span>
+    </nav>
+    <span style="flex: 1 1 0"></span>
+    <span style="font-size: 13px; color: #8A4209; background: #FBEFE3; border: 1px dashed #C9772E; border-radius: 6px; padding: 3px 8px; font-weight: 600">3 vacant</span>
+    <span style="font-size: 13px; color: #1F4E99; background: #E6EDF8; border-radius: 6px; padding: 3px 8px; font-weight: 600">2 proposed</span>
+  </div>
+
+  <div style="display: flex; flex-wrap: wrap; flex: 1 1 auto">
+
+    <!-- Canvas -->
+    <main style="flex: 999 1 640px; min-width: 0; position: relative; padding: 28px 28px 110px; background-color: #F3F4F1; background-image: radial-gradient(#D3D7D1 1px, transparent 1px); background-size: 22px 22px; display: flex; flex-direction: column; gap: 20px">
+
+      <!-- Presidency -->
+      <section aria-labelledby="pres" style="background: #FFFFFF; border: 1px solid #D9DDD8; border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 14px">
+        <div style="display: flex; align-items: baseline; gap: 10px">
+          <h2 id="pres" style="margin: 0; font-size: 15px; font-weight: 600">Presidency</h2>
+          <span style="font-size: 12px; color: #55606B">Single-person callings</span>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px">
+          <sc-for list="{{presidency}}" as="s" hint-placeholder-count="4">
+            <div style="display: flex; flex-direction: column; gap: 6px">
+              <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #55606B">{{s.role}}</span>
+              <div style="display: flex; align-items: center; gap: 10px; padding: 10px; border: {{s.border}}; border-radius: 10px; background: {{s.bg}}">
+                <span style="flex: none; width: 40px; height: 40px; border-radius: 50%; background: {{s.color}}; color: #FFFFFF; font-weight: 600; font-size: 14px; display: flex; align-items: center; justify-content: center">{{s.initials}}</span>
+                <div style="display: flex; flex-direction: column; gap: 3px; min-width: 0">
+                  <span style="font-size: 14px; font-weight: 600">{{s.name}}</span>
+                  <sc-if value="{{s.changed}}" hint-placeholder-val="{{false}}">
+                    <span style="font-size: 11px; font-weight: 600; color: #1F4E99">+ Proposed · from Primary</span>
+                  </sc-if>
+                  <sc-if value="{{s.multi}}" hint-placeholder-val="{{false}}">
+                    <span style="font-size: 11px; color: #55606B">+1 other calling</span>
+                  </sc-if>
+                </div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </section>
+
+      <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start">
+        <!-- Teachers list -->
+        <section aria-labelledby="teach" style="flex: 2 1 380px; background: #FFFFFF; border: 1px solid #D9DDD8; border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 12px">
+          <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap">
+            <div style="display: flex; align-items: baseline; gap: 10px">
+              <h2 id="teach" style="margin: 0; font-size: 15px; font-weight: 600">Teachers</h2>
+              <span style="font-size: 12px; color: #55606B">List · 3 of 4 filled</span>
+            </div>
+            <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: #3A444F">Prefers <span style="background: #E3EEEF; color: #123E47; border-radius: 4px; padding: 2px 6px; font-weight: 600">Teaching</span></span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <sc-for list="{{teachers}}" as="t" hint-placeholder-count="3">
+              <div style="display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid #E1E4DF; border-radius: 8px; background: #FBFBFA">
+                <span style="flex: none; width: 32px; height: 32px; border-radius: 50%; background: {{t.color}}; color: #FFFFFF; font-weight: 600; font-size: 12px; display: flex; align-items: center; justify-content: center">{{t.initials}}</span>
+                <span style="font-size: 14px; font-weight: 500; flex: 1">{{t.name}}</span>
+                <span style="font-size: 11px; color: #3A444F; background: #ECEEEA; border-radius: 4px; padding: 2px 6px">{{t.tag}}</span>
+              </div>
+            </sc-for>
+            <!-- Drop target (active drag) -->
+            <div style="position: relative; display: flex; align-items: center; gap: 10px; padding: 12px 10px; border: 2px dashed #1D5C68; border-radius: 8px; background: #E3EEEF">
+              <span style="flex: none; width: 32px; height: 32px; border-radius: 50%; border: 2px dashed #1D5C68; box-sizing: border-box"></span>
+              <span style="font-size: 13px; font-weight: 600; color: #123E47">Release to fill this Teacher position</span>
+              <!-- drag ghost -->
+              <div style="position: absolute; right: 24px; top: -26px; display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: #FFFFFF; border: 1px solid #1D5C68; border-radius: 10px; box-shadow: 0 10px 24px rgba(24,33,43,0.18); transform: rotate(-2deg)">
+                <span style="width: 34px; height: 34px; border-radius: 50%; background: #7B4A6A; color: #FFFFFF; font-weight: 600; font-size: 12px; display: flex; align-items: center; justify-content: center">RV</span>
+                <div style="display: flex; flex-direction: column; gap: 3px">
+                  <span style="font-size: 14px; font-weight: 600">Rosa Valdez</span>
+                  <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: #123E47; font-weight: 600">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M5 12l5 5L20 7"></path></svg>
+                    Matches preferred: Teaching
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap">
+            <button style="height: 36px; padding: 0 12px; border: 1px dashed #AEB5AE; border-radius: 8px; background: transparent; font-size: 13px; color: #3A444F; cursor: pointer">+ Add position</button>
+            <button style="height: 36px; padding: 0 12px; border: 1px solid transparent; border-radius: 8px; background: transparent; font-size: 13px; color: #3A444F; cursor: pointer">Reduce staffing need…</button>
+          </div>
+        </section>
+
+        <!-- Compassionate service + music -->
+        <div style="flex: 1 1 300px; display: flex; flex-direction: column; gap: 20px">
+          <section aria-labelledby="cs" style="background: #FFFFFF; border: 1px solid #D9DDD8; border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 10px">
+            <h2 id="cs" style="margin: 0; font-size: 15px; font-weight: 600">Compassionate service</h2>
+            <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #55606B">Coordinator</span>
+            <div style="display: flex; align-items: center; gap: 10px; padding: 10px; border: 2px dashed #C9772E; border-radius: 10px; background: #FFF8F1">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C9772E" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
+              <span style="font-size: 13px; font-weight: 600; color: #8A4209">Vacant</span>
+            </div>
+            <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #55606B; margin-top: 4px">Assistants · 1 of 2</span>
+            <div style="display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid #E1E4DF; border-radius: 8px; background: #FBFBFA">
+              <span style="width: 32px; height: 32px; border-radius: 50%; background: #4B4F8A; color: #FFFFFF; font-weight: 600; font-size: 12px; display: flex; align-items: center; justify-content: center">VO</span>
+              <span style="font-size: 14px; font-weight: 500">Vera Olsen</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 2px dashed #C9772E; border-radius: 8px; background: #FFF8F1">
+              <span style="font-size: 13px; font-weight: 600; color: #8A4209">Vacant position</span>
+            </div>
+          </section>
+          <section aria-labelledby="mus" style="background: #FFFFFF; border: 1px solid #D9DDD8; border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 10px">
+            <h2 id="mus" style="margin: 0; font-size: 15px; font-weight: 600">Music</h2>
+            <div style="display: flex; justify-content: space-between; font-size: 13px"><span style="color: #55606B">Music leader</span><span style="font-weight: 600">Ingrid Holm</span></div>
+            <div style="display: flex; justify-content: space-between; font-size: 13px"><span style="color: #55606B">Pianist</span><span style="font-weight: 600">Tess Morrow</span></div>
+          </section>
+          <button style="display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 48px; padding: 0 14px; border: 1px dashed #AEB5AE; border-radius: 10px; background: transparent; font-size: 13px; color: #3A444F; cursor: pointer; text-align: left">
+            <span>2 optional roles off · not counted as vacancies</span>
+            <span style="font-weight: 600; color: #1D5C68">Manage</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Dugout tray -->
+      <div style="position: absolute; left: 28px; right: 28px; bottom: 20px; display: flex; align-items: center; gap: 14px; background: #FFFFFF; border: 1px solid #D9DDD8; border-radius: 12px; padding: 10px 14px; box-shadow: 0 4px 14px rgba(24,33,43,0.08); flex-wrap: wrap">
+        <span style="font-size: 14px; font-weight: 600">Dugout · 14</span>
+        <div style="display: flex; gap: 6px; flex: 1 1 200px; flex-wrap: wrap">
+          <span style="width: 32px; height: 32px; border-radius: 50%; background: #3F6E4E; color: #FFFFFF; font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center">AB</span>
+          <span style="width: 32px; height: 32px; border-radius: 50%; background: #4B4F8A; color: #FFFFFF; font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center">CF</span>
+          <span aria-label="Rosa Valdez, being moved" style="width: 32px; height: 32px; border-radius: 50%; border: 2px dashed #7B4A6A; box-sizing: border-box"></span>
+          <span style="width: 32px; height: 32px; border-radius: 50%; background: #355C66; color: #FFFFFF; font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center">ML</span>
+          <span style="width: 32px; height: 32px; border-radius: 50%; background: #6B5A2F; color: #FFFFFF; font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center">GW</span>
+          <span style="height: 32px; padding: 0 10px; border-radius: 16px; background: #ECEEEA; color: #3A444F; font-size: 12px; display: flex; align-items: center">+9</span>
+        </div>
+        <span style="font-size: 12px; color: #55606B">Drop here to release from a calling</span>
+        <button style="height: 36px; padding: 0 12px; border: 1px solid #D9DDD8; border-radius: 8px; background: #FFFFFF; font-size: 13px; cursor: pointer; color: #18212B">Expand</button>
+      </div>
+    </main>
+
+    <!-- Inspector -->
+    <aside aria-label="Selected person" style="flex: 1 1 300px; max-width: 100%; box-sizing: border-box; background: #FFFFFF; border-left: 1px solid #D9DDD8; padding: 22px; display: flex; flex-direction: column; gap: 18px">
+      <div style="display: flex; gap: 14px; align-items: center">
+        <span style="width: 64px; height: 64px; border-radius: 50%; background: #355C66; color: #FFFFFF; font-weight: 600; font-size: 22px; display: flex; align-items: center; justify-content: center">KN</span>
+        <div style="display: flex; flex-direction: column; gap: 3px">
+          <span style="font-size: 18px; font-weight: 600">Kim Nguyen</span>
+          <span style="font-size: 13px; color: #55606B">Adult</span>
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <h3 style="margin: 0; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #55606B">In this proposal</h3>
+        <div style="display: flex; align-items: center; gap: 8px; font-size: 14px; padding: 8px 10px; border-radius: 8px; background: #E6EDF8">
+          <span style="font-weight: 700; color: #1F4E99" aria-label="Suggested calling">+</span>
+          <span style="flex: 1">Relief Society · 2nd Counselor</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px; font-size: 14px; padding: 8px 10px; border-radius: 8px; background: #F3F4F1; color: #3A444F">
+          <span style="font-weight: 700" aria-label="Suggested release">−</span>
+          <span style="flex: 1; text-decoration: line-through">Primary · Teacher (age 9)</span>
+        </div>
+        <span style="font-size: 12px; color: #55606B">The Primary position stays visible as a vacancy.</span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <h3 style="margin: 0; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #55606B">Tags</h3>
+        <div style="display: flex; gap: 6px; flex-wrap: wrap">
+          <span style="font-size: 12px; background: #ECEEEA; border-radius: 4px; padding: 3px 8px">Teaching</span>
+          <span style="font-size: 12px; background: #ECEEEA; border-radius: 4px; padding: 3px 8px">Weekday</span>
+          <button style="font-size: 12px; border: 1px dashed #AEB5AE; background: transparent; border-radius: 4px; padding: 3px 8px; cursor: pointer; color: #3A444F">+ Tag</button>
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <h3 style="margin: 0; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #55606B">Brief note</h3>
+        <p style="margin: 0; font-size: 14px; line-height: 1.5; color: #3A444F; background: #FBFBFA; border: 1px solid #E1E4DF; border-radius: 8px; padding: 10px">[Short planning note — 280 characters max]</p>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <h3 style="margin: 0; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #55606B">Outside the ward</h3>
+        <span style="font-size: 14px; color: #55606B">None listed</span>
+      </div>
+      <p style="margin: 0; font-size: 12px; color: #55606B; line-height: 1.45; border-top: 1px solid #ECEEEA; padding-top: 12px">Name, photo, tags and note are shared across every proposal. Callings shown are for <strong>Spring adjustments</strong> only.</p>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap">
+        <button style="height: 40px; padding: 0 14px; border: 1px solid #D9DDD8; border-radius: 8px; background: #FFFFFF; font-size: 13px; cursor: pointer; color: #18212B">Edit profile</button>
+        <button style="height: 40px; padding: 0 14px; border: 1px solid #D9DDD8; border-radius: 8px; background: #FFFFFF; font-size: 13px; cursor: pointer; color: #18212B">Upload photo</button>
+      </div>
+    </aside>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":960}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const plain = '1px solid #E1E4DF', changedB = '2px solid #1F4E99';
+    const presidency = [
+      { role: 'President', initials: 'HB', name: 'Helen Brandt', color: '#2F5D8A', border: plain, bg: '#FBFBFA', changed: false, multi: false },
+      { role: '1st Counselor', initials: 'LF', name: 'Lúcia Ferreira', color: '#7A5C2E', border: plain, bg: '#FBFBFA', changed: false, multi: true },
+      { role: '2nd Counselor', initials: 'KN', name: 'Kim Nguyen', color: '#355C66', border: changedB, bg: '#F3F7FD', changed: true, multi: false },
+      { role: 'Secretary', initials: 'PA', name: 'Patience Adeyemi', color: '#3F6E4E', border: plain, bg: '#FBFBFA', changed: false, multi: false }
+    ];
+    const teachers = [
+      { initials: 'MQ', name: 'Marisol Quintero', color: '#7A3E3E', tag: 'Teaching' },
+      { initials: 'SH', name: 'Sana Haddad', color: '#6B5A2F', tag: 'Weekday' },
+      { initials: 'JW', name: 'June Whitford', color: '#4B4F8A', tag: 'Teaching' }
+    ];
+    return { presidency, teachers };
+  }
+}
+</script>
+</body>
+</html>

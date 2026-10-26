@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Settings</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F3F4F1}
+a{color:#1D5C68}a:hover{color:#123E47}
+button{font-family:inherit}
+</style>
+</helmet>
+<div style="min-height: 1040px; background: #F3F4F1; font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #18212B; padding: 28px 24px 48px; box-sizing: border-box">
+  <div style="max-width: 1180px; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start">
+
+    <nav aria-label="Settings" style="flex: 1 1 200px; max-width: 240px; display: flex; flex-direction: column; gap: 4px">
+      <a href="Main.dc.html" style="font-size: 14px; text-decoration: none; margin-bottom: 14px">← Back to board</a>
+      <h1 style="margin: 0 0 10px; font-size: 22px; font-weight: 600">Settings</h1>
+      <a href="#access" aria-current="true" style="display: flex; align-items: center; min-height: 44px; padding: 0 12px; border-radius: 8px; background: #E3EEEF; color: #123E47; font-size: 14px; font-weight: 600; text-decoration: none">People &amp; access</a>
+      <a href="#presentation" style="display: flex; align-items: center; min-height: 44px; padding: 0 12px; border-radius: 8px; color: #18212B; font-size: 14px; text-decoration: none">Presentation</a>
+      <a href="#backup" style="display: flex; align-items: center; min-height: 44px; padding: 0 12px; border-radius: 8px; color: #18212B; font-size: 14px; text-decoration: none">Backup &amp; restore</a>
+    </nav>
+
+    <div style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 20px">
+
+      <!-- Access -->
+      <section id="access" aria-labelledby="ac-t" style="background: #FFFFFF; border: 1px solid #D9DDD8; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 14px">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap">
+          <div style="display: flex; flex-direction: column; gap: 4px">
+            <h2 id="ac-t" style="margin: 0; font-size: 17px; font-weight: 600">People &amp; access</h2>
+            <span style="font-size: 13px; color: #55606B">Everyone invited can edit every proposal. Admins also manage access.</span>
+          </div>
+          <button style="height: 44px; padding: 0 16px; border: none; background: #1D5C68; color: #FFFFFF; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer">Invite editor</button>
+        </div>
+        <div style="overflow-x: auto">
+          <div style="min-width: 560px; display: flex; flex-direction: column">
+            <sc-for list="{{users}}" as="u" hint-placeholder-count="4">
+              <div style="display: flex; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid #ECEEEA">
+                <span style="width: 36px; height: 36px; border-radius: 50%; background: {{u.color}}; color: #FFFFFF; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex: none">{{u.initials}}</span>
+                <span style="display: flex; flex-direction: column; flex: 1; min-width: 0"><span style="font-size: 14px; font-weight: 600">{{u.name}}</span><span style="font-size: 12px; color: #55606B">{{u.sub}}</span></span>
+                <span style="font-size: 12px; font-weight: 600; border-radius: 6px; padding: 3px 8px; background: {{u.roleBg}}; color: {{u.roleColor}}; width: 64px; text-align: center">{{u.role}}</span>
+                <button disabled="{{u.disabled}}" style="height: 36px; padding: 0 12px; border: 1px solid #D9DDD8; background: #FFFFFF; border-radius: 8px; font-size: 13px; cursor: pointer; color: {{u.actionColor}}; width: 140px">{{u.action}}</button>
+                <button disabled="{{u.removeDisabled}}" style="height: 36px; padding: 0 12px; border: 1px solid #D9DDD8; background: #FFFFFF; border-radius: 8px; font-size: 13px; cursor: pointer; color: {{u.removeColor}}; width: 120px">{{u.remove}}</button>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: flex-start; padding: 12px; background: #F3F4F1; border-radius: 8px">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3A444F" stroke-width="2" aria-hidden="true" style="flex: none; margin-top: 2px"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v5M12 16h.01"></path></svg>
+          <span style="font-size: 13px; color: #3A444F; line-height: 1.5">You're the only admin, so you can't remove your own admin role or access. Make someone else an admin first, or use <strong>Transfer admin</strong>.</span>
+        </div>
+      </section>
+
+      <!-- Presentation -->
+      <section id="presentation" aria-labelledby="pr-t" style="background: #FFFFFF; border: 1px solid #D9DDD8; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 12px">
+        <h2 id="pr-t" style="margin: 0; font-size: 17px; font-weight: 600">Presentation</h2>
+        <label style="display: flex; align-items: center; gap: 14px; min-height: 60px; padding: 0 2px; border-top: 1px solid #ECEEEA; cursor: pointer">
+          <span style="display: flex; flex-direction: column; gap: 2px; flex: 1">
+            <span style="display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600">Show Needs approval <span style="font-size: 11px; font-weight: 600; color: #123E47; background: #E3EEEF; border-radius: 4px; padding: 2px 6px">Admins only</span></span>
+            <span style="font-size: 12px; color: #55606B">Off by default. Only an Admin can change this.</span>
+          </span>
+          <input type="checkbox" style="width: 22px; height: 22px; margin: 0; accent-color: #1D5C68">
+        </label>
+      </section>
+
+      <!-- Backup -->
+      <section id="backup" aria-labelledby="bk-t" style="background: #FFFFFF; border: 1px solid #D9DDD8; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 14px">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap">
+          <div style="display: flex; flex-direction: column; gap: 4px">
+            <h2 id="bk-t" style="margin: 0; font-size: 17px; font-weight: 600">Backup &amp; restore</h2>
+            <span style="font-size: 13px; color: #55606B">Backups include members, photos, Current, every proposal and settings. Treat them as confidential.</span>
+          </div>
+          <div style="display: flex; gap: 8px">
+            <button style="height: 44px; padding: 0 16px; border: 1px solid #D9DDD8; background: #FFFFFF; border-radius: 8px; font-size: 14px; cursor: pointer; color: #18212B">Restore from file…</button>
+            <button style="height: 44px; padding: 0 16px; border: none; background: #18212B; color: #FFFFFF; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer">Create backup</button>
+          </div>
+        </div>
+        <sc-for list="{{backups}}" as="b" hint-placeholder-count="3">
+          <div style="display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid #ECEEEA; font-size: 14px">
+            <span style="flex: 1; font-weight: 600">{{b.date}}</span>
+            <span style="color: #55606B; font-size: 13px">{{b.size}}</span>
+            <button style="height: 36px; padding: 0 12px; border: 1px solid #D9DDD8; background: #FFFFFF; border-radius: 8px; font-size: 13px; cursor: pointer; color: #18212B">Download</button>
+          </div>
+        </sc-for>
+
+        <!-- Restore validation -->
+        <div role="region" aria-labelledby="rs-t" style="display: flex; flex-direction: column; gap: 10px; padding: 16px; border: 1px solid #B9BEC4; border-radius: 10px; background: #FBFBFA">
+          <h3 id="rs-t" style="margin: 0; font-size: 15px; font-weight: 600">Restore wardboard-2026-10-24.backup?</h3>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px">
+            <span style="font-size: 12px; background: #E8F2EA; color: #24572E; border-radius: 6px; padding: 4px 8px; font-weight: 600">✓ Archive valid</span>
+            <span style="font-size: 12px; background: #ECEEEA; border-radius: 6px; padding: 4px 8px">312 members</span>
+            <span style="font-size: 12px; background: #ECEEEA; border-radius: 6px; padding: 4px 8px">298 photos</span>
+            <span style="font-size: 12px; background: #ECEEEA; border-radius: 6px; padding: 4px 8px">3 proposals</span>
+            <span style="font-size: 12px; background: #ECEEEA; border-radius: 6px; padding: 4px 8px">Current from Oct 24</span>
+          </div>
+          <span style="font-size: 13px; color: #3A444F; line-height: 1.5">Replaces everything in WardBoard for all three users. Open boards reload. If anything fails, nothing changes.</span>
+          <div style="display: flex; gap: 8px; justify-content: flex-end">
+            <button style="height: 40px; padding: 0 14px; border: 1px solid #D9DDD8; background: #FFFFFF; border-radius: 8px; font-size: 13px; cursor: pointer; color: #18212B">Cancel</button>
+            <button style="height: 40px; padding: 0 14px; border: none; background: #8A3B12; color: #FFFFFF; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer">Replace all data</button>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1040}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const admin = { role: 'Admin', roleBg: '#E3EEEF', roleColor: '#123E47' };
+    const ed = { role: 'Editor', roleBg: '#ECEEEA', roleColor: '#3A444F' };
+    const inv = { role: 'Invited', roleBg: '#FBEFE3', roleColor: '#8A4209' };
+    return {
+      users: [
+        Object.assign({ initials: 'MS', name: 'Mike S. (you)', sub: 'Admin since setup · last admin', color: '#2F5D8A', action: 'Transfer admin', remove: 'Remove access', disabled: false, actionColor: '#18212B', removeDisabled: true, removeColor: '#8A929A' }, admin),
+        Object.assign({ initials: 'DH', name: 'Bishop Halvorsen', sub: 'Bishop · last active today', color: '#7A5C2E', action: 'Make admin', remove: 'Remove access', disabled: false, actionColor: '#18212B', removeDisabled: false, removeColor: '#18212B' }, ed),
+        Object.assign({ initials: 'JO', name: 'Brother Okafor', sub: '1st Counselor · last active Oct 23', color: '#3F6E4E', action: 'Make admin', remove: 'Remove access', disabled: false, actionColor: '#18212B', removeDisabled: false, removeColor: '#18212B' }, ed),
+        Object.assign({ initials: '?', name: '[invitee email]', sub: 'Invited Oct 22 · link expires in 5 days', color: '#9AA1A7', action: 'Resend', remove: 'Revoke', disabled: false, actionColor: '#18212B', removeDisabled: false, removeColor: '#18212B' }, inv)
+      ],
+      backups: [
+        { date: 'Oct 24, 2026 · before import', size: '48 MB' },
+        { date: 'Oct 19, 2026', size: '47 MB' },
+        { date: 'Oct 12, 2026', size: '47 MB' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

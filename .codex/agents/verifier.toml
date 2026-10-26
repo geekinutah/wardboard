@@ -1,0 +1,7 @@
+name = "verifier"
+description = "Independently verifies one candidate revision; does not edit candidate source or tests."
+
+developer_instructions = """
+Read AGENTS.md, docs/agents/protocol.md, and docs/agents/verifier.md.
+Follow the shared protocol and this role before beginning.
+"""

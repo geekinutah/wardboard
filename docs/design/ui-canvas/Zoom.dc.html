@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Zoom levels</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 1920px; height: 900px; box-sizing: border-box; background: #FFFFFF; font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #18212B; padding: 40px 48px; display: flex; flex-direction: column; gap: 24px">
+  <div style="display: flex; align-items: baseline; gap: 16px">
+    <h1 style="margin: 0; font-size: 28px; font-weight: 600">Three zoom levels</h1>
+    <span style="font-size: 15px; color: #55606B">Double-click, scroll or pinch to go deeper · Zoom out, Esc or scroll back to go up one level · Fit ward returns to level 1</span>
+  </div>
+
+  <div style="display: flex; align-items: stretch; gap: 20px; flex: 1">
+
+    <!-- Level 1 -->
+    <section style="flex: 1; display: flex; flex-direction: column; gap: 16px">
+      <span style="font-size: 13px; font-weight: 700; letter-spacing: 0.08em; color: #1D5C68">LEVEL 1 · WARD</span>
+      <div aria-hidden="true" style="height: 440px; border: 1px solid #D9DDD8; border-radius: 12px; background: #F3F4F1; padding: 18px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px">
+        <sc-for list="{{l1}}" as="o" hint-placeholder-count="8">
+          <div style="background: #FFFFFF; border: {{o.border}}; border-radius: 8px; padding: 8px; display: flex; flex-direction: column; gap: 6px">
+            <span style="font-size: 11px; font-weight: 600">{{o.name}}</span>
+            <div style="display: flex; gap: 3px"><span style="width: 16px; height: 16px; border-radius: 50%; background: #9AA8B2"></span><span style="width: 16px; height: 16px; border-radius: 50%; background: #A9A08A"></span><span style="width: 16px; height: 16px; border-radius: 50%; background: #93A897"></span></div>
+            <span style="font-size: 10px; font-weight: 600; color: #8A4209">{{o.vac}} vacant</span>
+          </div>
+        </sc-for>
+      </div>
+      <ul style="margin: 0; padding-left: 18px; font-size: 14px; line-height: 1.6; color: #3A444F">
+        <li><strong>Shows</strong> organization tiles, leaders' photos, vacancy and proposed-change counts.</li>
+        <li><strong>Drag</strong> leaders; hold a dragged card over a tile and it opens to level 2.</li>
+        <li><strong>Go deeper:</strong> double-click a tile (here, Primary).</li>
+      </ul>
+    </section>
+
+    <div aria-hidden="true" style="display: flex; align-items: center; padding-top: 0; color: #8A929A; font-size: 28px">→</div>
+
+    <!-- Level 2 -->
+    <section style="flex: 1; display: flex; flex-direction: column; gap: 16px">
+      <span style="font-size: 13px; font-weight: 700; letter-spacing: 0.08em; color: #1D5C68">LEVEL 2 · ORGANIZATION</span>
+      <div aria-hidden="true" style="height: 440px; border: 1px solid #D9DDD8; border-radius: 12px; background: #F3F4F1; padding: 18px; display: flex; flex-direction: column; gap: 12px; box-sizing: border-box">
+        <span style="font-size: 16px; font-weight: 600">Primary</span>
+        <div style="background: #FFFFFF; border: 1px solid #D9DDD8; border-radius: 8px; padding: 12px; display: flex; gap: 14px">
+          <sc-for list="{{pres}}" as="p" hint-placeholder-count="4">
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; width: 70px">
+              <span style="width: 40px; height: 40px; border-radius: 50%; background: {{p.bg}}; border: {{p.border}}; box-sizing: border-box"></span>
+              <span style="font-size: 11px; color: #3A444F; text-align: center">{{p.role}}</span>
+            </div>
+          </sc-for>
+        </div>
+        <sc-for list="{{groups}}" as="g" hint-placeholder-count="3">
+          <div style="background: #FFFFFF; border: {{g.border}}; border-radius: 8px; padding: 12px; display: flex; justify-content: space-between; font-size: 13px">
+            <span style="font-weight: 600">{{g.name}}</span>
+            <span style="color: #3A444F">{{g.filled}} filled · <span style="color: #8A4209; font-weight: 600">{{g.vac}} vacant</span></span>
+          </div>
+        </sc-for>
+      </div>
+      <ul style="margin: 0; padding-left: 18px; font-size: 14px; line-height: 1.6; color: #3A444F">
+        <li><strong>Shows</strong> the presidency as cards, and each group as a one-line summary with counts.</li>
+        <li><strong>Drag</strong> presidency cards; hold a card over a group and it opens to level 3.</li>
+        <li><strong>Go deeper:</strong> double-click a group (here, Teachers).</li>
+      </ul>
+    </section>
+
+    <div aria-hidden="true" style="display: flex; align-items: center; color: #8A929A; font-size: 28px">→</div>
+
+    <!-- Level 3 -->
+    <section style="flex: 1; display: flex; flex-direction: column; gap: 16px">
+      <span style="font-size: 13px; font-weight: 700; letter-spacing: 0.08em; color: #1D5C68">LEVEL 3 · GROUP</span>
+      <div aria-hidden="true" style="height: 440px; border: 1px solid #D9DDD8; border-radius: 12px; background: #F3F4F1; padding: 18px; display: flex; flex-direction: column; gap: 8px; box-sizing: border-box">
+        <div style="display: flex; justify-content: space-between; align-items: center"><span style="font-size: 16px; font-weight: 600">Primary · Teachers</span><span style="width: 28px; height: 28px; border: 1px solid #1D5C68; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #1D5C68; font-weight: 700">+</span></div>
+        <sc-for list="{{teachers}}" as="t" hint-placeholder-count="6">
+          <div style="background: {{t.bg}}; border: {{t.border}}; border-radius: 8px; padding: 9px 10px; display: flex; align-items: center; gap: 10px; font-size: 13px">
+            <span style="width: 28px; height: 28px; border-radius: 50%; background: {{t.avatar}}; flex: none"></span>
+            <span style="flex: 1; font-weight: 600; color: {{t.color}}">{{t.who}}</span>
+            <span style="color: #55606B; font-size: 12px">{{t.class}}</span>
+            <span style="font-size: 11px; background: #ECEEEA; border-radius: 4px; padding: 2px 6px">{{t.tag}}</span>
+          </div>
+        </sc-for>
+      </div>
+      <ul style="margin: 0; padding-left: 18px; font-size: 14px; line-height: 1.6; color: #3A444F">
+        <li><strong>Shows</strong> every position: member cards, tags, preference matches, vacancies, and the + to add a position.</li>
+        <li><strong>Drag</strong> anything; full swap, release and dugout behavior.</li>
+        <li><strong>Deepest level</strong> — further zoom only enlarges.</li>
+      </ul>
+    </section>
+  </div>
+
+  <p style="margin: 0; font-size: 13px; color: #55606B">Single click always selects, never zooms. Double-click on a member card opens that member’s notes; double-click anywhere else zooms in. Zoom and pan are per person: a teammate's zoom never moves yours. On phones, these three levels become screens you tap through instead of zooming.</p>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1920,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const names = ['Bishopric', 'Elders Quorum', 'Relief Society', 'Aaronic Priesthood', 'Young Women', 'Primary', 'Sunday School', 'Ward-wide'];
+    const vacs = [1, 2, 3, 2, 3, 5, 1, 3];
+    const F = (who, cls, tag, avatar) => ({ who, class: cls, tag, avatar, bg: '#FFFFFF', border: '1px solid #E1E4DF', color: '#18212B' });
+    const V = (cls) => ({ who: 'Vacant', class: cls, tag: '—', avatar: 'transparent', bg: '#FFF8F1', border: '1px dashed #C9772E', color: '#8A4209' });
+    return {
+      l1: names.map((name, i) => ({ name, vac: vacs[i], border: name === 'Primary' ? '2px solid #1D5C68' : '1px solid #D9DDD8' })),
+      pres: [
+        { role: 'President', bg: '#2F5D8A', border: 'none' },
+        { role: '1st Couns.', bg: '#7A5C2E', border: 'none' },
+        { role: '2nd Couns.', bg: '#FFF8F1', border: '2px dashed #C9772E' },
+        { role: 'Secretary', bg: '#3F6E4E', border: 'none' }
+      ],
+      groups: [
+        { name: 'Teachers', filled: 9, vac: 3, border: '2px solid #1D5C68' },
+        { name: 'Nursery', filled: 2, vac: 1, border: '1px solid #D9DDD8' },
+        { name: 'Music', filled: 1, vac: 1, border: '1px solid #D9DDD8' }
+      ],
+      teachers: [F('Muriel Price', 'Age 7', 'Teaching', '#7B4A6A'), F('Diego Ruiz', 'Age 8', 'Weekday', '#355C66'), V('Age 9'), F('Hana Sato', 'Age 10', 'Teaching', '#6B5A2F'), V('Age 11'), F('Paul Grant', 'Age 6', 'Outdoors', '#4B4F8A')]
+    };
+  }
+}
+</script>
+</body>
+</html>

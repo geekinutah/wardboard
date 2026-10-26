@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Search and filters</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+button{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 1280px; height: 860px; position: relative; overflow: hidden; box-sizing: border-box; background: #F3F4F1; font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #18212B">
+
+  <!-- Header with focused search -->
+  <header style="background: #FFFFFF; border-bottom: 1px solid #D9DDD8; padding: 0 24px; display: flex; align-items: center; gap: 20px; height: 64px">
+    <span style="font-weight: 700; font-size: 17px">WardBoard</span>
+    <span style="height: 40px; padding: 0 12px; border: 1px solid #1D5C68; background: #E3EEEF; border-radius: 8px; font-size: 13px; font-weight: 600; color: #123E47; display: flex; align-items: center">Spring adjustments</span>
+    <label style="display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 12px; border: 2px solid #1D5C68; border-radius: 8px; width: 640px; box-sizing: border-box; background: #FFFFFF">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#18212B" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+      <span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Search people, callings, tags</span>
+      <input type="search" value="mu" style="border: none; outline: none; font: inherit; font-size: 15px; flex: 1; min-width: 0">
+      <span style="font-size: 12px; color: #55606B">Esc to close</span>
+    </label>
+  </header>
+
+  <!-- Filter bar -->
+  <div style="background: #FFFFFF; border-bottom: 1px solid #D9DDD8; padding: 10px 24px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap">
+    <span style="font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #55606B; margin-right: 4px">Filter</span>
+    <button aria-pressed="true" style="height: 34px; padding: 0 12px; border-radius: 999px; border: 1px solid #C9772E; background: #FBEFE3; color: #8A4209; font-size: 13px; font-weight: 600; cursor: pointer">✓ Vacant positions</button>
+    <button aria-pressed="false" style="height: 34px; padding: 0 12px; border-radius: 999px; border: 1px solid #D9DDD8; background: #FFFFFF; color: #3A444F; font-size: 13px; cursor: pointer">No calling</button>
+    <button aria-pressed="false" style="height: 34px; padding: 0 12px; border-radius: 999px; border: 1px solid #D9DDD8; background: #FFFFFF; color: #3A444F; font-size: 13px; cursor: pointer">Youth</button>
+    <button aria-pressed="false" style="height: 34px; padding: 0 12px; border-radius: 999px; border: 1px solid #D9DDD8; background: #FFFFFF; color: #3A444F; font-size: 13px; cursor: pointer">Adults</button>
+    <button aria-pressed="true" style="height: 34px; padding: 0 12px; border-radius: 999px; border: 1px solid #1D5C68; background: #E3EEEF; color: #123E47; font-size: 13px; font-weight: 600; cursor: pointer">✓ Tag: Music</button>
+    <span style="flex: 1"></span>
+    <span style="font-size: 12px; color: #55606B">Filters highlight matches on the board; they never change placements.</span>
+  </div>
+
+  <!-- Dimmed board behind -->
+  <div aria-hidden="true" style="position: absolute; left: 24px; right: 24px; top: 150px; bottom: 24px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; opacity: 0.35">
+    <sc-for list="{{ghost}}" as="g" hint-placeholder-count="8">
+      <div style="background: #FFFFFF; border: 1px solid #D9DDD8; border-radius: 12px; padding: 14px; height: 300px; box-sizing: border-box; display: flex; flex-direction: column; gap: 10px">
+        <span style="font-size: 14px; font-weight: 600">{{g.name}}</span>
+        <span style="font-size: 12px; color: #8A4209; font-weight: 600">{{g.vac}} vacant</span>
+      </div>
+    </sc-for>
+  </div>
+
+  <!-- Results panel -->
+  <div role="listbox" aria-label="Search results" style="position: absolute; left: 404px; top: 58px; width: 640px; background: #FFFFFF; border: 1px solid #B9BEC4; border-radius: 12px; box-shadow: 0 18px 44px rgba(24,33,43,0.2); overflow: hidden">
+    <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid #ECEEEA; background: #FBFBFA">
+      <div role="group" aria-label="Search scope" style="display: flex; background: #ECEEEA; border-radius: 8px; padding: 3px">
+        <button aria-pressed="true" style="height: 30px; padding: 0 12px; border: none; border-radius: 6px; background: #FFFFFF; font-size: 12px; font-weight: 600; cursor: pointer; color: #18212B; box-shadow: 0 1px 2px rgba(0,0,0,0.08)">This proposal</button>
+        <button aria-pressed="false" style="height: 30px; padding: 0 12px; border: none; border-radius: 6px; background: transparent; font-size: 12px; cursor: pointer; color: #3A444F">All proposals &amp; Current</button>
+      </div>
+      <span style="font-size: 12px; color: #55606B">9 results</span>
+    </div>
+
+    <!-- People -->
+    <div style="padding: 10px 14px 4px; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #55606B">People</div>
+    <sc-for list="{{people}}" as="p" hint-placeholder-count="3">
+      <div role="option" aria-selected="{{p.sel}}" style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: {{p.bg}}">
+        <span style="flex: none; width: 36px; height: 36px; border-radius: 50%; background: {{p.color}}; color: #FFFFFF; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center">{{p.initials}}</span>
+        <div style="display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0">
+          <span style="font-size: 14px; font-weight: 600">{{p.name}} <span style="font-weight: 400; font-size: 12px; color: #55606B">· {{p.kind}}</span></span>
+          <span style="font-size: 12px; color: #3A444F">{{p.callings}}</span>
+        </div>
+        <sc-if value="{{p.inDugout}}" hint-placeholder-val="{{false}}">
+          <span style="font-size: 12px; color: #3A444F; background: #ECEEEA; border-radius: 6px; padding: 4px 8px">In dugout</span>
+        </sc-if>
+        <sc-if value="{{p.canAdd}}" hint-placeholder-val="{{true}}">
+          <button style="height: 34px; padding: 0 12px; border: 1px solid #D9DDD8; background: #FFFFFF; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; color: #18212B">Add to dugout</button>
+        </sc-if>
+      </div>
+    </sc-for>
+
+    <!-- Callings -->
+    <div style="padding: 12px 14px 4px; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #55606B; border-top: 1px solid #ECEEEA">Callings</div>
+    <sc-for list="{{callings}}" as="c" hint-placeholder-count="3">
+      <div role="option" aria-selected="false" style="display: flex; align-items: center; gap: 12px; padding: 9px 14px">
+        <div style="display: flex; flex-direction: column; gap: 2px; flex: 1">
+          <span style="font-size: 14px; font-weight: 600">{{c.title}}</span>
+          <span style="font-size: 12px; color: #55606B">{{c.org}}</span>
+        </div>
+        <span style="font-size: 12px; font-weight: 600; color: {{c.stateColor}}; background: {{c.stateBg}}; border: {{c.stateBorder}}; border-radius: 6px; padding: 3px 8px">{{c.state}}</span>
+      </div>
+    </sc-for>
+
+    <!-- Tags & groups -->
+    <div style="padding: 12px 14px 4px; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #55606B; border-top: 1px solid #ECEEEA">Tags &amp; groups</div>
+    <div style="display: flex; align-items: center; gap: 12px; padding: 9px 14px">
+      <span style="font-size: 13px; background: #ECEEEA; border-radius: 4px; padding: 3px 8px">Music</span>
+      <span style="font-size: 12px; color: #55606B; flex: 1">Tag · 8 people · select to highlight</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 12px; padding: 9px 14px 14px">
+      <span style="font-size: 14px; font-weight: 600">Music</span>
+      <span style="font-size: 12px; color: #55606B; flex: 1">Group · Ward-wide Callings · 6 positions, 1 vacant</span>
+    </div>
+    <div style="padding: 10px 14px; border-top: 1px solid #ECEEEA; background: #FBFBFA; font-size: 12px; color: #55606B">↑↓ to move · Enter to go there · note text isn't searched</div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":860}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const vac = { stateColor: '#8A4209', stateBg: '#FBEFE3', stateBorder: '1px dashed #C9772E' };
+    const fil = { stateColor: '#3A444F', stateBg: '#ECEEEA', stateBorder: '1px solid #ECEEEA' };
+    return {
+      ghost: ['Bishopric', 'Elders Quorum', 'Relief Society', 'Aaronic Priesthood', 'Young Women', 'Primary', 'Sunday School', 'Ward-wide'].map((name, i) => ({ name, vac: [1, 2, 3, 2, 3, 5, 1, 3][i] })),
+      people: [
+        { initials: 'MT', name: 'Murray Tate', kind: 'Adult', color: '#355C66', callings: 'No calling', inDugout: true, canAdd: false, sel: 'true', bg: '#E3EEEF' },
+        { initials: 'MP', name: 'Muriel Price', kind: 'Adult', color: '#7B4A6A', callings: 'Primary · Teacher (age 7) · Ward choir accompanist', inDugout: false, canAdd: true, sel: 'false', bg: '#FFFFFF' },
+        { initials: 'AM', name: 'Amu Mahe', kind: 'Youth', color: '#6B5A2F', callings: 'Teachers Quorum · Secretary', inDugout: false, canAdd: true, sel: 'false', bg: '#FFFFFF' }
+      ],
+      callings: [
+        Object.assign({ title: 'Music Leader', org: 'Primary · Music', state: 'Vacant' }, vac),
+        Object.assign({ title: 'Music Coordinator', org: 'Ward-wide · Music', state: 'Y. Tanaka' }, fil),
+        Object.assign({ title: 'Music Leader', org: 'Relief Society · Music', state: 'I. Holm' }, fil)
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

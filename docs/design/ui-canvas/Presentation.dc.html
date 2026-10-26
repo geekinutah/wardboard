@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>WardBoard — TV presentation</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+button{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 1920px; height: 1080px; box-sizing: border-box; background: #10171E; color: #EEF1EE; font-family: 'IBM Plex Sans', system-ui, sans-serif; padding: 56px 72px; display: flex; flex-direction: column; gap: 36px">
+  <header style="display: flex; align-items: center; justify-content: space-between">
+    <div style="display: flex; align-items: center; gap: 24px">
+      <span style="background: #5FB3BF; color: #0B2328; font-size: 22px; font-weight: 700; letter-spacing: 0.1em; padding: 8px 16px; border-radius: 6px">PROPOSED</span>
+      <h1 style="margin: 0; font-size: 52px; font-weight: 600; letter-spacing: -0.01em">Spring adjustments</h1>
+    </div>
+    <div style="display: flex; gap: 32px; font-size: 26px">
+      <span style="color: #9CC1F2; font-weight: 600">+4 callings</span>
+      <span style="color: #C7CDD3; font-weight: 600">−3 releases</span>
+      <span style="color: #F2B27A; font-weight: 600">20 vacant</span>
+    </div>
+  </header>
+
+  <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 28px; flex: 1">
+    <sc-for list="{{orgs}}" as="o" hint-placeholder-count="8">
+      <section style="background: #18222C; border: 1px solid #2A3743; border-radius: 18px; padding: 28px; display: flex; flex-direction: column; gap: 22px">
+        <div style="display: flex; justify-content: space-between; align-items: baseline">
+          <h2 style="margin: 0; font-size: 30px; font-weight: 600">{{o.name}}</h2>
+          <span style="font-size: 22px; font-weight: 600; color: #F2B27A">{{o.vacant}} vacant</span>
+        </div>
+        <div style="display: flex; gap: 18px; flex-wrap: wrap">
+          <sc-for list="{{o.leaders}}" as="l" hint-placeholder-count="3">
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 8px; width: 96px">
+              <sc-if value="{{l.filled}}" hint-placeholder-val="{{true}}">
+                <span style="width: 84px; height: 84px; border-radius: 50%; background: {{l.bg}}; color: #FFFFFF; font-size: 26px; font-weight: 600; display: flex; align-items: center; justify-content: center; box-shadow: {{l.ring}}">{{l.initials}}</span>
+                <span style="font-size: 19px; font-weight: 500; text-align: center">{{l.name}}</span>
+              </sc-if>
+              <sc-if value="{{l.vacant}}" hint-placeholder-val="{{false}}">
+                <span style="width: 84px; height: 84px; border-radius: 50%; border: 3px dashed #F2B27A; box-sizing: border-box"></span>
+                <span style="font-size: 19px; font-weight: 600; color: #F2B27A">Vacant</span>
+              </sc-if>
+              <span style="font-size: 16px; color: #A9B3BC; text-align: center">{{l.role}}</span>
+            </div>
+          </sc-for>
+        </div>
+      </section>
+    </sc-for>
+  </div>
+
+  <footer style="display: flex; justify-content: space-between; font-size: 20px; color: #A9B3BC">
+    <span>Maple Creek Ward · baseline Oct 19, 2026</span>
+    <span>Ring = proposed change</span>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1920,"height":1080}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const C = ['#2F5D8A', '#7A5C2E', '#3F6E4E', '#7B4A6A', '#355C66', '#6B5A2F', '#4B4F8A', '#7A3E3E'];
+    let i = 0;
+    const ringOn = '0 0 0 4px #10171E, 0 0 0 8px #9CC1F2';
+    const L = (initials, name, role, changed) => ({ filled: true, vacant: false, initials, name, role, bg: C[(i++) % C.length], ring: changed ? ringOn : 'none' });
+    const V = (role) => ({ filled: false, vacant: true, role, initials: '', name: '', bg: '', ring: 'none' });
+    const orgs = [
+      { name: 'Bishopric', vacant: 1, leaders: [L('DH', 'Halvorsen', 'Bishop'), L('JO', 'Okafor', '1st Couns.'), L('MS', 'Sato', '2nd Couns.')] },
+      { name: 'Elders Quorum', vacant: 2, leaders: [L('TL', 'Lindqvist', 'President'), L('RM', 'Mendes', '1st Couns.', true), L('AW', 'Whitaker', '2nd Couns.')] },
+      { name: 'Relief Society', vacant: 3, leaders: [L('HB', 'Brandt', 'President'), L('LF', 'Ferreira', '1st Couns.'), L('KN', 'Nguyen', '2nd Couns.', true)] },
+      { name: 'Aaronic Priesthood', vacant: 2, leaders: [L('DH', 'Bishop', 'Priests'), L('EC', 'Carter', 'Teachers'), L('SI', 'Ito', 'Deacons')] },
+      { name: 'Young Women', vacant: 3, leaders: [L('CM', 'Morales', 'President'), V('1st Couns.'), L('JP', 'Petersen', '2nd Couns.')] },
+      { name: 'Primary', vacant: 5, leaders: [L('WA', 'Abara', 'President'), L('NK', 'Kowalski', '1st Couns.'), V('2nd Couns.')] },
+      { name: 'Sunday School', vacant: 1, leaders: [L('GR', 'Rasmussen', 'President'), L('BL', 'Laurent', '1st Couns.'), L('FK', 'Kaur', '2nd Couns.', true)] },
+      { name: 'Ward-wide', vacant: 3, leaders: [L('IV', 'Vance', 'Mission'), L('YT', 'Tanaka', 'Music'), L('QH', 'Hale', 'Temple & FH')] }
+    ];
+    return { orgs };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+node_modules/
+dist/
+coverage/
+
+# Playwright
+test-results/
+playwright-report/
+
+# Local data (SQLite, photos, backups, import staging)
+data/
+*.sqlite
+*.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
+staging/
+
+# OS
+.DS_Store
+
+# Env
+.env
+*.local
+
+# Editors
+.vscode/*
+!.vscode/extensions.json
+.idea/
