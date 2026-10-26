@@ -1,6 +1,6 @@
 # Ward Transfer Board — Product Specification
 
-**Version:** 0.18 (build baseline, revised October 25, 2026)
+**Version:** 0.19 (build baseline, revised October 26, 2026)
 **Owner:** Ward Bishopric (bishop and two counselors)
 **Purpose:** Define a private visual aid for discussing and exploring changes to ward callings.
 
@@ -153,7 +153,7 @@ Examples:
 
 ### List vacancies
 
-**CONFIRMED:** Lists have a desired number of roster positions. Removing one of four advisers leaves three occupants and one vacancy until the position count is explicitly reduced. Removing a person must retain visible staffing need, including in lists. The UI remains one list. **PROPOSED:** Persist unfilled positions as vacancy placeholders. Adding to a vacancy fills it first. Adding beyond configured positions creates a proposed extra position rather than displacing anyone; removing an occupant leaves their position vacant. Explicitly reducing staffing need is a separate action. Initial list sizes need local configuration because the Handbook does not prescribe every class, committee, or teacher count.
+**CONFIRMED:** Lists have a desired number of roster positions. Removing one of four advisers leaves three occupants and one vacancy until the position count is explicitly reduced. Removing a person must retain visible staffing need, including in lists. The UI remains one list. **PROPOSED:** Persist unfilled positions as vacancy placeholders. Adding to a vacancy fills it first. **CONFIRMED (v0.19):** Adding beyond configured positions automatically creates an extra position rather than displacing anyone; the diff reports it as an added position (a position change) as well as the new calling. Removing an occupant leaves their position vacant. Explicitly reducing staffing need is a separate action. Initial list sizes need local configuration because the Handbook does not prescribe every class, committee, or teacher count.
 
 ### Vacancy indicators
 
@@ -173,7 +173,7 @@ Examples include strengths and availability constraints. Separately from tags, a
 
 **CONFIRMED:** Callings have tags and tag affinities as well as members. Affinities express useful preferences, not mandatory qualifications: for example, a Young Men calling can favor a member tagged as available during the week. Do not automatically assign or rank people as an eligibility judgment. **PROPOSED:** Show matching affinities during search/selection; a missing preferred tag is not an automatic rejection. Calling-specific affinity definitions belong to the corresponding board/proposal; member tags remain ward-wide shared data.
 
-**CONFIRMED:** A member with `needs_approval` set requires explicit approval each time they are proposed for a calling. Any Editor or Admin may approve the proposed placement. Approval is specific to that member, calling position, and proposal; it is not blanket permission for a calling type or future assignments. Ordinary affinities cannot bypass this special rule. **PROPOSED:** Store the approving user and time with the placement, and require fresh approval when its member or calling position changes. **OPEN:** Treatment of existing placements when the flag is set or cleared later, and whether duplicating a proposal requires fresh approval. This generic local flag must not be treated as a precise official membership status or as authority to override Church restrictions. Consult the applicable Handbook requirements outside this planning model; the app does not certify eligibility.
+**CONFIRMED:** A member with `needs_approval` set requires explicit approval each time they are proposed for a calling. Any Editor or Admin may approve the proposed placement. Approval is specific to that member, calling position, and proposal; it is not blanket permission for a calling type or future assignments. Ordinary affinities cannot bypass this special rule. **PROPOSED:** Store the approving user and time with the placement, and require fresh approval when its member or calling position changes. **CONFIRMED (v0.19):** Setting `needs_approval` on a member makes their existing proposed placements (suggested callings relative to the baseline) in Draft proposals require approval; Accepted proposals are unaffected until returned to Draft, when Draft rules apply again. Clearing the flag removes the requirement from that member's placements. Duplicating a proposal never copies approvals: placements in the duplicate that need approval require fresh approval. This generic local flag must not be treated as a precise official membership status or as authority to override Church restrictions. Consult the applicable Handbook requirements outside this planning model; the app does not certify eligibility.
 
 **CONFIRMED:** `needs_approval` is a member property, not a tag. It does not appear in the tag library, cannot be used as a calling affinity, and is not affected by tag operations. **PROPOSED:** Only Editors and Admins can set or clear it, explicitly from the member profile. **CONFIRMED:** Whether it is shown in presentation mode is controlled by the single presentation setting, Show Needs approval, which only Admins can change (section 10).
 
@@ -194,7 +194,7 @@ Implementation details may change, but preserve these distinctions:
 - **CurrentBoard:** Imported roster, slot structure, placements, import date/version. Read-only to ordinary edits.
 - **Placement:** Member occupying a calling slot. A member can occupy multiple different slots.
 - **Tag / MemberTag:** Ward-wide shared brief member context.
-- **CallingTag / CallingAffinity:** Board-owned calling context and preferred member-tag relationships. Proposal edits remain independent. Needs-approval placements require explicit Editor/Admin approval; approval lifecycle edge cases remain open.
+- **CallingTag / CallingAffinity:** Board-owned calling context and preferred member-tag relationships. Proposal edits remain independent. Needs-approval placements require explicit Editor/Admin approval; the approval lifecycle is defined in section 6.
 - **ExternalCalling:** Brief member-linked context about service outside the ward. Not a locally editable official record.
 - **Proposal:** Saved baseline, editable proposed slot structure/placements, name, optional rationale, status (Draft or Accepted) with accepting user and time, the summary saved at acceptance, timestamps. Baseline survives replacement of current.
 - **DugoutInclusion:** Explicit proposal-scoped member inclusion, distinct from derived no-calling membership.
@@ -245,7 +245,7 @@ Member identity matching must not silently merge namesakes. Local IDs or an appr
 
 A proposal containing any affected placement or position is not eligible for acceptance (section 3). It becomes eligible once ordinary edits leave no affected placements or positions.
 
-**OPEN:** Whether a member who returns in a later import (positively matched) automatically clears `removed_date` and their flags, and whether removed members appear in global search.
+**CONFIRMED (v0.19):** When an import matches a member who has a `removed_date`, the import preview asks for explicit confirmation that this is the same person returning. Confirming clears `removed_date` (removed markers in proposals disappear, since removal is derived); declining imports them as a new member. Nothing clears `removed_date` without that confirmation. **OPEN:** Whether removed members appear in global search.
 
 Unfilled calling slots may not appear in roster exports. **CONFIRMED:** Start with Handbook-based defaults and support custom callings/assignments. **CONFIRMED:** Imports replace occupants while preserving the configured applicable slot/assignment catalog, including vacant and custom positions; preview reconciles unfamiliar callings. Do not infer deletion of an unoccupied position merely from its absence in an occupant roster. Explicit catalog changes to current produce divergence notices in older proposals.
 
@@ -358,14 +358,14 @@ These describe intended outcomes, not claims that software exists or has been ve
 ## 13. Questions still requiring decisions
 
 1. Confirm “Ward-wide Callings” as the overview umbrella for mission, temple/family history, music, activities, and other supporting callings.
-2. Confirm automatic creation of an extra roster position when adding beyond a list’s configured size.
+2. Resolved (v0.19): adding beyond a list's configured size automatically creates an extra position, reported as a position change (section 5).
 3. How should proposal archive/delete work?
 4. Resolved (v0.17): releasing a president releases the counselors, with a confirmation (section 5).
-5. How should placement approval behave when `needs_approval` is set or cleared after placement, or a proposal is duplicated?
+5. Resolved (v0.19): setting the flag requires approval for existing proposed placements in Draft proposals; clearing it removes the requirement; duplicates never copy approvals (section 6).
 6. Is a CSV proposal summary useful, or is visual brainstorming sufficient? (Printing is out of scope.)
 7. Which privacy, retention, account, and backup defaults should be adopted before real data is used?
 8. Resolved (v0.17): Draft/Accepted status, read-only when accepted, reversible by changing status (section 3).
-9. Does a returning member clear `removed_date` automatically, and should removed members appear in search?
+9. Partly resolved (v0.19): a returning member clears `removed_date` only after explicit confirmation in the import preview (section 8). Still open: should removed members appear in search?
 
 ### Product modules
 
