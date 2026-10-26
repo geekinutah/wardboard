@@ -30,3 +30,6 @@ observation / review finding
 
 | ID | Priority | Area | State | Finding |
 |---|---|---|---|---|
+| B-001 | P2 | tooling | candidate | TypeScript pinned to 6.0.3 until typescript-eslint supports TS 7 |
+| B-002 | P2 | core tests | candidate | assertNever fallback test survives removal of the fallback |
+| B-003 | P2 | tooling | candidate | env-check Node hint can contradict `engines.node` |
