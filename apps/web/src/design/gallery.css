@@ -1,0 +1,59 @@
+.wb-gallery {
+  box-sizing: border-box;
+  min-height: 100vh;
+  padding: 20px 16px 40px;
+  color: var(--wb-ink);
+  background-color: var(--wb-ground);
+  background-image: radial-gradient(
+    var(--wb-canvas-dot) var(--wb-canvas-dot-size),
+    transparent var(--wb-canvas-dot-size)
+  );
+  background-size: var(--wb-canvas-dot-spacing) var(--wb-canvas-dot-spacing);
+}
+
+.wb-gallery-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  max-width: 1080px;
+  margin: 0 auto;
+  min-width: 0;
+}
+
+.wb-gallery h1 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.wb-gallery-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.wb-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+  gap: 12px;
+}
+
+.wb-gallery-grid > * {
+  min-width: 0;
+}
+
+.wb-chip-row,
+.wb-button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+@media (min-width: 800px) {
+  .wb-gallery {
+    padding: 28px 28px 48px;
+  }
+}
