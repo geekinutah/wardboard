@@ -167,7 +167,7 @@ function list(title: string, occupants: readonly (string | null)[], extras: Assi
   return { title, type: 'list', positions: occupants, ...extras };
 }
 
-/** A presidency: president and two counselors (leadership roles set), plus a secretary. */
+/** A presidency: president, two counselors, and a secretary, each with its leadership role. */
 function presidency(
   president: string | null,
   first: string | null,
@@ -178,7 +178,7 @@ function presidency(
     single('President', president, { prominent: true, leadershipRole: 'president' }),
     single('First Counselor', first, { prominent: true, leadershipRole: 'counselor' }),
     single('Second Counselor', second, { prominent: true, leadershipRole: 'counselor' }),
-    single('Secretary', secretary),
+    single('Secretary', secretary, { leadershipRole: 'secretary' }),
   ];
 }
 

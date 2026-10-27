@@ -13,6 +13,7 @@ import {
   type OperationResult,
   type SharedOperationErrorCode,
 } from './types.ts';
+import { applyPresidencyRelease } from './presidency.ts';
 
 /*
  * Basic placement operations (SPEC §5): put a member into a vacant single
@@ -96,8 +97,8 @@ function checkSource(board: Board, memberId: MemberId, from: PositionId | null):
 
 /**
  * Builds the resulting board: vacates `from`, places the member in `to`, clears the
- * member's explicit dugout inclusion (assigning a calling clears it, SPEC §5), drops
- * stale approvals, and revalidates. Everything else is carried over unchanged.
+ * member's explicit dugout inclusion (assigning a calling clears it, SPEC §5), applies
+ * the presidency release rule, drops stale approvals, and revalidates.
  */
 function commitPlacement(
   board: Board,
@@ -111,18 +112,19 @@ function commitPlacement(
     Object.entries(board.placements).filter(([position]) => position !== from),
   );
   placements[to] = memberId;
-  const next = dropStaleApprovals({
+  const drafted = {
     ...board,
     positions,
     placements,
     dugoutInclusions: board.dugoutInclusions.filter((id) => id !== memberId),
-  });
-  return operationOk(finalizeBoard(next, ctx.ward));
+  };
+  return operationOk(finalizeBoard(dropStaleApprovals(applyPresidencyRelease(board, drafted)), ctx.ward));
 }
 
 /**
  * Places a member into a vacant position of an enabled single assignment,
- * optionally moving them out of `from` (which becomes vacant).
+ * optionally moving them out of `from` (which becomes vacant). Moving out of a
+ * president position also vacates that presidency's counselors and secretary.
  *
  * Errors: `board_not_editable`; `not_found` (member, `to` or `from`);
  * `invalid_operation` (`from === to`, or `to` is a list position: use `addToList`);
@@ -170,8 +172,9 @@ export function placeInPosition(
 
 /**
  * Adds a member to an enabled list assignment without displacing anyone,
- * optionally moving them out of `from` (which becomes vacant). Fills the vacant
- * position with the lowest `order` (ties broken by id); when the list is full,
+ * optionally moving them out of `from` (which becomes vacant). Moving out of a
+ * president position also vacates that presidency's counselors and secretary. Fills
+ * the vacant position with the lowest `order` (ties broken by id); when the list is full,
  * creates a new position (id, then lineage, from `ctx.ids`) after the last one.
  *
  * Errors: `board_not_editable`; `not_found` (member, assignment or `from`);

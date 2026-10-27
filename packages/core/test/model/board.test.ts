@@ -321,7 +321,7 @@ describe('createBoard', () => {
         [A1]: assignment('a-1', {
           title: '  ',
           origin: 'imported' as unknown as 'custom',
-          leadershipRole: 'secretary' as unknown as null,
+          leadershipRole: 'clerk' as unknown as null,
           callingTagIds: [T1, T1],
         }),
       },

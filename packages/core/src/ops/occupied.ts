@@ -13,13 +13,14 @@ import {
   type OperationResult,
   type SharedOperationErrorCode,
 } from './types.ts';
+import { applyPresidencyRelease } from './presidency.ts';
 
 /*
  * Occupied single-calling drops (SPEC §5). Swap exchanges the two placements.
  * Release occupant places the incoming member and releases the displaced
  * member from that calling only; they are not explicitly added to the dugout
- * (no-calling membership is derived). The presidency release rule is not
- * applied here (T-013).
+ * (no-calling membership is derived). Releasing a president also vacates that
+ * presidency's counselors and secretary (`applyPresidencyRelease`).
  */
 
 /** Error codes specific to swap and release occupant, in addition to the shared codes. */
@@ -168,12 +169,14 @@ function finish(
   placements: Board['placements'],
   dugoutInclusions: readonly MemberId[],
 ): OperationResult<OccupiedErrorCode> {
-  return operationOk(finalizeBoard(dropStaleApprovals({ ...board, placements, dugoutInclusions }), ctx.ward));
+  const drafted = { ...board, placements, dugoutInclusions };
+  return operationOk(finalizeBoard(dropStaleApprovals(applyPresidencyRelease(board, drafted)), ctx.ward));
 }
 
 /**
  * Exchanges the placements of `memberId` at `from` and the occupant of `to`.
- * Both explicit dugout inclusions are cleared. Neither member's other callings change.
+ * Both explicit dugout inclusions are cleared. Neither member's other callings
+ * change, except counselors and the secretary released with a president.
  *
  * Errors: `board_not_editable`; `not_found` (member, `from` or `to`); `not_placed`;
  * `invalid_operation` (list `to`, `from === to`, or `to` held by `memberId`);
@@ -193,7 +196,9 @@ export function swap(board: Board, ctx: OperationContext, request: SwapRequest):
 
 /**
  * Places `memberId` in `to`, vacates `from`, and releases the displaced occupant
- * from `to` only. The displaced member gets no explicit dugout inclusion; an
+ * from `to` only. A released president also vacates that presidency's counselors
+ * and secretary; those members get no explicit dugout inclusion. The displaced
+ * member gets no explicit dugout inclusion; an
  * existing one is left as it was. `memberId`'s explicit inclusion is cleared.
  * `from` may be a disabled assignment.
  *
