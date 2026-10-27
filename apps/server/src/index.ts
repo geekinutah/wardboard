@@ -10,4 +10,3 @@ export {
   type IdentityProvider,
   type IdentityResult,
 } from './identity/index.ts';
-

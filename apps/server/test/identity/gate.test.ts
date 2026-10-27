@@ -113,6 +113,17 @@ function sendRawSocket(port: number, payload: string): Promise<string> {
   });
 }
 
+function expectFramedBody(response: string, expectedBody: string): void {
+  const split = response.indexOf('\r\n\r\n');
+  expect(split, 'response has a header/body separator').toBeGreaterThan(0);
+  const head = response.slice(0, split);
+  const body = response.slice(split + 4);
+  expect(body).toBe(expectedBody);
+  const lengthMatch = /\r\ncontent-length:\s*(\d+)/i.exec(head);
+  expect(lengthMatch, 'response declares content-length').not.toBeNull();
+  expect(Number(lengthMatch?.[1])).toBe(Buffer.byteLength(expectedBody));
+}
+
 describe('identity gate', () => {
   it('health is reachable without identity', async () => {
     const { server } = await setupServer();
@@ -280,6 +291,7 @@ describe('identity gate', () => {
     const response = await sendRawSocket(server.port, upgradeReq);
     expect(response).toMatch(/^HTTP\/1\.1 401/);
     expect(response).toContain('{"error":"unauthenticated"}');
+    expectFramedBody(response, '{"error":"unauthenticated"}');
   });
 
   it('upgrade to /api/health is not exempt', async () => {
@@ -298,6 +310,7 @@ describe('identity gate', () => {
     const response = await sendRawSocket(server.port, upgradeReq);
     expect(response).toMatch(/^HTTP\/1\.1 401/);
     expect(response).toContain('{"error":"unauthenticated"}');
+    expectFramedBody(response, '{"error":"unauthenticated"}');
   });
 
   it('authenticated upgrade gets 404 until a ws endpoint exists', async () => {
@@ -323,5 +336,6 @@ describe('identity gate', () => {
     const response = await sendRawSocket(server.port, upgradeReq);
     expect(response).toMatch(/^HTTP\/1\.1 404/);
     expect(response).toContain('{"error":"not_found"}');
+    expectFramedBody(response, '{"error":"not_found"}');
   });
 });

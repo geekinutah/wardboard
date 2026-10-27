@@ -117,7 +117,7 @@ describe('loopback guard', () => {
     const parent = await makeTempDir('non-loopback-refusal-');
     // Find an unused ephemeral port
     const helperServer = createServer();
-    await new Promise<void>((resolve) => helperServer.listen(0, '127.0.0.1', resolve));
+    await new Promise<void>((resolve) => helperServer.listen(0, '0.0.0.0', resolve));
     const address = helperServer.address();
     const port = typeof address === 'object' && address !== null ? address.port : 54321;
     await new Promise<void>((resolve) => helperServer.close(() => { resolve(); }));
@@ -140,8 +140,10 @@ describe('loopback guard', () => {
     expect(error).toBeDefined();
     expect(error?.message).toContain('WARDBOARD_TRUST_IDENTITY_HEADERS_ON_NON_LOOPBACK');
 
-    // Verify nothing is listening on that port afterwards
-    const portFree = await isPortFree(port, '127.0.0.1');
+    // Verify nothing is listening on that port afterwards. Probe the same
+    // wildcard address the refused server would have bound, so a guard that
+    // runs after listen() leaves the port taken and this check fails.
+    const portFree = await isPortFree(port, '0.0.0.0');
     expect(portFree).toBe(true);
   });
 

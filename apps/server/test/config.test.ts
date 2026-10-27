@@ -140,4 +140,3 @@ describe('parseConfig', () => {
     }
   });
 });
-

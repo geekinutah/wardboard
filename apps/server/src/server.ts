@@ -61,7 +61,17 @@ export function isLoopbackHost(host: string): boolean {
   return false;
 }
 
-
+/** A complete HTTP/1.1 response for a raw (upgrade) socket that then closes. */
+function rawJsonResponse(statusLine: string, body: string, noStore: boolean): string {
+  return (
+    `HTTP/1.1 ${statusLine}\r\n` +
+    'Content-Type: application/json\r\n' +
+    (noStore ? 'Cache-Control: no-store\r\n' : '') +
+    'Connection: close\r\n' +
+    `Content-Length: ${String(Buffer.byteLength(body))}\r\n\r\n` +
+    body
+  );
+}
 
 export type RunningServer = {
   url: string;
@@ -314,33 +324,19 @@ export async function startServer(
     });
   });
 
+  // Authenticate first, then route. T-024 plugs the WebSocket endpoint in
+  // after the gate; until then an authenticated upgrade is a 404.
   server.on('upgrade', (req, socket) => {
     socket.on('error', () => undefined);
 
     const auth = authenticate(provider, req);
     if (!auth.ok) {
-      socket.end(
-        'HTTP/1.1 401 Unauthorized\r\n' +
-          'Content-Type: application/json\r\n' +
-          'Cache-Control: no-store\r\n' +
-          'Connection: close\r\n' +
-          'Content-Length: 26\r\n\r\n' +
-          '{"error":"unauthenticated"}',
-      );
+      socket.end(rawJsonResponse('401 Unauthorized', '{"error":"unauthenticated"}', true));
       return;
     }
 
-    // Authenticated upgrade: WebSocket channel is implemented in T-024.
-    // Refuse with 404 until that endpoint exists.
-    socket.end(
-      'HTTP/1.1 404 Not Found\r\n' +
-        'Content-Type: application/json\r\n' +
-        'Connection: close\r\n' +
-        'Content-Length: 21\r\n\r\n' +
-        '{"error":"not_found"}',
-    );
+    socket.end(rawJsonResponse('404 Not Found', '{"error":"not_found"}', false));
   });
-
 
   server.on('clientError', (_error, socket) => {
     if (!socket.writable) {

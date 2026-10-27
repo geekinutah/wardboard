@@ -48,6 +48,7 @@ USER wardboard
 
 # WARDBOARD_BASE_URL deliberately has no default: it is required at run time.
 ENV WARDBOARD_HOST=0.0.0.0 \
+    WARDBOARD_TRUST_IDENTITY_HEADERS_ON_NON_LOOPBACK=1 \
     WARDBOARD_PORT=8080 \
     WARDBOARD_DATA_DIR=/data \
     WARDBOARD_WEB_DIR=/app/apps/web/dist
