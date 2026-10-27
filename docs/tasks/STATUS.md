@@ -23,4 +23,4 @@ Candidate and discovered work that has not yet been promoted into a task contrac
 | T-013 | Presidency release rule | 2 — Board domain | in progress | 0 | none |
 | T-014 | Second-calling detection | 2 — Board domain | done | 1 | none |
 | T-015 | Needs-approval placements | 2 — Board domain | done | 1 | none |
-| T-065 | OpenCode uses the session's model only | — (agent infra, off-roadmap) | in progress | 0 | OpenCode run confirms subagents on qwen3.8-27b |
+| T-065 | OpenCode always uses qwen3.8-27b-splash | — (agent infra, off-roadmap) | in progress | 0 | OpenCode run confirms all roles on lmstudio/qwen3.8-27b-splash |
