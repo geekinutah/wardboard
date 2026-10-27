@@ -26,7 +26,7 @@ Quick start from a fresh clone:
 
 ```sh
 ./scripts/setup.sh    # checks the toolchain, then installs dependencies
-./scripts/verify.sh   # the quality gate: toolchain, install, script tests, typecheck, lint, unit tests
+./scripts/verify.sh   # the quality gate: toolchain, install, script tests, typecheck, lint, unit tests, e2e, and the Docker smoke test (needs a running Docker; OrbStack on macOS)
 ```
 
 `node scripts/env-check.mjs` checks the toolchain on its own and prints a fix for anything missing or out of range. CI (`.github/workflows/ci.yml`) runs the same two scripts on every push and pull request.

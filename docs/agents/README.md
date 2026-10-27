@@ -169,6 +169,10 @@ The receiving verifier must obtain the exact candidate and implementation eviden
 
 Static TOML/YAML parsing and reference checks prove adapter structure, not runtime discovery, tool availability, hook behavior, or model compliance. After installing/authenticating a local CLI, run a small existing contract through controller → implementer → fresh verifier, confirm the shared files were read, and record the CLI version, candidate revision, model when available, real outputs, and remaining human checks. If a CLI is unavailable, record its live smoke test as pending; do not claim every harness executed the workflow.
 
+## Gate needs a reachable Docker daemon
+
+`./scripts/verify.sh` ends with `./scripts/docker-smoke.sh`, which builds and runs the shipped image. It needs a reachable Docker daemon (OrbStack on macOS). If `docker info` fails in your environment (daemon stopped, or a sandbox without Docker socket access), the smoke fails with `docker smoke: Docker daemon is not reachable`; report the gate BLOCKED. Never skip, stub, or work around the step, and never edit `verify.sh` to do so.
+
 ## Sandboxes that block the Playwright browser download
 
 The gate needs Playwright's pinned Chromium **and** WebKit. The steps below are written for Chromium; a blocked WebKit download fails the same way and has the same preferred fix. The Chromium-mapping fallback does not apply to WebKit: if WebKit can't be installed, phone-viewport checks are BLOCKED.
