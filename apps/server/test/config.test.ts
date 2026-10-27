@@ -112,4 +112,31 @@ describe('parseConfig', () => {
     const message = error instanceof ConfigError ? error.message : '';
     expect(message).toContain('WARDBOARD_WEB_DIR');
   });
+
+  it('trust flag defaults to false', () => {
+    const config = parseConfig(validEnv);
+    expect(config.trustIdentityHeadersOnNonLoopback).toBe(false);
+  });
+
+  it('trust flag accepts only "1"', () => {
+    const config = parseConfig({
+      ...validEnv,
+      WARDBOARD_TRUST_IDENTITY_HEADERS_ON_NON_LOOPBACK: '1',
+    });
+    expect(config.trustIdentityHeadersOnNonLoopback).toBe(true);
+
+    for (const val of ['true', '0', '', 'yes']) {
+      const error = capture(() =>
+        parseConfig({
+          ...validEnv,
+          WARDBOARD_TRUST_IDENTITY_HEADERS_ON_NON_LOOPBACK: val,
+        }),
+      );
+      expect(error, `val: ${JSON.stringify(val)}`).toBeInstanceOf(ConfigError);
+      const message = error instanceof ConfigError ? error.message : '';
+      expect(message, `val: ${JSON.stringify(val)}`).toContain(
+        'WARDBOARD_TRUST_IDENTITY_HEADERS_ON_NON_LOOPBACK',
+      );
+    }
+  });
 });

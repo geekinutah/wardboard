@@ -4,10 +4,23 @@ import { mkdir, mkdtemp, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { startServer, type Config, type RunningServer } from '../src/index.ts';
+import {
+  fixtureIdentityProvider,
+  startServer,
+  type Config,
+  type RunningServer,
+  type StartServerOptions,
+} from '../src/index.ts';
 
 const open: RunningServer[] = [];
 const tempDirs: string[] = [];
+
+const testIdentity: StartServerOptions = {
+  identityProvider: fixtureIdentityProvider({
+    login: 'tester@example.test',
+    displayName: 'Tester',
+  }),
+};
 
 afterEach(async () => {
   const servers = open.splice(0);
@@ -34,8 +47,8 @@ function loopbackConfig(dataDir: string, webDir?: string): Config {
   return { ...config, webDir };
 }
 
-async function start(config: Config): Promise<RunningServer> {
-  const running = await startServer(config);
+async function start(config: Config, options?: StartServerOptions): Promise<RunningServer> {
+  const running = await startServer(config, options);
   open.push(running);
   return running;
 }
@@ -127,7 +140,7 @@ describe('startServer', () => {
     const webDir = path.join(parent, 'web');
     await mkdir(webDir, { recursive: true });
     await writeFile(path.join(webDir, 'index.html'), '<p>spa-index-marker</p>');
-    const running = await start(loopbackConfig(path.join(parent, 'data'), webDir));
+    const running = await start(loopbackConfig(path.join(parent, 'data'), webDir), testIdentity);
 
     const res = await fetch(`${running.url}/api/nope`);
 
@@ -150,7 +163,7 @@ describe('startServer', () => {
     await writeFile(path.join(webDir, 'assets', 'mark.png'), png);
     await writeFile(path.join(webDir, 'assets', 'font.woff2'), woff);
     await writeFile(path.join(webDir, 'assets', 'meta.json'), '{"fiction":true}');
-    const running = await start(loopbackConfig(path.join(parent, 'data'), webDir));
+    const running = await start(loopbackConfig(path.join(parent, 'data'), webDir), testIdentity);
 
     const html = await fetch(`${running.url}/`);
     expect(html.status).toBe(200);
@@ -189,7 +202,7 @@ describe('startServer', () => {
     const webDir = path.join(parent, 'web');
     await mkdir(webDir, { recursive: true });
     await writeFile(path.join(webDir, 'index.html'), '<p>spa-index-marker</p>');
-    const running = await start(loopbackConfig(path.join(parent, 'data'), webDir));
+    const running = await start(loopbackConfig(path.join(parent, 'data'), webDir), testIdentity);
 
     const res = await fetch(`${running.url}/board/123`);
 
@@ -205,7 +218,7 @@ describe('startServer', () => {
     await mkdir(path.join(webDir, 'assets'), { recursive: true });
     await writeFile(path.join(webDir, 'index.html'), '<p>spa-index-marker</p>');
     await writeFile(path.join(parent, 'secret.txt'), secret);
-    const running = await start(loopbackConfig(path.join(parent, 'data'), webDir));
+    const running = await start(loopbackConfig(path.join(parent, 'data'), webDir), testIdentity);
 
     // fetch() applies WHATWG URL rules and rewrites dot-segments, %2e%2e, and
     // backslashes before the bytes leave the client. /..%2f survives fetch;
@@ -227,7 +240,7 @@ describe('startServer', () => {
 
   it('no webDir means non-api 404', async () => {
     const parent = await makeTemp('wardboard-noweb-');
-    const running = await start(loopbackConfig(path.join(parent, 'data')));
+    const running = await start(loopbackConfig(path.join(parent, 'data')), testIdentity);
 
     const res = await fetch(`${running.url}/`);
 

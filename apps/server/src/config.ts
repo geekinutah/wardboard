@@ -13,6 +13,7 @@ export type Config = {
   port: number;
   host: string;
   webDir?: string;
+  trustIdentityHeadersOnNonLoopback?: boolean;
 };
 
 const PORT_PATTERN = /^(?:0|[1-9][0-9]*)$/;
@@ -80,10 +81,20 @@ export function parseConfig(env: Record<string, string | undefined>): Config {
     problems.push('WARDBOARD_WEB_DIR must be an absolute path');
   }
 
+  const trustRaw = env['WARDBOARD_TRUST_IDENTITY_HEADERS_ON_NON_LOOPBACK'];
+  let trustIdentityHeadersOnNonLoopback = false;
+  if (trustRaw !== undefined) {
+    if (trustRaw === '1') {
+      trustIdentityHeadersOnNonLoopback = true;
+    } else {
+      problems.push('WARDBOARD_TRUST_IDENTITY_HEADERS_ON_NON_LOOPBACK must be "1" if set');
+    }
+  }
+
   if (problems.length > 0) throw new ConfigError(problems);
   if (dataDir === undefined || baseUrl === undefined) throw new ConfigError(problems);
 
-  const config: Config = { dataDir, baseUrl, port, host };
+  const config: Config = { dataDir, baseUrl, port, host, trustIdentityHeadersOnNonLoopback };
   if (webDir !== undefined) return { ...config, webDir };
   return config;
 }

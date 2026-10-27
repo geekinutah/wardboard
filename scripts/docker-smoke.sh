@@ -86,9 +86,13 @@ HEALTH_BODY="$(curl -fsS "${BASE_URL}/api/health")" || fail "GET /api/health fai
 [ "$HEALTH_BODY" = '{"status":"ok"}' ] || fail "/api/health returned '${HEALTH_BODY}', expected '{\"status\":\"ok\"}'"
 echo "    /api/health: ${HEALTH_BODY}"
 
-INDEX_BODY="$(curl -fsS "${BASE_URL}/")" || fail "GET / failed"
+INDEX_BODY="$(curl -fsS -H 'Tailscale-User-Login: smoke@example.test' "${BASE_URL}/")" || fail "GET / failed"
 grep -q 'WardBoard' <<<"$INDEX_BODY" || fail "GET / did not serve the WardBoard web shell"
 echo "    / serves the WardBoard shell"
+
+ANON_STATUS="$(curl -sS -o /dev/null -w '%{http_code}' "${BASE_URL}/")" || fail "GET / without identity failed"
+[ "$ANON_STATUS" = "401" ] || fail "GET / without Tailscale-User-Login returned ${ANON_STATUS}, expected 401"
+echo "    / without identity: 401"
 
 RUN_UID="$(docker exec "$NAME" id -u)"
 [ "$RUN_UID" != "0" ] || fail "container runs as root"

@@ -2,6 +2,76 @@ import { mkdir, readFile, realpath, stat } from 'node:fs/promises';
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import path from 'node:path';
 import type { Config } from './config.ts';
+import {
+  authenticate,
+  tailscaleIdentityProvider,
+  type IdentityProvider,
+} from './identity/index.ts';
+
+export type StartServerOptions = {
+  identityProvider?: IdentityProvider;
+};
+
+function parseIpv6(host: string): number[] | null {
+  const parts = host.split('::');
+  if (parts.length > 2) return null;
+
+  if (parts.length === 2) {
+    const leftPart = parts[0];
+    const rightPart = parts[1];
+    const left = leftPart !== undefined && leftPart.length > 0 ? leftPart.split(':') : [];
+    const right = rightPart !== undefined && rightPart.length > 0 ? rightPart.split(':') : [];
+    if (left.some((w) => !/^[0-9a-fA-F]{1,4}$/.test(w))) return null;
+    if (right.some((w) => !/^[0-9a-fA-F]{1,4}$/.test(w))) return null;
+    const zeros = 8 - (left.length + right.length);
+    if (zeros < 1) return null;
+    const zeroWords: number[] = new Array<number>(zeros).fill(0);
+    const leftWords = left.map((hex) => parseInt(hex, 16));
+    const rightWords = right.map((hex) => parseInt(hex, 16));
+    return [...leftWords, ...zeroWords, ...rightWords];
+  }
+
+  const words = host.split(':');
+  if (words.length !== 8) return null;
+  if (words.some((w) => !/^[0-9a-fA-F]{1,4}$/.test(w))) return null;
+  return words.map((hex) => parseInt(hex, 16));
+}
+
+export function isLoopbackHost(host: string): boolean {
+  let h = host.toLowerCase();
+  if (h.startsWith('[') && h.endsWith(']')) {
+    h = h.slice(1, -1);
+  }
+  if (h === 'localhost') return true;
+
+  // IPv4 in 127.0.0.0/8
+  const ipv4Match =
+    /^127\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)$/.test(
+      h,
+    );
+  if (ipv4Match) return true;
+
+  if (h.includes(':')) {
+    const words = parseIpv6(h);
+    if (words !== null) {
+      return words.slice(0, 7).every((w) => w === 0) && words[7] === 1;
+    }
+  }
+
+  return false;
+}
+
+/** A complete HTTP/1.1 response for a raw (upgrade) socket that then closes. */
+function rawJsonResponse(statusLine: string, body: string, noStore: boolean): string {
+  return (
+    `HTTP/1.1 ${statusLine}\r\n` +
+    'Content-Type: application/json\r\n' +
+    (noStore ? 'Cache-Control: no-store\r\n' : '') +
+    'Connection: close\r\n' +
+    `Content-Length: ${String(Buffer.byteLength(body))}\r\n\r\n` +
+    body
+  );
+}
 
 export type RunningServer = {
   url: string;
@@ -170,9 +240,12 @@ async function serveWeb(
   await sendFile(res, method, index.filePath, indexPath);
 }
 
-async function handleRequest(req: IncomingMessage, res: ServerResponse, config: Config): Promise<void> {
-  // T-021 adds the identity middleware in front of everything else.
-  // /api/health remains the only unauthenticated route.
+async function handleRequest(
+  req: IncomingMessage,
+  res: ServerResponse,
+  config: Config,
+  provider: IdentityProvider,
+): Promise<void> {
   const method = req.method ?? 'GET';
   if (req.url === undefined) {
     writeJson(res, 400, '{"error":"bad_request"}', method);
@@ -186,6 +259,12 @@ async function handleRequest(req: IncomingMessage, res: ServerResponse, config: 
       return;
     }
     writeJson(res, 405, '{"error":"method_not_allowed"}', method, { allow: 'GET, HEAD' });
+    return;
+  }
+
+  const auth = authenticate(provider, req);
+  if (!auth.ok) {
+    writeJson(res, 401, '{"error":"unauthenticated"}', method, { 'cache-control': 'no-store' });
     return;
   }
 
@@ -221,17 +300,42 @@ function closeServer(server: Server): Promise<void> {
   return closing;
 }
 
-export async function startServer(config: Config): Promise<RunningServer> {
+export async function startServer(
+  config: Config,
+  options?: StartServerOptions,
+): Promise<RunningServer> {
+  if (!isLoopbackHost(config.host) && !config.trustIdentityHeadersOnNonLoopback) {
+    throw new Error(
+      `Refusing to start on non-loopback host "${config.host}" without WARDBOARD_TRUST_IDENTITY_HEADERS_ON_NON_LOOPBACK=1`,
+    );
+  }
+
   await mkdir(config.dataDir, { recursive: true });
 
+  const provider = options?.identityProvider ?? tailscaleIdentityProvider();
+
   const server = createServer((req, res) => {
-    void handleRequest(req, res, config).catch(() => {
+    void handleRequest(req, res, config, provider).catch(() => {
       if (res.headersSent || res.writableEnded) {
         res.destroy();
         return;
       }
       writeJson(res, 500, '{"error":"internal_error"}', req.method ?? 'GET');
     });
+  });
+
+  // Authenticate first, then route. T-024 plugs the WebSocket endpoint in
+  // after the gate; until then an authenticated upgrade is a 404.
+  server.on('upgrade', (req, socket) => {
+    socket.on('error', () => undefined);
+
+    const auth = authenticate(provider, req);
+    if (!auth.ok) {
+      socket.end(rawJsonResponse('401 Unauthorized', '{"error":"unauthenticated"}', true));
+      return;
+    }
+
+    socket.end(rawJsonResponse('404 Not Found', '{"error":"not_found"}', false));
   });
 
   server.on('clientError', (_error, socket) => {
