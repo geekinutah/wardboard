@@ -11,7 +11,7 @@ Work that **cannot** be finished by an agent: accounts, decisions, Church guidan
 | 1 | ~~Sign-in method~~ **DONE 2026-10-25** | — | Tailscale identity via `tailscale serve`, behind a replaceable identity-provider module (SPEC §10). |
 | 2 | ~~Youth/adult mapping rule~~ **DONE 2026-10-25** | — | Adult 18+, youth 11–17, under 11 not imported (SPEC §15). |
 | 3 | ~~Identity source-key policy~~ **DONE 2026-10-25** | — | No Church identifiers; match by name, with confirmation for ambiguous cases (SPEC §8, §15). |
-| 4 | ~~Church guidance on data handling~~ **Reviewed 2026-10-25** | SPEC §9: confirm storage, access, photo use and export against applicable Church guidance before real data is used. | Review before the first real import. |
+| 4 | ~~Church guidance on data handling~~ **DONE 2026-10-25** | — | Reviewed storage, access, photo use and export against applicable Church guidance (SPEC §9); cleared before real data is used. |
 | 5 | ~~Directory photo collection~~ **Confirmed acceptable 2026-10-25** | — | T-061 may be promoted. |
 | 6 | ~~Anonymized PDF samples~~ **DONE 2026-10-25** | — | Committed to `fixtures/lcr-reports/` after Mike's review. |
 | 7 | Tailscale and Mac Studio | Account and device setup. | Needed for T-063 and first install. Docker engine: OrbStack (decided 2026-10-25; already installed). Counselors asked to install Tailscale (2026-10-25); invite them to the machine and expose the service once it runs. Give each counselor tailnet access to the Mac Studio (tailnet member or machine sharing), confirm your Tailscale plan covers it, and confirm their requests carry identity headers. |
