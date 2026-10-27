@@ -3,15 +3,20 @@ import type { Duplex } from 'node:stream';
 import { WebSocket, WebSocketServer, type RawData } from 'ws';
 import {
   boardId,
+  memberId,
   proposalId,
+  tagId,
   userId,
   type Board,
   type BoardId,
   type Proposal,
   type ProposalId,
+  type TagId,
+  type Ward,
 } from '@wardboard/core';
 import type { Access, User } from '../access/index.ts';
 import type { Identity } from '../identity/index.ts';
+import { parseMemberPatch, parseTagName, type MemberProfilePatch } from '../members/index.ts';
 import {
   checkAcceptance,
   freezeSummary,
@@ -186,6 +191,22 @@ export function createOperationChannel(deps: {
         connection.ws.send(payload);
       }
     }
+  }
+
+  function broadcastOpen(payload: string): void {
+    for (const connection of connections) {
+      if (connection.open && connection.ws.readyState === WebSocket.OPEN) {
+        connection.ws.send(payload);
+      }
+    }
+  }
+
+  function broadcastWard(ward: Ward): void {
+    broadcastOpen(JSON.stringify({ type: 'ward', ward }));
+  }
+
+  function broadcastSettings(showNeedsApproval: boolean): void {
+    broadcastOpen(JSON.stringify({ type: 'settings', requestId: '', showNeedsApproval }));
   }
 
   function broadcastProposal(id: BoardId, detail: ProposalDetail): void {
@@ -519,7 +540,171 @@ export function createOperationChannel(deps: {
     });
   }
 
-  function dispatch(connection: Connection, parsed: unknown): void {
+  function profilePatch(patch: MemberProfilePatch): {
+    name?: string;
+    note?: string | null;
+    tagIds?: TagId[];
+  } {
+    const next: { name?: string; note?: string | null; tagIds?: TagId[] } = {};
+    if (patch.name !== undefined) next.name = patch.name;
+    if (patch.note !== undefined) next.note = patch.note;
+    if (patch.tagIds !== undefined) next.tagIds = patch.tagIds.map((id) => tagId(id));
+    return next;
+  }
+
+  function updateMember(connection: Connection, message: Record<string, unknown>): void {
+    if (!exact(message, ['type', 'requestId', 'memberId', 'patch'])) {
+      refuse(connection, message, 'bad_request', 'updateMember must have requestId, memberId, and patch');
+      return;
+    }
+    if (!boundedRequestId(message.requestId)) {
+      refuse(connection, message, 'bad_request', 'requestId must be a string of 1 to 64 characters');
+      return;
+    }
+    if (!nonEmpty(message.memberId)) {
+      refuse(connection, message, 'bad_request', 'memberId must be a non-empty string');
+      return;
+    }
+    const patch = parseMemberPatch(message.patch);
+    if (!patch.ok) {
+      refuse(connection, message, 'bad_request', patch.message);
+      return;
+    }
+    const updated = store.updateMemberProfile(memberId(message.memberId), profilePatch(patch.value));
+    if (!updated.ok) {
+      refuse(connection, message, updated.error.code, updated.error.message);
+      return;
+    }
+    sendJson(connection.ws, { type: 'memberUpdated', requestId: message.requestId });
+    broadcastWard(updated.value);
+  }
+
+  function createTag(connection: Connection, message: Record<string, unknown>): void {
+    if (!exact(message, ['type', 'requestId', 'name'])) {
+      refuse(connection, message, 'bad_request', 'createTag must have requestId and name');
+      return;
+    }
+    if (!boundedRequestId(message.requestId)) {
+      refuse(connection, message, 'bad_request', 'requestId must be a string of 1 to 64 characters');
+      return;
+    }
+    const name = parseTagName(message.name);
+    if (!name.ok) {
+      refuse(connection, message, 'bad_request', name.message);
+      return;
+    }
+    const created = store.createTag(name.value, ids);
+    if (!created.ok) {
+      refuse(connection, message, created.error.code, created.error.message);
+      return;
+    }
+    sendJson(connection.ws, {
+      type: 'tagCreated',
+      requestId: message.requestId,
+      tagId: created.value.tagId,
+    });
+    broadcastWard(created.value.ward);
+  }
+
+  function renameTag(connection: Connection, message: Record<string, unknown>): void {
+    if (!exact(message, ['type', 'requestId', 'tagId', 'name'])) {
+      refuse(connection, message, 'bad_request', 'renameTag must have requestId, tagId, and name');
+      return;
+    }
+    if (!boundedRequestId(message.requestId)) {
+      refuse(connection, message, 'bad_request', 'requestId must be a string of 1 to 64 characters');
+      return;
+    }
+    if (!nonEmpty(message.tagId)) {
+      refuse(connection, message, 'bad_request', 'tagId must be a non-empty string');
+      return;
+    }
+    const name = parseTagName(message.name);
+    if (!name.ok) {
+      refuse(connection, message, 'bad_request', name.message);
+      return;
+    }
+    const renamed = store.renameTag(tagId(message.tagId), name.value);
+    if (!renamed.ok) {
+      refuse(connection, message, renamed.error.code, renamed.error.message);
+      return;
+    }
+    sendJson(connection.ws, { type: 'memberUpdated', requestId: message.requestId });
+    broadcastWard(renamed.value);
+  }
+
+  function requireAdmin(connection: Connection, message: Record<string, unknown>, actor: User, action: string): boolean {
+    if (actor.role === 'admin') return true;
+    refuse(connection, message, 'forbidden', `only an admin can ${action}`);
+    return false;
+  }
+
+  function setNeedsApproval(connection: Connection, message: Record<string, unknown>, actor: User): void {
+    if (!exact(message, ['type', 'requestId', 'memberId', 'value'])) {
+      refuse(connection, message, 'bad_request', 'setNeedsApproval must have requestId, memberId, and value');
+      return;
+    }
+    if (!boundedRequestId(message.requestId)) {
+      refuse(connection, message, 'bad_request', 'requestId must be a string of 1 to 64 characters');
+      return;
+    }
+    if (!nonEmpty(message.memberId)) {
+      refuse(connection, message, 'bad_request', 'memberId must be a non-empty string');
+      return;
+    }
+    if (typeof message.value !== 'boolean') {
+      refuse(connection, message, 'bad_request', 'value must be a boolean');
+      return;
+    }
+    if (!requireAdmin(connection, message, actor, 'set needs approval')) return;
+    const updated = store.setNeedsApproval(memberId(message.memberId), message.value);
+    if (!updated.ok) {
+      refuse(connection, message, updated.error.code, updated.error.message);
+      return;
+    }
+    sendJson(connection.ws, { type: 'memberUpdated', requestId: message.requestId });
+    broadcastWard(updated.value.ward);
+    for (const board of updated.value.boards) {
+      broadcast(board, message.requestId, actor.login);
+    }
+  }
+
+  function getSettings(connection: Connection, message: Record<string, unknown>): void {
+    if (!exact(message, ['type', 'requestId'])) {
+      refuse(connection, message, 'bad_request', 'getSettings must have requestId');
+      return;
+    }
+    if (!boundedRequestId(message.requestId)) {
+      refuse(connection, message, 'bad_request', 'requestId must be a string of 1 to 64 characters');
+      return;
+    }
+    const settings = store.loadSettings();
+    sendJson(connection.ws, {
+      type: 'settings',
+      requestId: message.requestId,
+      showNeedsApproval: settings.showNeedsApproval,
+    });
+  }
+
+  function setShowNeedsApproval(connection: Connection, message: Record<string, unknown>, actor: User): void {
+    if (!exact(message, ['type', 'requestId', 'value'])) {
+      refuse(connection, message, 'bad_request', 'setShowNeedsApproval must have requestId and value');
+      return;
+    }
+    if (!boundedRequestId(message.requestId)) {
+      refuse(connection, message, 'bad_request', 'requestId must be a string of 1 to 64 characters');
+      return;
+    }
+    if (typeof message.value !== 'boolean') {
+      refuse(connection, message, 'bad_request', 'value must be a boolean');
+      return;
+    }
+    if (!requireAdmin(connection, message, actor, 'change show needs approval')) return;
+    store.setShowNeedsApproval(message.value);
+    broadcastSettings(store.loadSettings().showNeedsApproval);
+  }
+
+  function dispatch(connection: Connection, parsed: unknown, actor: User): void {
     if (!isRecord(parsed) || typeof parsed.type !== 'string') {
       sendJson(connection.ws, { type: 'error', code: 'bad_request' });
       return;
@@ -552,6 +737,30 @@ export function createOperationChannel(deps: {
       getProposal(connection, parsed);
       return;
     }
+    if (parsed.type === 'updateMember') {
+      updateMember(connection, parsed);
+      return;
+    }
+    if (parsed.type === 'createTag') {
+      createTag(connection, parsed);
+      return;
+    }
+    if (parsed.type === 'renameTag') {
+      renameTag(connection, parsed);
+      return;
+    }
+    if (parsed.type === 'setNeedsApproval') {
+      setNeedsApproval(connection, parsed, actor);
+      return;
+    }
+    if (parsed.type === 'getSettings') {
+      getSettings(connection, parsed);
+      return;
+    }
+    if (parsed.type === 'setShowNeedsApproval') {
+      setShowNeedsApproval(connection, parsed, actor);
+      return;
+    }
     sendJson(connection.ws, { type: 'error', code: 'bad_request' });
   }
 
@@ -578,7 +787,7 @@ export function createOperationChannel(deps: {
       sendJson(connection.ws, { type: 'error', code: 'bad_message' });
       return;
     }
-    dispatch(connection, parsed);
+    dispatch(connection, parsed, resolved.user);
   }
 
   return {

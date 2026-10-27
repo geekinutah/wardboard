@@ -21,6 +21,15 @@ export {
   type User,
 } from './access/index.ts';
 export {
+  parseMemberName,
+  parseMemberNote,
+  parseMemberPatch,
+  parseTagIds,
+  parseTagName,
+  type MemberProfilePatch,
+  type ParseResult,
+} from './members/index.ts';
+export {
   openStore,
   type CurrentRecord,
   type ProposalSummary,

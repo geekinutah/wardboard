@@ -375,6 +375,75 @@ export function writeProposalMeta(
   }
 }
 
+export function writeMemberProfile(
+  db: DatabaseSync,
+  id: string,
+  name: string,
+  note: string | null,
+  tagIds: readonly string[] | null,
+  updatedAt: string,
+): void {
+  const result = db
+    .prepare('UPDATE members SET name = ?, note = ?, updated_at = ? WHERE id = ?')
+    .run(name, note, updatedAt, id);
+  // SQLite may report zero changes when every assigned value is already stored.
+  if (changesOf(result) !== 1 && db.prepare('SELECT id FROM members WHERE id = ?').get(id) === undefined) {
+    throw new Error(`member ${id} was not updated`);
+  }
+  if (tagIds === null) return;
+  db.prepare('DELETE FROM member_tags WHERE member_id = ?').run(id);
+  const insert = db.prepare(
+    'INSERT INTO member_tags (member_id, tag_id, sort_order) VALUES (?, ?, ?)',
+  );
+  for (let index = 0; index < tagIds.length; index += 1) {
+    const tag = tagIds[index];
+    if (tag === undefined) continue;
+    insert.run(id, tag, index);
+  }
+}
+
+export function insertTag(db: DatabaseSync, id: string, name: string): void {
+  db.prepare('INSERT INTO tags (id, name) VALUES (?, ?)').run(id, name);
+}
+
+export function renameStoredTag(db: DatabaseSync, id: string, name: string): void {
+  const result = db.prepare('UPDATE tags SET name = ? WHERE id = ?').run(name, id);
+  if (changesOf(result) !== 1 && db.prepare('SELECT id FROM tags WHERE id = ?').get(id) === undefined) {
+    throw new Error(`tag ${id} was not renamed`);
+  }
+}
+
+export function writeNeedsApproval(db: DatabaseSync, id: string, value: boolean, updatedAt: string): void {
+  const result = db
+    .prepare('UPDATE members SET needs_approval = ?, updated_at = ? WHERE id = ?')
+    .run(bit(value), updatedAt, id);
+  if (changesOf(result) !== 1) {
+    throw new Error(`member ${id} needs_approval was not updated`);
+  }
+}
+
+export function readShowNeedsApproval(db: DatabaseSync): boolean {
+  const row = db.prepare(`SELECT value FROM settings WHERE key = 'showNeedsApproval'`).get();
+  if (row === undefined) return false;
+  const raw = row['value'];
+  if (typeof raw !== 'string') throw new Error('settings.showNeedsApproval is not text');
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw) as unknown;
+  } catch (error: unknown) {
+    throw new Error(`settings.showNeedsApproval is not json: ${errorMessage(error)}`, { cause: error });
+  }
+  if (typeof parsed !== 'boolean') throw new Error('settings.showNeedsApproval is not a boolean');
+  return parsed;
+}
+
+export function writeShowNeedsApproval(db: DatabaseSync, value: boolean): void {
+  db.prepare(
+    `INSERT INTO settings (key, value) VALUES ('showNeedsApproval', ?)
+     ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+  ).run(JSON.stringify(value));
+}
+
 export function writeProposalAcceptance(
   db: DatabaseSync,
   id: string,

@@ -3,31 +3,44 @@ import {
   boardId,
   createBoard,
   createProposal,
+  createTag as createTagRecord,
   createWard,
   dropAllApprovals,
+  dropMemberApprovals,
   proposalId,
+  renameTag as renameTagRecord,
+  setMemberTags,
   type Board,
   type BoardKind,
   type IdGenerator,
+  type MemberId,
   type ProposalId,
+  type TagId,
+  type Ward,
 } from '@wardboard/core';
 import {
   AlreadyInitializedError,
   errorMessage,
   findCurrentId,
+  insertTag,
   listProposalSummaries,
   nextTabOrder,
   readBoard,
   readBoardMeta,
   readCurrentRecord,
   readProposal,
+  readShowNeedsApproval,
   readWard,
+  renameStoredTag,
   replaceProposalBoard,
   withImmediateTransaction,
   writeInitialization,
+  writeMemberProfile,
+  writeNeedsApproval,
   writeProposal,
   writeProposalAcceptance,
   writeProposalMeta,
+  writeShowNeedsApproval,
 } from './persist.ts';
 import type { Store, StoreClock, StoreError, StoreResult } from './types.ts';
 
@@ -309,7 +322,178 @@ export function openStore(db: DatabaseSync, clock: StoreClock): Store {
       }
       return ok(loaded);
     },
+
+    updateMemberProfile(id, patch) {
+      const stamp = stampOf(clock);
+      try {
+        withImmediateTransaction(db, () => {
+          const applied = applyMemberProfile(readWard(db), id, patch);
+          if (!applied.ok) throw new Refusal(applied.error);
+          const stored = applied.value.members[id];
+          if (stored === undefined) {
+            throw new Refusal({ code: 'not_found', message: `member ${id} does not exist` });
+          }
+          writeMemberProfile(
+            db,
+            stored.id,
+            stored.name,
+            stored.note,
+            patch.tagIds === undefined ? null : stored.tagIds,
+            stamp,
+          );
+        });
+      } catch (error: unknown) {
+        if (error instanceof Refusal) return fail(error.failure);
+        return invalid(errorMessage(error));
+      }
+      return ok(readWard(db));
+    },
+
+    createTag(name, ids) {
+      let createdId: TagId;
+      try {
+        createdId = withImmediateTransaction(db, () => {
+          const created = createTagRecord(readWard(db), ids, name);
+          if (!created.ok) {
+            throw new Refusal({ code: 'invalid', message: created.error.message });
+          }
+          const tag = created.value.ward.tags[created.value.tagId];
+          if (tag === undefined) {
+            throw new Error(`tag ${created.value.tagId} missing after create`);
+          }
+          insertTag(db, tag.id, tag.name);
+          return tag.id;
+        });
+      } catch (error: unknown) {
+        if (error instanceof Refusal) return fail(error.failure);
+        return invalid(errorMessage(error));
+      }
+      return ok({ ward: readWard(db), tagId: createdId });
+    },
+
+    renameTag(id, name) {
+      try {
+        withImmediateTransaction(db, () => {
+          const renamed = renameTagRecord(readWard(db), id, name);
+          if (!renamed.ok) throw new Refusal(tagStoreError(renamed.error));
+          const tag = renamed.value.tags[id];
+          if (tag === undefined) throw new Error(`tag ${id} missing after rename`);
+          renameStoredTag(db, tag.id, tag.name);
+        });
+      } catch (error: unknown) {
+        if (error instanceof Refusal) return fail(error.failure);
+        return invalid(errorMessage(error));
+      }
+      return ok(readWard(db));
+    },
+
+    setNeedsApproval(id, value) {
+      const stamp = stampOf(clock);
+      const changedIds: string[] = [];
+      try {
+        withImmediateTransaction(db, () => {
+          const ward = readWard(db);
+          const member = ward.members[id];
+          if (member === undefined) {
+            throw new Refusal({ code: 'not_found', message: `member ${id} does not exist` });
+          }
+          if (member.needsApproval === value) {
+            throw new Refusal({ code: 'invalid', message: 'no change' });
+          }
+          const validated = createWard({
+            tags: ward.tags,
+            members: { ...ward.members, [id]: { ...member, needsApproval: value } },
+          });
+          if (!validated.ok) {
+            throw new Refusal({ code: 'invalid', message: invalidMessage(validated.errors) });
+          }
+          writeNeedsApproval(db, id, value, stamp);
+          if (!value) return;
+          for (const summary of listProposalSummaries(db)) {
+            if (summary.status !== 'draft') continue;
+            const proposal = readProposal(db, summary.id);
+            if (proposal === null) continue;
+            const dropped = dropMemberApprovals(proposal.board, validated.value, id);
+            if (dropped.approvals.length === proposal.board.approvals.length) continue;
+            replaceProposalBoard(
+              db,
+              { ...dropped, version: proposal.board.version + 1 },
+              proposal.board.version,
+              stamp,
+            );
+            changedIds.push(proposal.board.id);
+          }
+        });
+      } catch (error: unknown) {
+        if (error instanceof Refusal) return fail(error.failure);
+        return invalid(errorMessage(error));
+      }
+      const stored = readWard(db);
+      const boards: Board[] = [];
+      for (const changedId of changedIds) {
+        const board = readBoard(db, changedId, stored);
+        if (board === null) throw new Error(`board ${changedId} missing after needs-approval update`);
+        boards.push(board);
+      }
+      return ok({ ward: stored, boards });
+    },
+
+    loadSettings() {
+      return withImmediateTransaction(db, () => ({ showNeedsApproval: readShowNeedsApproval(db) }));
+    },
+
+    setShowNeedsApproval(value) {
+      withImmediateTransaction(db, () => {
+        writeShowNeedsApproval(db, value);
+      });
+    },
   };
+}
+
+function applyMemberProfile(
+  ward: Ward,
+  id: MemberId,
+  patch: { name?: string; note?: string | null; tagIds?: readonly TagId[] },
+): StoreResult<Ward> {
+  if (ward.members[id] === undefined) {
+    return fail({ code: 'not_found', message: `member ${id} does not exist` });
+  }
+  let next = ward;
+  if (patch.name !== undefined || patch.note !== undefined) {
+    const current = next.members[id];
+    if (current === undefined) {
+      return fail({ code: 'not_found', message: `member ${id} does not exist` });
+    }
+    const validated = createWard({
+      tags: next.tags,
+      members: {
+        ...next.members,
+        [id]: {
+          ...current,
+          ...(patch.name !== undefined ? { name: patch.name } : {}),
+          ...(patch.note !== undefined ? { note: patch.note } : {}),
+        },
+      },
+    });
+    if (!validated.ok) return invalidResult(validated.errors);
+    next = validated.value;
+  }
+  if (patch.tagIds !== undefined) {
+    const tagged = setMemberTags(next, id, patch.tagIds);
+    if (!tagged.ok) {
+      if (tagged.error.code === 'not_found' && next.members[id] === undefined) {
+        return fail({ code: 'not_found', message: tagged.error.message });
+      }
+      return invalid(tagged.error.message);
+    }
+    next = tagged.value;
+  }
+  return ok(next);
+}
+
+function tagStoreError(error: { code: string; message: string }): StoreError {
+  if (error.code === 'not_found') return { code: 'not_found', message: error.message };
+  return { code: 'invalid', message: error.message };
 }
 
 type ResolvedSource =

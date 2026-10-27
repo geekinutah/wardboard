@@ -2,10 +2,12 @@ import type {
   Board,
   BoardId,
   IdGenerator,
+  MemberId,
   Proposal,
   ProposalAcceptance,
   ProposalId,
   ProposalStatus,
+  TagId,
   Ward,
 } from '@wardboard/core';
 
@@ -61,4 +63,22 @@ export interface Store {
   ): StoreResult<Proposal>;
   /** Writes acceptance, or clears it when `accepted` is null. Does not change the board version. */
   setProposalAcceptance(id: ProposalId, accepted: ProposalAcceptance | null): StoreResult<Proposal>;
+  /** Replaces name, note, and/or tags for one member. Unknown member is `not_found`; other failures are `invalid`. */
+  updateMemberProfile(
+    id: MemberId,
+    patch: { name?: string; note?: string | null; tagIds?: readonly TagId[] },
+  ): StoreResult<Ward>;
+  /** Adds a tag through core `createTag`. Duplicate names are `invalid`. */
+  createTag(name: string, ids: IdGenerator): StoreResult<{ ward: Ward; tagId: TagId }>;
+  /** Renames a tag through core `renameTag`. Unknown tag is `not_found`; duplicate names are `invalid`. */
+  renameTag(id: TagId, name: string): StoreResult<Ward>;
+  /**
+   * Sets `needsApproval`. Turning it on drops that member's approvals on Draft
+   * working boards only, and returns those boards at `version + 1`.
+   */
+  setNeedsApproval(id: MemberId, value: boolean): StoreResult<{ ward: Ward; boards: readonly Board[] }>;
+  /** `showNeedsApproval` from the settings row, or false when the row is absent. */
+  loadSettings(): { showNeedsApproval: boolean };
+  /** Writes the `showNeedsApproval` settings row as a JSON boolean. */
+  setShowNeedsApproval(value: boolean): void;
 }
