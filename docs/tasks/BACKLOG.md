@@ -44,3 +44,5 @@ observation / review finding
 | B-012 | P1 | core model | candidate | No place for Current's import date or proposal reopen audit |
 | B-013 | P2 | docker | candidate | Docker Engine 29 no longer deletes anonymous volumes on a plain `docker rm` |
 | B-014 | P2 | core ordering | candidate | Structural calling order tie-break differs between derive and second-calling |
+| B-015 | P1 | docker | candidate | Docker image ships `packages/core/src/fixtures/`; docker smoke fails on main |
+| B-016 | P2 | server security | candidate | `authenticatedIdentities` WeakMap is exported mutable |

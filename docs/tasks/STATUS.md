@@ -12,7 +12,7 @@ Candidate and discovered work that has not yet been promoted into a task contrac
 | T-005 | SQLite schema and migrations | 1 — Foundations | done | 2 | none |
 | T-006 | Docker image | 1 — Foundations | done | 1 | compose up/restart on the Mac Studio with OrbStack |
 | T-007 | Domain model and fictional fixture ward | 2 — Board domain | done | 1 | none |
-| T-021 | Identity provider interface and Tailscale provider | 3 — Server and collaboration | in progress | 0 | tailscale serve sign-in and direct-localhost refusal (after T-063) |
+| T-021 | Identity provider interface and Tailscale provider | 3 — Server and collaboration | done | 1 | tailscale serve sign-in and direct-localhost refusal (after T-063) |
 | T-008 | Derived views | 2 — Board domain | done | 1 | none |
 | T-009 | Move and fill (and the operation conventions) | 2 — Board domain | done | 1 | none |
 | T-017 | Removed state and acceptance eligibility | 2 — Board domain | todo | 0 | none |
