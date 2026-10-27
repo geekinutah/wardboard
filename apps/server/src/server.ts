@@ -10,6 +10,8 @@ import {
   tailscaleIdentityProvider,
   type IdentityProvider,
 } from './identity/index.ts';
+import { openStore } from './store/index.ts';
+import { createOperationChannel, type OperationChannel } from './ws/channel.ts';
 
 export type StartServerOptions = {
   identityProvider?: IdentityProvider;
@@ -328,6 +330,7 @@ export async function startServer(
 
   const db = openDatabase(databasePath(config.dataDir));
   let server: Server | undefined;
+  let channel: OperationChannel | undefined;
   try {
     migrate(db);
     const clock = options?.clock ?? ((): Date => new Date());
@@ -341,6 +344,11 @@ export async function startServer(
       .some((user) => user.role === 'admin' && user.revokedAt === null);
 
     const provider = options?.identityProvider ?? tailscaleIdentityProvider();
+    const store = openStore(db, clock);
+    const appOrigin = new URL(config.baseUrl).origin;
+    let listenOrigin = '';
+    channel = createOperationChannel({ store, access, clock, ids });
+    const operationChannel = channel;
 
     server = createServer((req, res) => {
       void handleRequest(req, res, config, provider, access).catch(() => {
@@ -352,9 +360,8 @@ export async function startServer(
       });
     });
 
-    // Authenticate first, then authorize. T-024 plugs the WebSocket endpoint in
-    // after the gate; until then an allowed upgrade is a 404.
-    server.on('upgrade', (req, socket) => {
+    // Identity, then access, for every upgrade. Origin applies only to /api/ws.
+    server.on('upgrade', (req, socket, head) => {
       socket.on('error', () => undefined);
 
       const auth = authenticate(provider, req);
@@ -370,7 +377,19 @@ export async function startServer(
       }
       setAuthenticatedUser(req, resolved.user);
 
-      socket.end(rawJsonResponse('404 Not Found', '{"error":"not_found"}', false));
+      if (requestPath(req.url ?? '/') !== '/api/ws') {
+        socket.end(rawJsonResponse('404 Not Found', '{"error":"not_found"}', false));
+        return;
+      }
+
+      const originHeader = req.headers.origin;
+      const origin = typeof originHeader === 'string' && originHeader.length > 0 ? originHeader : undefined;
+      if (origin === undefined || (origin !== appOrigin && origin !== listenOrigin)) {
+        socket.end(rawJsonResponse('403 Forbidden', '{"error":"forbidden"}', true));
+        return;
+      }
+
+      operationChannel.handleUpgrade(req, socket, head, resolved.user, auth.identity);
     });
 
     server.on('clientError', (_error, socket) => {
@@ -384,6 +403,7 @@ export async function startServer(
     server.on('error', () => undefined);
 
     const listening = server;
+    let listenPort = 0;
     await new Promise<void>((resolve, reject) => {
       const onError = (error: Error): void => {
         reject(error);
@@ -391,32 +411,39 @@ export async function startServer(
       listening.once('error', onError);
       listening.listen(config.port, config.host, () => {
         listening.removeListener('error', onError);
+        const address = listening.address();
+        if (address === null || typeof address === 'string') {
+          reject(new Error('Server did not bind a TCP port'));
+          return;
+        }
+        listenOrigin = formatListenUrl(address.address, address.port);
+        listenPort = address.port;
         resolve();
       });
     });
-
-    const address = listening.address();
-    if (address === null || typeof address === 'string') {
+    if (listenOrigin === '' || listenPort === 0) {
       throw new Error('Server did not bind a TCP port');
     }
 
-    let closed = false;
+    let closing: Promise<void> | undefined;
     return {
-      port: address.port,
-      url: formatListenUrl(address.address, address.port),
+      port: listenPort,
+      url: listenOrigin,
       hasActiveAdmin,
-      close: async () => {
-        try {
-          await closeServer(listening);
-        } finally {
-          if (!closed) {
-            closed = true;
+      close: () => {
+        closing ??= (async () => {
+          try {
+            operationChannel.terminate();
+            await closeServer(listening);
+          } finally {
             db.close();
           }
-        }
+        })();
+        return closing;
       },
     };
   } catch (error: unknown) {
+    channel?.terminate();
     if (server !== undefined) {
       await closeServer(server).catch(() => undefined);
     }

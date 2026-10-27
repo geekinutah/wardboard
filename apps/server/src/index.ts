@@ -29,3 +29,4 @@ export {
   type StoreError,
   type StoreResult,
 } from './store/index.ts';
+export { operationRegistry, type OpKind } from './ws/operations.ts';
