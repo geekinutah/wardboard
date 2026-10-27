@@ -45,3 +45,10 @@ export {
   validateMeta,
   type ProposalDetail,
 } from './proposals/index.ts';
+export {
+  MAX_PHOTO_BYTES,
+  createPhotoStore,
+  sanitizePhoto,
+  type PhotoStore,
+  type SanitizeResult,
+} from './photos/index.ts';

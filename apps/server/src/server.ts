@@ -10,6 +10,7 @@ import {
   tailscaleIdentityProvider,
   type IdentityProvider,
 } from './identity/index.ts';
+import { createPhotoStore, handlePhotoRequest, type PhotoStore } from './photos/index.ts';
 import { openStore } from './store/index.ts';
 import { createOperationChannel, type OperationChannel } from './ws/channel.ts';
 
@@ -254,6 +255,8 @@ async function handleRequest(
   config: Config,
   provider: IdentityProvider,
   access: Access,
+  listenOrigin: string,
+  photos: PhotoStore,
 ): Promise<void> {
   const method = req.method ?? 'GET';
   if (req.url === undefined) {
@@ -283,6 +286,19 @@ async function handleRequest(
     return;
   }
   setAuthenticatedUser(req, resolved.user);
+
+  if (pathname === '/api/photos' || pathname.startsWith('/api/photos/')) {
+    await handlePhotoRequest({
+      req,
+      res,
+      method,
+      pathname,
+      photos,
+      appOrigin: new URL(config.baseUrl).origin,
+      listenOrigin,
+    });
+    return;
+  }
 
   if (pathname === '/api' || pathname.startsWith('/api/')) {
     writeJson(res, 404, '{"error":"not_found"}', method);
@@ -345,13 +361,14 @@ export async function startServer(
 
     const provider = options?.identityProvider ?? tailscaleIdentityProvider();
     const store = openStore(db, clock);
+    const photos = createPhotoStore(config.dataDir);
     const appOrigin = new URL(config.baseUrl).origin;
     let listenOrigin = '';
     channel = createOperationChannel({ store, access, clock, ids });
     const operationChannel = channel;
 
     server = createServer((req, res) => {
-      void handleRequest(req, res, config, provider, access).catch(() => {
+      void handleRequest(req, res, config, provider, access, listenOrigin, photos).catch(() => {
         if (res.headersSent || res.writableEnded) {
           res.destroy();
           return;
