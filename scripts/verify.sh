@@ -5,6 +5,9 @@
 # Concurrency: uses no fixed ports and writes only inside this checkout (and
 # the shared pnpm store, which pnpm locks), so separate checkouts or worktrees
 # can run it at the same time. Run at most one gate per checkout at a time.
+# The docker smoke uses unique image, container and volume names and an
+# ephemeral loopback port, so concurrent gates in separate worktrees don't
+# collide either.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
@@ -49,3 +52,6 @@ pnpm --filter web exec playwright install chromium webkit
 
 step "e2e: pnpm --filter web run test:e2e:playwright"
 pnpm --filter web run test:e2e:playwright
+
+step "docker smoke: ./scripts/docker-smoke.sh"
+./scripts/docker-smoke.sh

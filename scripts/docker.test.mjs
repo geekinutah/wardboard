@@ -189,6 +189,25 @@ describe('scripts (docker edge cases)', () => {
     assert.doesNotMatch(output, /building image/i);
   });
 
+  it('docker-smoke.sh exits non-zero with a clear message when the docker daemon is unreachable', () => {
+    const log = join(mkdtempSync(join(tmpdir(), 'wardboard-docker-log-')), 'calls.txt');
+    dirs.push(join(log, '..'));
+    const fakeDocker = `#!/usr/bin/env bash\necho "$*" >> '${log}'\nif [ "$1" = "info" ]; then exit 1; fi\nexit 0\n`;
+    const bin = dockerlessPath({ docker: fakeDocker });
+    const result = spawnSync(join(bin, 'bash'), [smoke], { encoding: 'utf8', env: { PATH: bin } });
+
+    assert.notEqual(result.status, 0, `smoke must fail when the daemon is down: ${result.stdout}${result.stderr}`);
+    assert.ok(
+      result.stderr.startsWith('docker smoke: Docker daemon is not reachable'),
+      `unexpected stderr: ${result.stderr}`,
+    );
+    assert.match(result.stderr, /OrbStack|Docker/);
+    assert.match(result.stderr, /cannot pass/i);
+    const calls = readFileSync(log, 'utf8').split('\n').filter(Boolean);
+    assert.ok(calls.some((c) => c.startsWith('info')), `docker info was never called: ${calls.join('|')}`);
+    assert.ok(!calls.some((c) => c.startsWith('build')), `a build was attempted: ${calls.join('|')}`);
+  });
+
   it('setup.sh prints a Docker hint but stays non-fatal when docker is missing', () => {
     const fakePnpm = `#!/usr/bin/env bash\nif [ "$1" = "--version" ]; then echo '${pinnedPnpm}'; exit 0; fi\nexit 0\n`;
     const bin = dockerlessPath({ pnpm: fakePnpm });
@@ -202,3 +221,28 @@ describe('scripts (docker edge cases)', () => {
     assert.match(output, /OrbStack/);
   });
 });
+
+describe('verify.sh docker smoke step', () => {
+  it('verify.sh runs the docker smoke as an unconditional final step', () => {
+    const lines = read('scripts/verify.sh').split('\n');
+    const stepIdx = lines.map((l, i) => (/^step\s+"/.test(l) ? i : -1)).filter((i) => i !== -1);
+    const last = stepIdx[stepIdx.length - 1];
+    assert.match(lines[last], /^step\s+"docker smoke: \.\/scripts\/docker-smoke\.sh"\s*$/, 'last step must be the docker smoke');
+
+    const rest = lines.slice(last + 1).filter((l) => l.trim() !== '' && !l.trim().startsWith('#'));
+    assert.deepEqual(rest, ['./scripts/docker-smoke.sh'], 'the smoke must be the only command, exactly, after its step line');
+
+    // Not nested in a conditional, case or function.
+    const before = lines.slice(0, last).filter((l) => !l.trim().startsWith('#'));
+    let depth = 0;
+    for (const l of before) {
+      if (/^\s*(if|case|while|for|until)\b/.test(l) || /\(\)\s*\{\s*$/.test(l) || /^\s*function\b/.test(l)) depth++;
+      if (/^\s*(fi|esac|done)\b/.test(l) || /^\}/.test(l)) depth--;
+    }
+    assert.equal(depth, 0, 'the smoke step is inside an unclosed if/case/loop/function');
+
+    const text = lines.filter((l) => !l.trim().startsWith('#')).join('\n');
+    assert.doesNotMatch(text, /SKIP|NO_DOCKER/i, 'verify.sh must not reference a skip variable');
+  });
+});
+

@@ -17,6 +17,11 @@ if ! command -v docker >/dev/null 2>&1; then
   exit 1
 fi
 
+if ! docker info >/dev/null 2>&1; then
+  echo "docker smoke: Docker daemon is not reachable — start OrbStack (macOS) or Docker, or, in a sandbox, grant this session access to the Docker socket. The quality gate cannot pass without a running Docker daemon." >&2
+  exit 1
+fi
+
 IMAGE="wardboard:smoke-$(date +%s)-$$"
 NAME="wardboard-smoke-$(date +%s)-$$"
 VOLUME="wardboard-smoke-$(date +%s)-$$"

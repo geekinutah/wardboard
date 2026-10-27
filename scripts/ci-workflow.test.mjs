@@ -45,4 +45,10 @@ describe('ci workflow', () => {
   it('ci workflow uses no secrets', () => {
     assert.doesNotMatch(text, /secrets\./);
   });
+
+  it('ci workflow runs the docker smoke only through verify.sh', () => {
+    assert.doesNotMatch(text, /^\s{2}docker-smoke\s*:/m, 'no docker-smoke job');
+    assert.doesNotMatch(text, /docker-smoke\.sh/, 'the workflow must not call docker-smoke.sh directly');
+    assert.match(text, /^\s+run:\s*\.\/scripts\/verify\.sh\s*$/m);
+  });
 });
