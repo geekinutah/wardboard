@@ -20,7 +20,7 @@ Candidate and discovered work that has not yet been promoted into a task contrac
 | T-010 | Swap and release occupant | 2 — Board domain | done | 1 | none |
 | T-011 | Release and dugout | 2 — Board domain | done | 1 | none |
 | T-012 | Groups and positions | 2 — Board domain | done | 1 | none |
-| T-013 | Presidency release rule | 2 — Board domain | in progress | 0 | none |
+| T-013 | Presidency release rule | 2 — Board domain | done | 1 | none |
 | T-014 | Second-calling detection | 2 — Board domain | done | 1 | none |
 | T-015 | Needs-approval placements | 2 — Board domain | done | 1 | none |
 | T-065 | OpenCode always uses qwen3.8-27b-splash | — (agent infra, off-roadmap) | done | 2 | OpenCode run confirms all roles on lmstudio/qwen3.8-27b-splash |
