@@ -28,3 +28,4 @@ Candidate and discovered work that has not yet been promoted into a task contrac
 | T-067 | Run the Docker smoke test in the quality gate | 1 — Foundations | done | 1 | verify.sh with OrbStack stopped fails clearly (after T-066) |
 | T-016 | Net diff | 2 — Board domain | done | 2 | none |
 | T-019 | Search and filters | 2 — Board domain | done | 1 | none |
+| T-018 | Oversight and accepted summary | 2 — Board domain | todo | 0 | none |

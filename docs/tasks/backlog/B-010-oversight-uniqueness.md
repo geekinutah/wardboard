@@ -2,9 +2,9 @@
 
 **Priority:** P1  
 **Area:** core model  
-**State:** candidate  
+**State:** accepted  
 **Found:** 2026-10-26, T-007 verifier  
-**Promoted to:** —
+**Promoted to:** T-018
 
 ## Finding
 
@@ -21,3 +21,7 @@ Decide that each target has at most one overseer and that the priests quorum is 
 ## Evidence
 
 - `docs/tasks/evidence/T-007.md` (verifier Note 1)
+
+## Decision
+
+2026-10-27, Mike: no duplicate overseers. Each oversight target has at most one overseer, and the priests quorum is overseen only by the fixed bishop entry. This is enforced in the model as part of T-018.
