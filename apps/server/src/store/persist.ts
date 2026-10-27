@@ -360,6 +360,42 @@ export function replaceProposalBoard(
   }
 }
 
+export function writeProposalMeta(
+  db: DatabaseSync,
+  id: string,
+  name: string,
+  rationale: string | null,
+  updatedAt: string,
+): void {
+  const result = db
+    .prepare('UPDATE boards SET name = ?, rationale = ?, updated_at = ? WHERE proposal_id = ?')
+    .run(name, rationale, updatedAt, id);
+  if (changesOf(result) !== 1) {
+    throw new Error(`proposal ${id} meta was not updated`);
+  }
+}
+
+export function writeProposalAcceptance(
+  db: DatabaseSync,
+  id: string,
+  status: ProposalStatus,
+  acceptedBy: string | null,
+  acceptedAt: string | null,
+  acceptedSummary: string | null,
+  updatedAt: string,
+): void {
+  const result = db
+    .prepare(
+      `UPDATE boards
+       SET status = ?, accepted_by = ?, accepted_at = ?, accepted_summary = ?, updated_at = ?
+       WHERE proposal_id = ?`,
+    )
+    .run(status, acceptedBy, acceptedAt, acceptedSummary, updatedAt, id);
+  if (changesOf(result) !== 1) {
+    throw new Error(`proposal ${id} acceptance was not updated`);
+  }
+}
+
 function proposalConflicts(db: DatabaseSync, proposal: Proposal): boolean {
   const row = db
     .prepare('SELECT id FROM boards WHERE proposal_id = ? OR id = ? OR id = ? LIMIT 1')

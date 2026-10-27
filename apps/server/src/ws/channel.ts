@@ -1,9 +1,24 @@
 import type { IncomingMessage } from 'node:http';
 import type { Duplex } from 'node:stream';
 import { WebSocket, WebSocketServer, type RawData } from 'ws';
-import { boardId, type Board, type BoardId, type Proposal } from '@wardboard/core';
+import {
+  boardId,
+  proposalId,
+  userId,
+  type Board,
+  type BoardId,
+  type Proposal,
+  type ProposalId,
+} from '@wardboard/core';
 import type { Access, User } from '../access/index.ts';
 import type { Identity } from '../identity/index.ts';
+import {
+  checkAcceptance,
+  freezeSummary,
+  toProposalDetail,
+  validateMeta,
+  type ProposalDetail,
+} from '../proposals/index.ts';
 import type { Store } from '../store/index.ts';
 import { prepareOperation } from './operations.ts';
 
@@ -69,6 +84,27 @@ function echoRequestId(value: unknown): string {
   return value;
 }
 
+function boundedRequestId(value: unknown): value is string {
+  return nonEmpty(value) && value.length <= 64;
+}
+
+function isProposalStatus(value: unknown): value is 'accepted' | 'draft' {
+  return value === 'accepted' || value === 'draft';
+}
+
+function proposalSource(value: unknown): { kind: 'current' } | { kind: 'proposal'; id: ProposalId } | null {
+  if (!isRecord(value)) return null;
+  if (exact(value, ['kind']) && value.kind === 'current') return { kind: 'current' };
+  if (exact(value, ['kind', 'proposalId']) && value.kind === 'proposal' && nonEmpty(value.proposalId)) {
+    return { kind: 'proposal', id: proposalId(value.proposalId) };
+  }
+  return null;
+}
+
+function clientCode(code: string): string {
+  return code === 'invalid' ? 'bad_request' : code;
+}
+
 export function createOperationChannel(deps: {
   store: Store;
   access: Access;
@@ -122,13 +158,13 @@ export function createOperationChannel(deps: {
     }
   }
 
-  function listBoards(connection: Connection, message: Record<string, unknown>): void {
-    if (!exact(message, ['type'])) {
-      sendJson(connection.ws, { type: 'error', code: 'bad_request' });
-      return;
-    }
+  function boardsMessage(): {
+    type: 'boards';
+    current: null | { boardId: Board['id']; version: number; importVersion: string; importedAt: string };
+    proposals: ReturnType<Store['listProposals']>;
+  } {
     const current = store.loadCurrent();
-    sendJson(connection.ws, {
+    return {
       type: 'boards',
       current:
         current === null
@@ -140,7 +176,38 @@ export function createOperationChannel(deps: {
               importedAt: current.importedAt,
             },
       proposals: store.listProposals(),
-    });
+    };
+  }
+
+  function broadcastBoards(): void {
+    const payload = JSON.stringify(boardsMessage());
+    for (const connection of connections) {
+      if (connection.open && connection.ws.readyState === WebSocket.OPEN) {
+        connection.ws.send(payload);
+      }
+    }
+  }
+
+  function broadcastProposal(id: BoardId, detail: ProposalDetail): void {
+    const payload = JSON.stringify({ type: 'proposalChanged', boardId: id, proposal: detail });
+    for (const connection of connections) {
+      if (connection.open && connection.subscription === id && connection.ws.readyState === WebSocket.OPEN) {
+        connection.ws.send(payload);
+      }
+    }
+  }
+
+  function publishProposal(proposal: Proposal): void {
+    broadcastProposal(proposal.board.id, toProposalDetail(proposal, access.listUsers()));
+    broadcastBoards();
+  }
+
+  function listBoards(connection: Connection, message: Record<string, unknown>): void {
+    if (!exact(message, ['type'])) {
+      sendJson(connection.ws, { type: 'error', code: 'bad_request' });
+      return;
+    }
+    sendJson(connection.ws, boardsMessage());
   }
 
   function subscribe(connection: Connection, message: Record<string, unknown>): void {
@@ -280,6 +347,178 @@ export function createOperationChannel(deps: {
     broadcast(committed.value, requestId, connection.user.login);
   }
 
+  function refuse(connection: Connection, message: Record<string, unknown>, code: string, text: string): void {
+    reject(connection.ws, echoRequestId(message.requestId), code, text);
+  }
+
+  function createProposal(connection: Connection, message: Record<string, unknown>): void {
+    if (!exact(message, ['type', 'requestId', 'name', 'rationale', 'source'])) {
+      refuse(connection, message, 'bad_request', 'createProposal must have requestId, name, rationale, and source');
+      return;
+    }
+    if (!boundedRequestId(message.requestId)) {
+      refuse(connection, message, 'bad_request', 'requestId must be a string of 1 to 64 characters');
+      return;
+    }
+    const meta = validateMeta({ name: message.name, rationale: message.rationale });
+    if (!meta.ok) {
+      refuse(
+        connection,
+        message,
+        'bad_request',
+        'name must be 1 to 80 characters and rationale must be null or at most 500 characters',
+      );
+      return;
+    }
+    const source = proposalSource(message.source);
+    if (source === null) {
+      refuse(connection, message, 'bad_request', 'source must be current or an existing proposal');
+      return;
+    }
+    const created = store.createProposal({ name: meta.name, rationale: meta.rationale, source }, ids);
+    if (!created.ok) {
+      refuse(connection, message, clientCode(created.error.code), created.error.message);
+      return;
+    }
+    sendJson(connection.ws, {
+      type: 'proposalCreated',
+      requestId: message.requestId,
+      proposalId: created.value.id,
+      boardId: created.value.board.id,
+    });
+    broadcastBoards();
+  }
+
+  function updateProposal(connection: Connection, message: Record<string, unknown>): void {
+    if (!exact(message, ['type', 'requestId', 'proposalId', 'name', 'rationale'])) {
+      refuse(connection, message, 'bad_request', 'updateProposal must have requestId, proposalId, name, and rationale');
+      return;
+    }
+    if (!boundedRequestId(message.requestId)) {
+      refuse(connection, message, 'bad_request', 'requestId must be a string of 1 to 64 characters');
+      return;
+    }
+    if (!nonEmpty(message.proposalId)) {
+      refuse(connection, message, 'bad_request', 'proposalId must be a non-empty string');
+      return;
+    }
+    const meta = validateMeta({ name: message.name, rationale: message.rationale });
+    if (!meta.ok) {
+      refuse(
+        connection,
+        message,
+        'bad_request',
+        'name must be 1 to 80 characters and rationale must be null or at most 500 characters',
+      );
+      return;
+    }
+    const updated = store.updateProposalMeta(proposalId(message.proposalId), {
+      name: meta.name,
+      rationale: meta.rationale,
+    });
+    if (!updated.ok) {
+      refuse(connection, message, clientCode(updated.error.code), updated.error.message);
+      return;
+    }
+    sendJson(connection.ws, {
+      type: 'proposalUpdated',
+      requestId: message.requestId,
+      proposalId: updated.value.id,
+    });
+    publishProposal(updated.value);
+  }
+
+  function applyStatus(
+    connection: Connection,
+    proposal: Proposal,
+    status: 'accepted' | 'draft',
+  ): { ok: true; value: Proposal } | { ok: false; code: string; message: string } {
+    if (status === 'draft') {
+      const reopened = store.setProposalAcceptance(proposal.id, null);
+      if (!reopened.ok) return { ok: false, code: clientCode(reopened.error.code), message: reopened.error.message };
+      return reopened;
+    }
+    const current = store.loadCurrent();
+    if (current === null) return { ok: false, code: 'no_current', message: 'no current board' };
+    const ward = store.loadWard();
+    const eligibility = checkAcceptance(proposal, current.board, ward);
+    if (!eligibility.ok) return eligibility;
+    // Eligibility and the write stay on the same stack with no await between them.
+    const accepted = store.setProposalAcceptance(proposal.id, {
+      by: userId(connection.user.id),
+      at: clock().toISOString(),
+      summary: freezeSummary(proposal, ward),
+    });
+    if (!accepted.ok) return { ok: false, code: clientCode(accepted.error.code), message: accepted.error.message };
+    return accepted;
+  }
+
+  function setProposalStatus(connection: Connection, message: Record<string, unknown>): void {
+    if (!exact(message, ['type', 'requestId', 'proposalId', 'status'])) {
+      refuse(connection, message, 'bad_request', 'setProposalStatus must have requestId, proposalId, and status');
+      return;
+    }
+    if (!boundedRequestId(message.requestId)) {
+      refuse(connection, message, 'bad_request', 'requestId must be a string of 1 to 64 characters');
+      return;
+    }
+    if (!nonEmpty(message.proposalId)) {
+      refuse(connection, message, 'bad_request', 'proposalId must be a non-empty string');
+      return;
+    }
+    if (!isProposalStatus(message.status)) {
+      refuse(connection, message, 'bad_request', 'status must be accepted or draft');
+      return;
+    }
+    const id = proposalId(message.proposalId);
+    const proposal = store.loadProposal(id);
+    if (proposal === null) {
+      refuse(connection, message, 'not_found', `proposal ${id} does not exist`);
+      return;
+    }
+    if (proposal.status === message.status) {
+      refuse(connection, message, 'no_change', `proposal ${id} is already ${message.status}`);
+      return;
+    }
+    const written = applyStatus(connection, proposal, message.status);
+    if (!written.ok) {
+      refuse(connection, message, written.code, written.message);
+      return;
+    }
+    sendJson(connection.ws, {
+      type: 'statusChanged',
+      requestId: message.requestId,
+      proposalId: written.value.id,
+      status: written.value.status,
+    });
+    publishProposal(written.value);
+  }
+
+  function getProposal(connection: Connection, message: Record<string, unknown>): void {
+    if (!exact(message, ['type', 'requestId', 'proposalId'])) {
+      refuse(connection, message, 'bad_request', 'getProposal must have requestId and proposalId');
+      return;
+    }
+    if (!boundedRequestId(message.requestId)) {
+      refuse(connection, message, 'bad_request', 'requestId must be a string of 1 to 64 characters');
+      return;
+    }
+    if (!nonEmpty(message.proposalId)) {
+      refuse(connection, message, 'bad_request', 'proposalId must be a non-empty string');
+      return;
+    }
+    const proposal = store.loadProposal(proposalId(message.proposalId));
+    if (proposal === null) {
+      refuse(connection, message, 'not_found', `proposal ${message.proposalId} does not exist`);
+      return;
+    }
+    sendJson(connection.ws, {
+      type: 'proposalDetail',
+      requestId: message.requestId,
+      proposal: toProposalDetail(proposal, access.listUsers()),
+    });
+  }
+
   function dispatch(connection: Connection, parsed: unknown): void {
     if (!isRecord(parsed) || typeof parsed.type !== 'string') {
       sendJson(connection.ws, { type: 'error', code: 'bad_request' });
@@ -295,6 +534,22 @@ export function createOperationChannel(deps: {
     }
     if (parsed.type === 'op') {
       operate(connection, parsed);
+      return;
+    }
+    if (parsed.type === 'createProposal') {
+      createProposal(connection, parsed);
+      return;
+    }
+    if (parsed.type === 'updateProposal') {
+      updateProposal(connection, parsed);
+      return;
+    }
+    if (parsed.type === 'setProposalStatus') {
+      setProposalStatus(connection, parsed);
+      return;
+    }
+    if (parsed.type === 'getProposal') {
+      getProposal(connection, parsed);
       return;
     }
     sendJson(connection.ws, { type: 'error', code: 'bad_request' });

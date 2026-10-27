@@ -1,4 +1,13 @@
-import type { Board, BoardId, IdGenerator, Proposal, ProposalId, ProposalStatus, Ward } from '@wardboard/core';
+import type {
+  Board,
+  BoardId,
+  IdGenerator,
+  Proposal,
+  ProposalAcceptance,
+  ProposalId,
+  ProposalStatus,
+  Ward,
+} from '@wardboard/core';
 
 export type StoreClock = () => Date;
 
@@ -45,4 +54,11 @@ export interface Store {
   ): StoreResult<Proposal>;
   /** Replaces every board-owned row of `next.id` and sets version = expectedVersion + 1, in one transaction. */
   commitBoard(next: Board, expectedVersion: number): StoreResult<Board>;
+  /** Sets name, rationale, and updated_at. Does not change the board version. */
+  updateProposalMeta(
+    id: ProposalId,
+    meta: { name: string; rationale: string | null },
+  ): StoreResult<Proposal>;
+  /** Writes acceptance, or clears it when `accepted` is null. Does not change the board version. */
+  setProposalAcceptance(id: ProposalId, accepted: ProposalAcceptance | null): StoreResult<Proposal>;
 }

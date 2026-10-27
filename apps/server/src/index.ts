@@ -30,3 +30,9 @@ export {
   type StoreResult,
 } from './store/index.ts';
 export { operationRegistry, type OpKind } from './ws/operations.ts';
+export {
+  checkAcceptance,
+  freezeSummary,
+  validateMeta,
+  type ProposalDetail,
+} from './proposals/index.ts';

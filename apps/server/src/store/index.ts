@@ -26,6 +26,8 @@ import {
   withImmediateTransaction,
   writeInitialization,
   writeProposal,
+  writeProposalAcceptance,
+  writeProposalMeta,
 } from './persist.ts';
 import type { Store, StoreClock, StoreError, StoreResult } from './types.ts';
 
@@ -55,8 +57,22 @@ function invalid(message: string): StoreResult<never> {
 }
 
 function invalidResult(errors: readonly { path: string; message: string }[]): StoreResult<never> {
+  return invalid(invalidMessage(errors));
+}
+
+function invalidMessage(errors: readonly { path: string; message: string }[]): string {
   const message = errors.map((error) => `${error.path}: ${error.message}`).join('; ');
-  return invalid(message.length > 0 ? message : 'invalid');
+  return message.length > 0 ? message : 'invalid';
+}
+
+class Refusal extends Error {
+  readonly failure: StoreError;
+
+  constructor(failure: StoreError) {
+    super(failure.message);
+    this.name = 'Refusal';
+    this.failure = failure;
+  }
 }
 
 function stampOf(clock: StoreClock): string {
@@ -217,6 +233,79 @@ export function openStore(db: DatabaseSync, clock: StoreClock): Store {
       const loaded = readBoard(db, next.id, readWard(db));
       if (loaded === null) {
         throw new Error(`board ${next.id} missing after commit`);
+      }
+      return ok(loaded);
+    },
+
+    updateProposalMeta(id, meta) {
+      const stamp = stampOf(clock);
+      try {
+        withImmediateTransaction(db, () => {
+          const existing = readProposal(db, id);
+          if (existing === null) {
+            throw new Refusal({ code: 'not_found', message: `proposal ${id} does not exist` });
+          }
+          if (existing.status === 'accepted') {
+            throw new Refusal({ code: 'not_editable', message: 'accepted proposals cannot be edited' });
+          }
+          const validated = createProposal(
+            { ...existing, name: meta.name, rationale: meta.rationale, updatedAt: stamp },
+            readWard(db),
+          );
+          if (!validated.ok) {
+            throw new Refusal({ code: 'invalid', message: invalidMessage(validated.errors) });
+          }
+          writeProposalMeta(db, id, validated.value.name, validated.value.rationale, stamp);
+        });
+      } catch (error: unknown) {
+        if (error instanceof Refusal) return fail(error.failure);
+        return invalid(errorMessage(error));
+      }
+      const loaded = readProposal(db, id);
+      if (loaded === null) {
+        throw new Error(`proposal ${id} missing after update`);
+      }
+      return ok(loaded);
+    },
+
+    setProposalAcceptance(id, accepted) {
+      const stamp = stampOf(clock);
+      try {
+        withImmediateTransaction(db, () => {
+          const existing = readProposal(db, id);
+          if (existing === null) {
+            throw new Refusal({ code: 'not_found', message: `proposal ${id} does not exist` });
+          }
+          const validated = createProposal(
+            {
+              ...existing,
+              status: accepted === null ? 'draft' : 'accepted',
+              accepted,
+              updatedAt: stamp,
+            },
+            readWard(db),
+          );
+          if (!validated.ok) {
+            throw new Refusal({ code: 'invalid', message: invalidMessage(validated.errors) });
+          }
+          const recorded = validated.value.accepted;
+          writeProposalAcceptance(
+            db,
+            id,
+            validated.value.status,
+            recorded === null ? null : recorded.by,
+            recorded === null ? null : recorded.at,
+            recorded === null ? null : recorded.summary,
+            stamp,
+          );
+        });
+      } catch (error: unknown) {
+        if (error instanceof Refusal) return fail(error.failure);
+        return invalid(errorMessage(error));
+      }
+      const loaded = readProposal(db, id);
+      if (loaded === null) {
+        throw new Error(`proposal ${id} missing after acceptance update`);
       }
       return ok(loaded);
     },
