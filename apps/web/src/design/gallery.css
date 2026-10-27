@@ -57,3 +57,101 @@
     padding: 28px 28px 48px;
   }
 }
+
+.wb-gallery-canvas-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin: 0;
+  min-width: 0;
+}
+
+.wb-gallery-canvas-frame {
+  width: 100%;
+  max-width: 900px;
+  height: 560px;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--wb-line);
+  border-radius: 12px;
+  background: var(--wb-ground);
+}
+
+.wb-canvas-demo {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: 16px;
+}
+
+.wb-canvas-demo-heading {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.wb-canvas-demo-orgs,
+.wb-canvas-demo-people {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
+  gap: 10px;
+  min-width: 0;
+}
+
+.wb-canvas-demo-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.wb-canvas-demo-tile,
+.wb-canvas-demo-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid var(--wb-line);
+  border-radius: 8px;
+  background: var(--wb-surface);
+}
+
+.wb-canvas-demo-group {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.wb-canvas-demo-tile[data-selected='true'],
+.wb-canvas-demo-group[data-selected='true'] {
+  border: 2px solid var(--wb-accent);
+}
+
+.wb-canvas-demo-title {
+  font-size: 13px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.wb-canvas-demo-vacant {
+  color: var(--wb-vacancy-text);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.wb-canvas-demo-counts {
+  color: var(--wb-ink-2);
+  font-size: 13px;
+}
+
+.wb-canvas-demo-selected {
+  color: var(--wb-accent-dark);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.wb-canvas-demo-member {
+  min-width: 0;
+}
