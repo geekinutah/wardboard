@@ -55,6 +55,7 @@ docker run -d \
   -v "$VOLUME:/data" \
   -p 127.0.0.1::8080 \
   -e WARDBOARD_BASE_URL=http://localhost \
+  -e WARDBOARD_INITIAL_ADMIN_LOGIN=smoke@example.test \
   "$IMAGE" >/dev/null
 
 # Wait for the container's own health check; a broken image must time out here.
@@ -98,6 +99,10 @@ echo "    / serves the WardBoard shell"
 ANON_STATUS="$(curl -sS -o /dev/null -w '%{http_code}' "${BASE_URL}/")" || fail "GET / without identity failed"
 [ "$ANON_STATUS" = "401" ] || fail "GET / without Tailscale-User-Login returned ${ANON_STATUS}, expected 401"
 echo "    / without identity: 401"
+
+STRANGER_STATUS="$(curl -sS -o /dev/null -w '%{http_code}' -H 'Tailscale-User-Login: stranger@example.test' "${BASE_URL}/")" || fail "GET / with a stranger login failed"
+[ "$STRANGER_STATUS" = "403" ] || fail "GET / with Tailscale-User-Login stranger@example.test returned ${STRANGER_STATUS}, expected 403"
+echo "    / stranger login: 403"
 
 RUN_UID="$(docker exec "$NAME" id -u)"
 [ "$RUN_UID" != "0" ] || fail "container runs as root"

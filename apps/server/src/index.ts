@@ -10,3 +10,13 @@ export {
   type IdentityProvider,
   type IdentityResult,
 } from './identity/index.ts';
+export {
+  createAccess,
+  getAuthenticatedUser,
+  type Access,
+  type AccessErrorCode,
+  type AccessResult,
+  type Invitation,
+  type Role,
+  type User,
+} from './access/index.ts';

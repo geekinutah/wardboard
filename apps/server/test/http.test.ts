@@ -42,6 +42,7 @@ function loopbackConfig(dataDir: string, webDir?: string): Config {
     baseUrl: 'http://wardboard.example',
     port: 0,
     host: '127.0.0.1',
+    initialAdminLogin: 'tester@example.test',
   };
   if (webDir === undefined) return config;
   return { ...config, webDir };

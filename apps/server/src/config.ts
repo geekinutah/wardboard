@@ -1,4 +1,5 @@
 import path from 'node:path';
+import { normalizeLogin } from './access/login.ts';
 
 export class ConfigError extends Error {
   constructor(problems: readonly string[]) {
@@ -14,6 +15,7 @@ export type Config = {
   host: string;
   webDir?: string;
   trustIdentityHeadersOnNonLoopback?: boolean;
+  initialAdminLogin?: string;
 };
 
 const PORT_PATTERN = /^(?:0|[1-9][0-9]*)$/;
@@ -91,10 +93,22 @@ export function parseConfig(env: Record<string, string | undefined>): Config {
     }
   }
 
+  const initialRaw = env['WARDBOARD_INITIAL_ADMIN_LOGIN'];
+  let initialAdminLogin: string | undefined;
+  if (initialRaw !== undefined) {
+    const normalized = normalizeLogin(initialRaw);
+    if (normalized === undefined) {
+      problems.push('WARDBOARD_INITIAL_ADMIN_LOGIN is invalid');
+    } else {
+      initialAdminLogin = normalized;
+    }
+  }
+
   if (problems.length > 0) throw new ConfigError(problems);
   if (dataDir === undefined || baseUrl === undefined) throw new ConfigError(problems);
 
-  const config: Config = { dataDir, baseUrl, port, host, trustIdentityHeadersOnNonLoopback };
-  if (webDir !== undefined) return { ...config, webDir };
+  let config: Config = { dataDir, baseUrl, port, host, trustIdentityHeadersOnNonLoopback };
+  if (webDir !== undefined) config = { ...config, webDir };
+  if (initialAdminLogin !== undefined) config = { ...config, initialAdminLogin };
   return config;
 }

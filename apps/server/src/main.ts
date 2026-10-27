@@ -14,6 +14,9 @@ async function main(): Promise<void> {
   }
 
   const running = await startServer(config);
+  if (config.initialAdminLogin === undefined && !running.hasActiveAdmin) {
+    console.error('no admin: set WARDBOARD_INITIAL_ADMIN_LOGIN');
+  }
   console.log(running.url);
 
   let shuttingDown = false;

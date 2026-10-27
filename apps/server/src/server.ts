@@ -1,7 +1,10 @@
+import { randomUUID } from 'node:crypto';
 import { mkdir, readFile, realpath, stat } from 'node:fs/promises';
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import path from 'node:path';
+import { setAuthenticatedUser, createAccess, type Access } from './access/index.ts';
 import type { Config } from './config.ts';
+import { databasePath, migrate, openDatabase } from './db/index.ts';
 import {
   authenticate,
   tailscaleIdentityProvider,
@@ -10,6 +13,8 @@ import {
 
 export type StartServerOptions = {
   identityProvider?: IdentityProvider;
+  clock?: () => Date;
+  ids?: () => string;
 };
 
 function parseIpv6(host: string): number[] | null {
@@ -76,6 +81,7 @@ function rawJsonResponse(statusLine: string, body: string, noStore: boolean): st
 export type RunningServer = {
   url: string;
   port: number;
+  hasActiveAdmin: boolean;
   close(): Promise<void>;
 };
 
@@ -245,6 +251,7 @@ async function handleRequest(
   res: ServerResponse,
   config: Config,
   provider: IdentityProvider,
+  access: Access,
 ): Promise<void> {
   const method = req.method ?? 'GET';
   if (req.url === undefined) {
@@ -267,6 +274,13 @@ async function handleRequest(
     writeJson(res, 401, '{"error":"unauthenticated"}', method, { 'cache-control': 'no-store' });
     return;
   }
+
+  const resolved = access.resolve(auth.identity);
+  if (!resolved.ok) {
+    writeJson(res, 403, '{"error":"forbidden"}', method, { 'cache-control': 'no-store' });
+    return;
+  }
+  setAuthenticatedUser(req, resolved.user);
 
   if (pathname === '/api' || pathname.startsWith('/api/')) {
     writeJson(res, 404, '{"error":"not_found"}', method);
@@ -312,62 +326,101 @@ export async function startServer(
 
   await mkdir(config.dataDir, { recursive: true });
 
-  const provider = options?.identityProvider ?? tailscaleIdentityProvider();
+  const db = openDatabase(databasePath(config.dataDir));
+  let server: Server | undefined;
+  try {
+    migrate(db);
+    const clock = options?.clock ?? ((): Date => new Date());
+    const ids = options?.ids ?? randomUUID;
+    const access = createAccess(db, clock, ids);
+    if (config.initialAdminLogin !== undefined) {
+      access.bootstrapAdmin(config.initialAdminLogin);
+    }
+    const hasActiveAdmin = access
+      .listUsers()
+      .some((user) => user.role === 'admin' && user.revokedAt === null);
 
-  const server = createServer((req, res) => {
-    void handleRequest(req, res, config, provider).catch(() => {
-      if (res.headersSent || res.writableEnded) {
-        res.destroy();
+    const provider = options?.identityProvider ?? tailscaleIdentityProvider();
+
+    server = createServer((req, res) => {
+      void handleRequest(req, res, config, provider, access).catch(() => {
+        if (res.headersSent || res.writableEnded) {
+          res.destroy();
+          return;
+        }
+        writeJson(res, 500, '{"error":"internal_error"}', req.method ?? 'GET');
+      });
+    });
+
+    // Authenticate first, then authorize. T-024 plugs the WebSocket endpoint in
+    // after the gate; until then an allowed upgrade is a 404.
+    server.on('upgrade', (req, socket) => {
+      socket.on('error', () => undefined);
+
+      const auth = authenticate(provider, req);
+      if (!auth.ok) {
+        socket.end(rawJsonResponse('401 Unauthorized', '{"error":"unauthenticated"}', true));
         return;
       }
-      writeJson(res, 500, '{"error":"internal_error"}', req.method ?? 'GET');
+
+      const resolved = access.resolve(auth.identity);
+      if (!resolved.ok) {
+        socket.end(rawJsonResponse('403 Forbidden', '{"error":"forbidden"}', true));
+        return;
+      }
+      setAuthenticatedUser(req, resolved.user);
+
+      socket.end(rawJsonResponse('404 Not Found', '{"error":"not_found"}', false));
     });
-  });
 
-  // Authenticate first, then route. T-024 plugs the WebSocket endpoint in
-  // after the gate; until then an authenticated upgrade is a 404.
-  server.on('upgrade', (req, socket) => {
-    socket.on('error', () => undefined);
+    server.on('clientError', (_error, socket) => {
+      if (!socket.writable) {
+        socket.destroy();
+        return;
+      }
+      socket.end('HTTP/1.1 400 Bad Request\r\nX-Content-Type-Options: nosniff\r\nConnection: close\r\n\r\n');
+    });
+    // Keep a listener so a late socket error cannot crash the process. Do not log request data.
+    server.on('error', () => undefined);
 
-    const auth = authenticate(provider, req);
-    if (!auth.ok) {
-      socket.end(rawJsonResponse('401 Unauthorized', '{"error":"unauthenticated"}', true));
-      return;
+    const listening = server;
+    await new Promise<void>((resolve, reject) => {
+      const onError = (error: Error): void => {
+        reject(error);
+      };
+      listening.once('error', onError);
+      listening.listen(config.port, config.host, () => {
+        listening.removeListener('error', onError);
+        resolve();
+      });
+    });
+
+    const address = listening.address();
+    if (address === null || typeof address === 'string') {
+      throw new Error('Server did not bind a TCP port');
     }
 
-    socket.end(rawJsonResponse('404 Not Found', '{"error":"not_found"}', false));
-  });
-
-  server.on('clientError', (_error, socket) => {
-    if (!socket.writable) {
-      socket.destroy();
-      return;
-    }
-    socket.end('HTTP/1.1 400 Bad Request\r\nX-Content-Type-Options: nosniff\r\nConnection: close\r\n\r\n');
-  });
-  // Keep a listener so a late socket error cannot crash the process. Do not log request data.
-  server.on('error', () => undefined);
-
-  await new Promise<void>((resolve, reject) => {
-    const onError = (error: Error): void => {
-      reject(error);
+    let closed = false;
+    return {
+      port: address.port,
+      url: formatListenUrl(address.address, address.port),
+      hasActiveAdmin,
+      close: async () => {
+        try {
+          await closeServer(listening);
+        } finally {
+          if (!closed) {
+            closed = true;
+            db.close();
+          }
+        }
+      },
     };
-    server.once('error', onError);
-    server.listen(config.port, config.host, () => {
-      server.removeListener('error', onError);
-      resolve();
-    });
-  });
-
-  const address = server.address();
-  if (address === null || typeof address === 'string') {
-    await closeServer(server);
-    throw new Error('Server did not bind a TCP port');
+  } catch (error: unknown) {
+    if (server !== undefined) {
+      await closeServer(server).catch(() => undefined);
+    }
+    db.close();
+    throw error;
   }
-
-  return {
-    port: address.port,
-    url: formatListenUrl(address.address, address.port),
-    close: () => closeServer(server),
-  };
 }

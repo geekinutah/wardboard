@@ -46,6 +46,7 @@ async function setupServer(options?: StartServerOptions): Promise<{
     port: 0,
     host: '127.0.0.1',
     webDir,
+    initialAdminLogin: (options?.identityProvider?.identify(undefined as never) as { identity?: Identity } | undefined)?.identity?.login ?? 'alice@example.test',
   };
 
   const server = await startServer(config, options);

@@ -118,6 +118,31 @@ describe('parseConfig', () => {
     expect(config.trustIdentityHeadersOnNonLoopback).toBe(false);
   });
 
+  it('initial admin login is optional and normalized', () => {
+    expect(parseConfig(validEnv).initialAdminLogin).toBeUndefined();
+
+    const config = parseConfig({
+      ...validEnv,
+      WARDBOARD_INITIAL_ADMIN_LOGIN: ' Mike@X.test ',
+    });
+    expect(config.initialAdminLogin).toBe('mike@x.test');
+  });
+
+  it('invalid initial admin login is a ConfigError', () => {
+    for (const login of ['a b', 'a,b', '', '   ', 'a<b', 'a>b', 'a\u0007b', 'a'.repeat(255)]) {
+      const error = capture(() =>
+        parseConfig({
+          ...validEnv,
+          WARDBOARD_INITIAL_ADMIN_LOGIN: login,
+        }),
+      );
+
+      expect(error, JSON.stringify(login)).toBeInstanceOf(ConfigError);
+      const message = error instanceof ConfigError ? error.message : '';
+      expect(message, JSON.stringify(login)).toContain('WARDBOARD_INITIAL_ADMIN_LOGIN');
+    }
+  });
+
   it('trust flag accepts only "1"', () => {
     const config = parseConfig({
       ...validEnv,

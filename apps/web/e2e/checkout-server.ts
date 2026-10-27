@@ -49,6 +49,7 @@ export async function startCheckoutServer(): Promise<CheckoutServer> {
         port: 0,
         host: '127.0.0.1',
         webDir: webDistDir,
+        initialAdminLogin: 'e2e-editor@example.test',
       },
       {
         identityProvider: fixtureIdentityProvider({
