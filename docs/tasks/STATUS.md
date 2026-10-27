@@ -21,5 +21,5 @@ Candidate and discovered work that has not yet been promoted into a task contrac
 | T-011 | Release and dugout | 2 — Board domain | in progress | 0 | none |
 | T-012 | Groups and positions | 2 — Board domain | in progress | 0 | none |
 | T-013 | Presidency release rule | 2 — Board domain | todo | 0 | none |
-| T-014 | Second-calling detection | 2 — Board domain | in progress | 0 | none |
+| T-014 | Second-calling detection | 2 — Board domain | done | 1 | none |
 | T-015 | Needs-approval placements | 2 — Board domain | in progress | 0 | none |
