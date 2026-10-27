@@ -108,7 +108,13 @@ If your OpenCode session is sandboxed, the Playwright browser download block in 
 
 ### Model choice (OpenCode)
 
-No model is pinned in the committed adapters. Subagents inherit the invoking session's model unless the controller passes an explicit per-invocation override; choose the model per handoff based on task complexity and verification risk rather than silently inheriting. Name the actual model in the handoff packet and controller report. Model choice must not weaken any acceptance, quality, mutation, or GUI gate.
+Every implementer and verifier subagent runs on this session's model. Do not pass a `model` override on the subagent tool and do not switch providers; no model is pinned in the committed adapters or in an `opencode.json`.
+
+- Do not apply another harness's model guidance (for example the Codex or Claude Code sections) in OpenCode.
+- Do not infer a model's capability from its name, release date, or other metadata.
+- Independence comes from a fresh verifier session, not a different model.
+- Name the session's actual model in the handoff packet and controller report.
+- If the session's model lacks a capability a task requires, report BLOCKED to the operator instead of switching models.
 
 Record verification in the task's evidence file per the Evidence record rule in `docs/agents/protocol.md`.
 

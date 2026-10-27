@@ -7,4 +7,10 @@ Read `AGENTS.md`, `docs/agents/protocol.md`, and `docs/agents/controller.md`. Fo
 
 ## Model choice (OpenCode)
 
-Choose the model for each implementer and verifier handoff based on the task, and pass it explicitly (the `model` parameter on the subagent tool) rather than inheriting this session's model. Never pin a model in this adapter. Do not silently inherit when an override is available. Name the chosen model in the handoff packet and the controller report. The shared role files leave model choice to the harness (`docs/agents/protocol.md`); this adapter is where that choice is made.
+Every implementer and verifier subagent runs on this session's model. Do not pass a `model` override on the subagent tool and do not switch providers; never pin a model in this adapter.
+
+- Do not apply another harness's model guidance (for example the Codex or Claude Code sections) in OpenCode.
+- Do not infer a model's capability from its name, release date, or other metadata.
+- Independence comes from a fresh verifier session, not a different model (`docs/agents/protocol.md`).
+- Name the session's actual model in the handoff packet and the controller report.
+- If the session's model lacks a capability a task requires, report BLOCKED to the operator instead of switching models.
