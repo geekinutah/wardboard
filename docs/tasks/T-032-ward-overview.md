@@ -59,6 +59,7 @@ May change:
 - `packages/core/src/derive/overview.ts` (new), `packages/core/src/derive/index.ts` (one export line), `packages/core/test/derive/overview.test.ts` (new)
 - `apps/web/src/features/ward-overview/**` (new)
 - `apps/web/e2e/gui/ward-overview.capture.ts` (new)
+- `apps/web/e2e/preview.spec.ts` and `apps/web/e2e/gui/preview.capture.ts` (remove only the `No previews yet.` line from T-070 so the index e2e/capture pass once feature previews exist; the zero-previews case remains covered by `src/preview/preview.test.tsx`)
 
 Must not change:
 - Other `packages/core/**` files, `apps/web/src/App.tsx`, `main.tsx`, `apps/web/src/design/**`, `apps/web/src/preview/**`, `apps/web/src/features/canvas/**`, `apps/server/**`, and anything else
