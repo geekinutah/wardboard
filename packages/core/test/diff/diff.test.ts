@@ -8,15 +8,21 @@ import {
   assignmentId,
   createWard,
   diffBoards as diffBoardsFromRoot,
+  lineageId,
+  moveToDugout,
   placeInPosition,
   proposalDiff as proposalDiffFromRoot,
   releaseCalling,
   releaseOccupant,
   removeAssignment,
   removePosition,
+  positionId,
   swap,
+  type AssignmentId,
   type Board,
+  type LineageId,
   type PositionId,
+  type Ward,
 } from '../../src/index.ts';
 import { diffBoards, proposalDiff, type DiffPlacement, type DiffPosition } from '../../src/diff/index.ts';
 import { deepFreeze } from '../../src/model/freeze.ts';
@@ -69,6 +75,35 @@ function placed(entries: readonly DiffPlacement[]): string[] {
 function positionIds(entries: readonly DiffPosition[]): string[] {
   return entries.map((entry) => entry.positionId);
 }
+
+/**
+ * Rebuilds `board` with every position id and assignment id renamed (suffix
+ * `-r`) while keeping every lineage, so cross-board matching by id finds nothing.
+ */
+function renameIds(board: Board, ward: Ward): Board {
+  const pos = (id: PositionId): PositionId => positionId(`${id}-r`);
+  const asg = (id: AssignmentId): AssignmentId => assignmentId(`${id}-r`);
+  return rebuild(board, ward, {
+    assignments: Object.fromEntries(Object.values(board.assignments).map((a) => [asg(a.id), { ...a, id: asg(a.id) }])),
+    positions: Object.fromEntries(
+      Object.values(board.positions).map((p) => [pos(p.id), { ...p, id: pos(p.id), assignmentId: asg(p.assignmentId) }]),
+    ),
+    placements: Object.fromEntries(Object.entries(board.placements).map(([id, m]) => [pos(positionId(id)), m])),
+    approvals: board.approvals.map((a) => ({ ...a, positionId: pos(a.positionId) })),
+  });
+}
+
+/** Rebuilds `board` with the given positions' lineages replaced; ids are kept. */
+function relineage(board: Board, ward: Ward, ids: readonly PositionId[]): Board {
+  const fresh = (id: PositionId): LineageId => lineageId(`fresh-${id}`);
+  return rebuild(board, ward, {
+    positions: Object.fromEntries(
+      Object.values(board.positions).map((p) => [p.id, ids.includes(p.id) ? { ...p, lineageId: fresh(p.id) } : p]),
+    ),
+  });
+}
+
+const renamedId = (id: PositionId): PositionId => positionId(`${id}-r`);
 
 function sameList(entries: readonly DiffPlacement[]): string[] {
   return entries.map((entry) => entry.title);
@@ -384,6 +419,129 @@ describe('net diff', () => {
     expect(isDeeplyFrozen(result)).toBe(true);
     expect(Object.isFrozen(result.callings)).toBe(true);
     expect(Object.isFrozen(result.callings[0])).toBe(true);
+  });
+
+  it('moving a member to the dugout is exactly one release', () => {
+    const { ward, baseline, board } = fixtureSetup();
+    const ted = memberNamed(ward, 'Ted Madeup');
+    const source = pid(board, DEACONS_ADVISER);
+    const next = expectOk(moveToDugout(board, contextFor(ward), { memberId: ted, from: source }));
+    expect(next.dugoutInclusions).toContain(ted);
+    expect(diffBoards(baseline, next)).toEqual({
+      callings: [],
+      releases: [
+        {
+          memberId: ted,
+          positionId: source,
+          lineageId: lineageOf(baseline, source),
+          assignmentId: baseline.positions[source]?.assignmentId,
+          title: 'Deacons Quorum Adviser',
+        },
+      ],
+      addedPositions: [],
+      removedPositions: [],
+    });
+  });
+
+  describe('position identity is lineage, not position or assignment id', () => {
+    const empty = { callings: [], releases: [], addedPositions: [], removedPositions: [] };
+
+    it('an unchanged arrangement with renamed position and assignment ids has an empty diff', () => {
+      const { ward, baseline, board } = fixtureSetup();
+      const renamed = renameIds(board, ward);
+      const sharedIds = Object.keys(renamed.positions).filter((id) => id in baseline.positions);
+      const sharedAssignments = Object.keys(renamed.assignments).filter((id) => id in baseline.assignments);
+      expect(sharedIds).toEqual([]);
+      expect(sharedAssignments).toEqual([]);
+      expect(Object.keys(renamed.placements)).toHaveLength(Object.keys(baseline.placements).length);
+      expect(diffBoards(baseline, renamed)).toEqual(empty);
+      expect(diffBoards(renamed, baseline)).toEqual(empty);
+    });
+
+    it('single positions match by lineage across renamed ids', () => {
+      const { ward, baseline, board } = fixtureSetup();
+      const ted = memberNamed(ward, 'Ted Madeup');
+      const source = pid(board, DEACONS_ADVISER);
+      const destination = pid(board, DEACONS_COUNSELOR);
+      const renamed = renameIds(board, ward);
+      const moved = expectOk(
+        placeInPosition(renamed, contextFor(ward), { memberId: ted, from: renamedId(source), to: renamedId(destination) }),
+      );
+      const result = diffBoards(baseline, moved);
+      expect(placed(result.releases)).toEqual([`${ted}@${source}`]);
+      expect(result.releases[0]?.assignmentId).toBe(baseline.positions[source]?.assignmentId);
+      expect(placed(result.callings)).toEqual([`${ted}@${renamedId(destination)}`]);
+      expect(result.callings[0]?.lineageId).toBe(lineageOf(baseline, destination));
+      expect(result.callings[0]?.assignmentId).toBe(moved.positions[renamedId(destination)]?.assignmentId);
+      expect(result.addedPositions).toEqual([]);
+      expect(result.removedPositions).toEqual([]);
+    });
+
+    it('a reused position id with a different lineage is a removed and an added position', () => {
+      const { ward, baseline, board } = fixtureSetup();
+      const ted = memberNamed(ward, 'Ted Madeup');
+      const adviser = pid(board, DEACONS_ADVISER);
+      const vacant = pid(board, DEACONS_COUNSELOR);
+      expect(board.placements[adviser]).toBe(ted);
+      expect(board.placements[vacant]).toBeUndefined();
+      const next = relineage(board, ward, [adviser, vacant]);
+      const result = diffBoards(baseline, next);
+      // Structural order: the First Counselor sorts before the Adviser.
+      expect(result.removedPositions).toEqual([
+        { positionId: vacant, lineageId: lineageOf(baseline, vacant), assignmentId: baseline.positions[vacant]?.assignmentId, title: 'Deacons Quorum First Counselor' },
+        { positionId: adviser, lineageId: lineageOf(baseline, adviser), assignmentId: baseline.positions[adviser]?.assignmentId, title: 'Deacons Quorum Adviser' },
+      ]);
+      expect(result.addedPositions).toEqual([
+        { positionId: vacant, lineageId: lineageId(`fresh-${vacant}`), assignmentId: next.positions[vacant]?.assignmentId, title: 'Deacons Quorum First Counselor' },
+        { positionId: adviser, lineageId: lineageId(`fresh-${adviser}`), assignmentId: next.positions[adviser]?.assignmentId, title: 'Deacons Quorum Adviser' },
+      ]);
+      // The occupied one is also a release of the old calling and a calling to the new one.
+      expect(result.releases).toEqual([
+        { memberId: ted, positionId: adviser, lineageId: lineageOf(baseline, adviser), assignmentId: baseline.positions[adviser]?.assignmentId, title: 'Deacons Quorum Adviser' },
+      ]);
+      expect(result.callings).toEqual([
+        { memberId: ted, positionId: adviser, lineageId: lineageId(`fresh-${adviser}`), assignmentId: next.positions[adviser]?.assignmentId, title: 'Deacons Quorum Adviser' },
+      ]);
+    });
+
+    it('a list with renamed ids but shared lineages is the same calling', () => {
+      const { ward, baseline, board } = fixtureSetup();
+      const jo = memberNamed(ward, 'Jo Testwell');
+      const lena = memberNamed(ward, 'Lena Storybook');
+      const ctx = contextFor(ward);
+      const renamed = renameIds(board, ward);
+      const jos = renamedId(pid(board, RS_TEACHER, 0));
+      const lenaBefore = renamedId(pid(board, RS_TEACHER, 2));
+      const listId = assignmentNamed(renamed, RS_TEACHER[0], RS_TEACHER[1]).id;
+      expect(listId in baseline.assignments).toBe(false);
+      let next = expectOk(releaseCalling(renamed, ctx, { memberId: jo, positionId: jos }));
+      next = expectOk(releaseCalling(next, ctx, { memberId: lena, positionId: lenaBefore }));
+      next = expectOk(addToList(next, ctx, { memberId: lena, from: null, assignmentId: listId }));
+      expect(next.placements[jos]).toBe(lena);
+      const result = diffBoards(baseline, next);
+      expect(placed(result.releases)).toEqual([`${jo}@${pid(board, RS_TEACHER, 0)}`]);
+      expect(result.callings).toEqual([]);
+      expect(result.addedPositions).toEqual([]);
+      expect(result.removedPositions).toEqual([]);
+    });
+
+    it('a list reusing an assignment id but sharing no lineage is a different calling', () => {
+      const { ward, baseline, board } = fixtureSetup();
+      const list = assignmentNamed(board, RS_TEACHER[0], RS_TEACHER[1]);
+      const ids = [0, 1, 2, 3].map((index) => pid(board, RS_TEACHER, index));
+      const next = relineage(board, ward, ids);
+      expect(next.assignments[list.id]).toBeDefined();
+      const result = diffBoards(baseline, next);
+      const holders = ['Jo Testwell', 'Kit Notreal', 'Lena Storybook'].map(
+        (name, index) => `${memberNamed(ward, name)}@${ids[index] ?? ''}`,
+      );
+      expect(positionIds(result.removedPositions)).toEqual(ids);
+      expect(positionIds(result.addedPositions)).toEqual(ids);
+      expect(result.addedPositions.map((entry) => entry.lineageId)).toEqual(ids.map((id) => lineageId(`fresh-${id}`)));
+      expect(placed(result.releases)).toEqual(holders);
+      expect(placed(result.callings)).toEqual(holders);
+      expect(result.callings.every((entry) => entry.assignmentId === list.id)).toBe(true);
+    });
   });
 
   it('is exported from the package root', () => {
