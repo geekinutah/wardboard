@@ -121,6 +121,27 @@ describe('.dockerignore', () => {
       assert.ok(entries.includes(required), `.dockerignore must list ${required}`);
     }
   });
+
+  it('dockerignore excludes fixtures directories at any depth', () => {
+    const entries = read('.dockerignore')
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line !== '' && !line.startsWith('#'));
+
+    const idx = entries.findIndex((line) => line === '**/fixtures/' || line === '**/fixtures');
+    assert.notEqual(
+      idx,
+      -1,
+      '.dockerignore must list **/fixtures/ so fixtures/ directories at any depth (e.g. packages/core/src/fixtures/) stay out of the image',
+    );
+
+    for (const line of entries.slice(idx + 1)) {
+      assert.ok(
+        !line.startsWith('!') || !line.includes('fixtures'),
+        `a later "${line}" re-includes fixtures after the ${entries[idx]} exclusion`,
+      );
+    }
+  });
 });
 
 describe('scripts (docker edge cases)', () => {

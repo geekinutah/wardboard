@@ -9,4 +9,5 @@ data/
 *.sqlite*
 .env
 fixtures/
+**/fixtures/
 docs/
