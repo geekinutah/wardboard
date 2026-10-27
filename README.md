@@ -47,3 +47,15 @@ To build the image and run the end-to-end smoke test (health check, web shell, n
 ```sh
 ./scripts/docker-smoke.sh
 ```
+
+## Run locally with fictional data
+
+For poking around without Docker:
+
+```sh
+pnpm dev
+```
+
+This builds the web client, starts the server on `http://127.0.0.1:5180` (override the port with `WARDBOARD_DEV_PORT`), and prints the URL to open. Data lives in the gitignored `data/dev/` directory and is seeded once with the fictional fixture ward; later runs reuse it. `pnpm dev -- --reset` wipes and reseeds that directory.
+
+The dev server binds loopback only and signs everyone in as the fictional admin "Dev Admin" (`dev-admin@example.test`). Use it for local exploration only — never expose it beyond localhost, and never point it at real member data.

@@ -11,7 +11,8 @@
     "setup": "./scripts/setup.sh",
     "verify": "./scripts/verify.sh",
     "lint": "eslint scripts eslint.config.js --max-warnings 0",
-    "test:scripts": "node --test scripts/"
+    "test:scripts": "node --test scripts/",
+    "dev": "pnpm --filter @wardboard/web run build && node apps/server/dev/dev-server.ts"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
