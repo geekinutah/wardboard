@@ -4,6 +4,7 @@ import {
   createBoard,
   createProposal,
   createWard,
+  dropAllApprovals,
   proposalId,
   type Board,
   type BoardKind,
@@ -144,6 +145,12 @@ export function openStore(db: DatabaseSync, clock: StoreClock): Store {
       if (!source.ok) return source;
       const id = ids();
       const at = stampOf(clock);
+      const ward = readWard(db);
+      const copiedBoard = copyBoard(source.board, `${id}-board`, 'proposal', 0);
+      // SPEC §6: duplicating never copies approvals. A proposal started from
+      // Current still snapshots Current, approvals included.
+      const workingBoard =
+        input.source.kind === 'proposal' ? dropAllApprovals(copiedBoard, ward) : copiedBoard;
       const validated = createProposal(
         {
           id: proposalId(id),
@@ -152,12 +159,12 @@ export function openStore(db: DatabaseSync, clock: StoreClock): Store {
           status: 'draft',
           accepted: null,
           baseline: copyBoard(source.baseline, `${id}-baseline`, 'baseline', 0),
-          board: copyBoard(source.board, `${id}-board`, 'proposal', 0),
+          board: workingBoard,
           tabOrder: nextTabOrder(db),
           createdAt: at,
           updatedAt: at,
         },
-        readWard(db),
+        ward,
       );
       if (!validated.ok) return invalidResult(validated.errors);
       try {

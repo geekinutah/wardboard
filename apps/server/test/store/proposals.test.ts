@@ -168,6 +168,66 @@ describe('proposals', () => {
     expect(gamma.board.version).toBe(0);
   });
 
+  it('duplicate drops working-board approvals and keeps the baseline', () => {
+    const { db, store } = openTempStore();
+    const { ward, current } = buildFixtureWard();
+    take(store.initialize({ ward, current, importVersion: 'fixture' }));
+    insertUser(db, 'user-ada');
+    const organ = placementByTitle(current, 'Organist');
+    const approval = {
+      memberId: organ.memberId,
+      positionId: organ.positionId,
+      approvedBy: userId('user-ada'),
+      approvedAt: FIXED_ISO,
+    };
+    const source = unwrap(
+      createProposal(
+        {
+          id: proposalId('src-approvals'),
+          name: 'Has approval',
+          rationale: null,
+          status: 'draft',
+          accepted: null,
+          baseline: {
+            ...current,
+            id: boardId('src-approvals-baseline'),
+            kind: 'baseline',
+            version: 0,
+            approvals: [approval],
+          },
+          board: {
+            ...current,
+            id: boardId('src-approvals-board'),
+            kind: 'proposal',
+            version: 0,
+            approvals: [approval],
+          },
+          tabOrder: 0,
+          createdAt: FIXED_ISO,
+          updatedAt: FIXED_ISO,
+        },
+        ward,
+      ),
+    );
+    expect(source.board.approvals).toEqual([approval]);
+    expect(source.baseline.approvals).toEqual([approval]);
+    take(store.insertProposal(source));
+
+    const duplicate = take(
+      store.createProposal(
+        { name: 'Copy', rationale: null, source: { kind: 'proposal', id: source.id } },
+        sequentialIds('dup'),
+      ),
+    );
+
+    expect(duplicate.board.approvals).toEqual([]);
+    const loaded = store.loadProposal(source.id);
+    if (loaded === null) expect.fail('source proposal missing');
+    expect(loaded.board.approvals).toEqual(source.board.approvals);
+    expect(arrangementOf(duplicate.baseline)).toEqual(arrangementOf(loaded.baseline));
+    expect(duplicate.baseline.approvals).toEqual(loaded.baseline.approvals);
+  });
+
   it('duplicate of accepted is draft', () => {
     const { db, store } = openTempStore();
     const { ward, current } = buildFixtureWard();
