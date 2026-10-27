@@ -39,5 +39,5 @@ Candidate and discovered work that has not yet been promoted into a task contrac
 | T-069 | Antigravity model guidance names Gemini 4 Argon, not "pro" | — (agent infra, off-roadmap) | done | 1 | Antigravity controller run names Gemini Flash / Gemini 4 Argon, never a Pro model |
 | T-070 | Preview harness for standalone board views | 4 — Desktop board | done | 1 | none |
 | T-032 | Level 1: ward overview | 4 — Desktop board | in progress | 1 | TV readability of tiles from the meeting table |
-| T-033 | Level 2: organization | 4 — Desktop board | in progress | 1 | none |
+| T-033 | Level 2: organization | 4 — Desktop board | done | 1 | none |
 | T-034 | Level 3: group detail and add position | 4 — Desktop board | todo | 0 | none |
