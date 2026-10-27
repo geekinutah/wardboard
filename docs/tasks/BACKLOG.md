@@ -46,3 +46,4 @@ observation / review finding
 | B-014 | P2 | core ordering | candidate | Structural calling order tie-break differs between derive and second-calling |
 | B-015 | P1 | docker | candidate | Docker image ships `packages/core/src/fixtures/`; docker smoke fails on main |
 | B-016 | P2 | server security | candidate | `authenticatedIdentities` WeakMap is exported mutable |
+| B-017 | P2 | agent docs (OpenCode) | candidate | OpenCode model test doesn't pin the "fresh session, not a different model" wording |
