@@ -1,4 +1,4 @@
-# B-024: dev reset-guard test is checkout-location sensitive
+# B-025: dev reset-guard test is checkout-location sensitive
 
 **Priority:** P2  
 **Area:** server dev tooling  

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Gallery } from './design/Gallery.tsx';
 import { checkHealth, defaultHealthClient, type HealthClient, type HealthState } from './health.ts';
+import { ConnectionIndicator, SyncBanner, SyncProvider } from './sync/react.tsx';
 
 export type AppProps = {
   healthClient?: HealthClient;
@@ -33,15 +34,19 @@ function AppShell({ healthClient }: { healthClient: HealthClient }) {
   }, [healthClient]);
 
   return (
-    <div className="shell">
-      <header className="shell-header">
-        <span className="shell-brand">WardBoard</span>
-      </header>
-      <main className="shell-main">
-        <p className="shell-status" role="status" data-state={health}>
-          {STATUS_TEXT[health]}
-        </p>
-      </main>
-    </div>
+    <SyncProvider>
+      <div className="shell">
+        <header className="shell-header">
+          <span className="shell-brand">WardBoard</span>
+          <ConnectionIndicator />
+        </header>
+        <main className="shell-main">
+          <SyncBanner />
+          <p className="shell-status" role="status" data-state={health}>
+            {STATUS_TEXT[health]}
+          </p>
+        </main>
+      </div>
+    </SyncProvider>
   );
 }

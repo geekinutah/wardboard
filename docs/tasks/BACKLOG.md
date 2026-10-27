@@ -53,4 +53,5 @@ observation / review finding
 | B-021 | P2 | core tests | candidate | Fixture proposals share every position/assignment id with their baseline, so id-vs-lineage bugs go undetected |
 | B-022 | P2 | core diff | candidate | Diff list correspondence untested when a list's first position has a new lineage |
 | B-023 | P2 | server schema | candidate | SQLite oversight rows are not unique per target |
-| B-024 | P2 | server dev tooling | candidate | dev reset-guard test asserts on the checkout root, so it fails if the checkout lives inside the OS temp dir |
+| B-024 | P2 | web sync | candidate | `send` can hang if the subscription changes before its commit arrives |
+| B-025 | P2 | server dev tooling | candidate | dev reset-guard test asserts on the checkout root, so it fails if the checkout lives inside the OS temp dir |
