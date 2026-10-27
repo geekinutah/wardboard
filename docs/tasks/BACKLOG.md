@@ -44,7 +44,7 @@ observation / review finding
 | B-012 | P1 | core model | candidate | No place for Current's import date or proposal reopen audit |
 | B-013 | P2 | docker | candidate | Docker Engine 29 no longer deletes anonymous volumes on a plain `docker rm` |
 | B-014 | P2 | core ordering | candidate | Structural calling order tie-break differs between derive and second-calling |
-| B-015 | P1 | docker | accepted | Docker image ships `packages/core/src/fixtures/`; docker smoke fails on main |
+| B-015 | P1 | docker | resolved | Docker image ships `packages/core/src/fixtures/`; docker smoke fails on main |
 | B-016 | P2 | server security | candidate | `authenticatedIdentities` WeakMap is exported mutable |
 | B-017 | P2 | agent docs (OpenCode) | candidate | OpenCode model test doesn't pin the "fresh session, not a different model" wording |
 | B-018 | P1 | agent process / CI | accepted | No controller watches CI; integrated gate skips the Docker smoke (CI red on main since T-006) |

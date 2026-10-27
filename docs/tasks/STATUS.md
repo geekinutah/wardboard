@@ -25,4 +25,4 @@ Candidate and discovered work that has not yet been promoted into a task contrac
 | T-015 | Needs-approval placements | 2 — Board domain | done | 1 | none |
 | T-065 | OpenCode always uses qwen3.8-27b-splash | — (agent infra, off-roadmap) | done | 2 | OpenCode run confirms all roles on lmstudio/qwen3.8-27b-splash |
 | T-066 | Keep nested fixtures out of the Docker image | 1 — Foundations | done | 1 | none |
-| T-067 | Run the Docker smoke test in the quality gate | 1 — Foundations | todo | 0 | verify.sh with OrbStack stopped fails clearly (after T-066) |
+| T-067 | Run the Docker smoke test in the quality gate | 1 — Foundations | in progress | 0 | verify.sh with OrbStack stopped fails clearly (after T-066) |

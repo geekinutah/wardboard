@@ -2,7 +2,7 @@
 
 **Priority:** P1  
 **Area:** docker  
-**State:** accepted  
+**State:** resolved  
 **Found:** 2026-10-26, T-021 round 1 (implementer and verifier, independently)  
 **Promoted to:** T-066
 
