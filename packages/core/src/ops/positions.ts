@@ -32,11 +32,13 @@ import {
   type OperationResult,
   type SharedOperationErrorCode,
 } from './types.ts';
+import { applyPresidencyRelease } from './presidency.ts';
 
 /*
  * Structural edits for one proposal board (SPEC §4, §5, §7). Removing an
  * occupied position releases that placement and appends explicit dugout
- * inclusion. The presidency release rule is intentionally not applied (T-013).
+ * inclusion. `removePosition` and `removeAssignment` apply the presidency
+ * release rule before stale approvals are dropped.
  *
  * Fresh ids come from `ctx.ids` in the order documented on each operation.
  * Names and titles are trimmed; empty after trimming is `invalid_name`.
@@ -109,6 +111,10 @@ function blocked(board: Board): OperationResult<PositionErrorCode> | null {
 
 function commit(ctx: OperationContext, next: Board): OperationResult<PositionErrorCode> {
   return operationOk(finalizeBoard(dropStaleApprovals(next), ctx.ward));
+}
+
+function commitWithPresidencyRelease(before: Board, ctx: OperationContext, next: Board): OperationResult<PositionErrorCode> {
+  return operationOk(finalizeBoard(dropStaleApprovals(applyPresidencyRelease(before, next)), ctx.ward));
 }
 
 function isCallingGroupKind(kind: string): kind is CallingGroupKind {
@@ -611,7 +617,7 @@ export function removePosition(
   }
   const removed = new Set<string>([position.id]);
   const occupant = occupantOf(board, position.id);
-  return commit(ctx, {
+  return commitWithPresidencyRelease(board, ctx, {
     ...board,
     positions: withoutPositions(board, removed),
     placements: withoutPlacements(board, removed),
@@ -622,7 +628,9 @@ export function removePosition(
 /**
  * Deletes an assignment and every position it owns. Each occupant is released
  * from those positions and explicitly included in the dugout once, in position
- * order, keeping other callings. Approvals for the deleted positions are dropped.
+ * order, keeping other callings. Removing a president assignment also vacates
+ * that presidency's counselors and secretary without an explicit inclusion.
+ * Approvals for the deleted positions are dropped.
  *
  * Errors: `board_not_editable`; `not_found`.
  */
@@ -648,7 +656,7 @@ export function removeAssignment(
     }
   }
   const removed = new Set(positions.map((position) => position.id));
-  return commit(ctx, {
+  return commitWithPresidencyRelease(board, ctx, {
     ...board,
     assignments: withoutAssignments(board, new Set([assignment.id])),
     positions: withoutPositions(board, removed),

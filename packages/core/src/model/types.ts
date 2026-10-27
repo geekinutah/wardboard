@@ -47,7 +47,7 @@ export type AssignmentType = (typeof ASSIGNMENT_TYPES)[number];
 export const ASSIGNMENT_ORIGINS = ['standard', 'custom'] as const;
 export type AssignmentOrigin = (typeof ASSIGNMENT_ORIGINS)[number];
 
-export const LEADERSHIP_ROLES = ['president', 'counselor'] as const;
+export const LEADERSHIP_ROLES = ['president', 'counselor', 'secretary'] as const;
 export type LeadershipRole = (typeof LEADERSHIP_ROLES)[number];
 
 export const OVERSEERS = ['bishop', 'first_counselor', 'second_counselor'] as const;

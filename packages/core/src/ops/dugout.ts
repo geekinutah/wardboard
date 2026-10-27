@@ -12,6 +12,7 @@ import {
   type OperationResult,
   type SharedOperationErrorCode,
 } from './types.ts';
+import { applyPresidencyRelease } from './presidency.ts';
 
 /*
  * Dugout operations (SPEC §3, §5): release one specific calling, drag a card
@@ -23,8 +24,9 @@ import {
  * appended, never removed or rewritten here: a member left with no callings
  * appears in the dugout through derived membership (T-008), not through an
  * explicit inclusion, and assigning a calling (the move operations) is what
- * clears an explicit inclusion (SPEC §5). The presidency release rule is not
- * applied here; T-013 adds it.
+ * clears an explicit inclusion (SPEC §5). Releasing a calling or moving it to
+ * the dugout also applies the presidency release rule. Add to dugout does not
+ * change placements, so the rule is not applied there.
  */
 
 /** Error codes specific to the dugout operations, in addition to the shared codes. */
@@ -93,8 +95,8 @@ function checkHolds(board: Board, memberId: MemberId, position: PositionId | nul
 /**
  * Builds the resulting board: vacates `release` (the position persists),
  * appends the member to `dugoutInclusions` at most once when
- * `recordInclusion`, drops stale approvals, and revalidates. Everything else
- * is carried over unchanged.
+ * `recordInclusion`, applies the presidency release rule when a calling was
+ * released, drops stale approvals, and revalidates.
  */
 function commit(
   board: Board,
@@ -108,14 +110,17 @@ function commit(
   );
   const dugoutInclusions: readonly MemberId[] =
     recordInclusion && !board.dugoutInclusions.includes(memberId) ? [...board.dugoutInclusions, memberId] : board.dugoutInclusions;
-  const next = dropStaleApprovals({ ...board, placements, dugoutInclusions });
-  return operationOk(finalizeBoard(next, ctx.ward));
+  const drafted = { ...board, placements, dugoutInclusions };
+  const ruled = release === null ? drafted : applyPresidencyRelease(board, drafted);
+  return operationOk(finalizeBoard(dropStaleApprovals(ruled), ctx.ward));
 }
 
 /**
  * Releases exactly one of the member's callings (SPEC §3, §5): the position
  * becomes vacant but is not deleted (a list keeps its size), every other
- * calling is kept, and `dugoutInclusions` is not changed. Releasing from a
+ * calling is kept, and `dugoutInclusions` is not changed. Releasing a president
+ * also vacates that presidency's counselors and secretary without an explicit
+ * dugout inclusion. Releasing from a
  * disabled assignment is allowed: moving out is always allowed. Stale
  * approvals for the released position are dropped.
  *
@@ -143,7 +148,9 @@ export function releaseCalling(
  * Drags a card from a calling to the dugout (SPEC §5): releases `from` (which
  * becomes vacant) and records an explicit dugout inclusion for the member in
  * this proposal, even if the member keeps other callings. The inclusion is
- * appended at most once; every other calling is kept. Stale approvals for
+ * appended at most once; every other calling is kept. Moving a president also
+ * vacates that presidency's counselors and secretary, without including them.
+ * Stale approvals for
  * `from` are dropped.
  *
  * Errors: `board_not_editable`; `not_found` (member or `from`);
