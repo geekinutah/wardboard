@@ -40,7 +40,7 @@ Candidate and discovered work that has not yet been promoted into a task contrac
 | T-070 | Preview harness for standalone board views | 4 — Desktop board | done | 1 | none |
 | T-032 | Level 1: ward overview | 4 — Desktop board | done | 1 | TV readability of tiles from the meeting table |
 | T-033 | Level 2: organization | 4 — Desktop board | done | 1 | none |
-| T-034 | Level 3: group detail and add position | 4 — Desktop board | in progress | 1 | none |
+| T-034 | Level 3: group detail and add position | 4 — Desktop board | done | 1 | none |
 | T-025 | Proposal lifecycle | 3 — Server and collaboration | done | 1 | none |
 | T-027 | Photo storage | 3 — Server and collaboration | in progress | 1 | none |
 | T-026 | Member profile service | 3 — Server and collaboration | in progress | 1 | none |
