@@ -15,7 +15,7 @@ Candidate and discovered work that has not yet been promoted into a task contrac
 | T-021 | Identity provider interface and Tailscale provider | 3 — Server and collaboration | done | 1 | tailscale serve sign-in and direct-localhost refusal (after T-063) |
 | T-008 | Derived views | 2 — Board domain | done | 1 | none |
 | T-009 | Move and fill (and the operation conventions) | 2 — Board domain | done | 1 | none |
-| T-017 | Removed state and acceptance eligibility | 2 — Board domain | in progress | 0 | none |
+| T-017 | Removed state and acceptance eligibility | 2 — Board domain | done | 1 | none |
 | T-020 | Tags and affinities | 2 — Board domain | in progress | 0 | none |
 | T-010 | Swap and release occupant | 2 — Board domain | done | 1 | none |
 | T-011 | Release and dugout | 2 — Board domain | done | 1 | none |
