@@ -96,3 +96,48 @@ describe('App shell', () => {
     expect(fetchStub).toHaveBeenCalledWith('/api/health', expect.anything());
   });
 });
+
+describe('App sync wiring', () => {
+  class SocketSpy {
+    static urls: string[] = [];
+    readyState = 0;
+    onopen: ((event: unknown) => void) | null = null;
+    onmessage: ((event: { readonly data: unknown }) => void) | null = null;
+    onclose: ((event: { readonly code?: number }) => void) | null = null;
+    onerror: ((event: unknown) => void) | null = null;
+
+    constructor(url: string) {
+      SocketSpy.urls.push(url);
+    }
+
+    send(): void {}
+
+    close(): void {}
+  }
+
+  it('app shell renders indicator and keeps Server: ok', async () => {
+    SocketSpy.urls = [];
+    vi.stubGlobal('WebSocket', SocketSpy);
+    render(<App healthClient={clientReturning(jsonResponse(200, { status: 'ok' }))} />);
+
+    expect(await screen.findByText('Server: ok')).toBeInTheDocument();
+    const header = screen.getByRole('banner');
+    expect(within(header).getByText('WardBoard')).toBeInTheDocument();
+    expect(within(header).getByRole('status')).toHaveTextContent('Connecting…');
+    expect(SocketSpy.urls).toEqual([`ws://${window.location.host}/api/ws`]);
+  });
+
+  it('gallery route does not open a socket', () => {
+    SocketSpy.urls = [];
+    vi.stubGlobal('WebSocket', SocketSpy);
+    const previous = `${window.location.pathname}${window.location.search}`;
+    window.history.pushState({}, '', '/__gallery');
+    try {
+      render(<App />);
+      expect(SocketSpy.urls).toEqual([]);
+      expect(screen.getByRole('heading', { name: 'Components' })).toBeInTheDocument();
+    } finally {
+      window.history.pushState({}, '', previous);
+    }
+  });
+});
