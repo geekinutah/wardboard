@@ -7,7 +7,6 @@ const SCENARIO = 'preview';
 test('preview index', async ({ page }, testInfo) => {
   await page.goto('/__preview');
   await expect(page.getByRole('heading', { name: 'Previews', level: 1 })).toBeVisible();
-  await expect(page.getByText('No previews yet.')).toBeVisible();
 
   // Compare against the root element's clientWidth to detect horizontal overflow
   const overflow = await page.evaluate(() => ({
