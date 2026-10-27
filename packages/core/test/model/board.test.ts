@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { buildFixtureWard } from '../../src/fixtures/index.ts';
 import {
   assignmentId,
   boardGroupId,
@@ -388,5 +389,73 @@ describe('createBoard', () => {
 
     expect(board.dugoutInclusions).toEqual([M2]);
     expect(board.placements[P1]).toBe(M1);
+  });
+
+  it('createBoard rejects a second overseer of the same target', () => {
+    const primary = minimalBoard({
+      boardGroups: { [BG1]: { id: BG1, name: 'Primary', order: 0, visible: true, key: 'primary' } },
+      oversight: [
+        { overseer: 'second_counselor', target: { kind: 'boardGroup', id: BG1 }, fixed: false },
+        { overseer: 'first_counselor', target: { kind: 'boardGroup', id: BG1 }, fixed: false },
+      ],
+    });
+    const triple = minimalBoard({
+      oversight: [
+        { overseer: 'bishop', target: { kind: 'boardGroup', id: BG1 }, fixed: false },
+        { overseer: 'first_counselor', target: { kind: 'boardGroup', id: BG1 }, fixed: false },
+        { overseer: 'second_counselor', target: { kind: 'boardGroup', id: BG1 }, fixed: false },
+      ],
+    });
+
+    expect(errorsOf(createBoard(primary, ward)).map((e) => `${e.code} ${e.path}`)).toEqual(['duplicate_oversight oversight[1]']);
+    expect(errorsOf(createBoard(triple, ward)).map((e) => `${e.code} ${e.path}`)).toEqual([
+      'duplicate_oversight oversight[1]',
+      'duplicate_oversight oversight[2]',
+    ]);
+  });
+
+  it('createBoard rejects an identical duplicate oversight entry', () => {
+    const entry: Oversight = { overseer: 'second_counselor', target: { kind: 'callingGroup', id: CG1 }, fixed: false };
+    const input = minimalBoard({ oversight: [entry, entry] });
+
+    expect(errorsOf(createBoard(input, ward))).toEqual([
+      expect.objectContaining({
+        code: 'duplicate_oversight',
+        path: 'oversight[1]',
+        message: 'each oversight target may have only one overseer',
+      }),
+    ]);
+  });
+
+  it('createBoard rejects a counselor over the priests quorum in either order', () => {
+    const counselorFirst = withPriestsQuorum([
+      { overseer: 'first_counselor', target: { kind: 'callingGroup', id: PQ }, fixed: false },
+      { overseer: 'bishop', target: { kind: 'callingGroup', id: PQ }, fixed: true },
+    ]);
+    const counselorAfter = withPriestsQuorum([
+      { overseer: 'bishop', target: { kind: 'callingGroup', id: PQ }, fixed: true },
+      { overseer: 'second_counselor', target: { kind: 'callingGroup', id: PQ }, fixed: false },
+    ]);
+    const priestsOnly = 'the priests quorum is overseen only by the fixed bishop entry';
+
+    expect(errorsOf(createBoard(counselorFirst, ward))).toEqual([
+      { code: 'fixed_oversight', path: 'oversight[0]', message: priestsOnly },
+    ]);
+    expect(errorsOf(createBoard(counselorAfter, ward))).toEqual([
+      { code: 'fixed_oversight', path: 'oversight[1]', message: priestsOnly },
+    ]);
+  });
+
+  it('createBoard accepts one overseer per target', () => {
+    const { ward: fixtureWard, current } = buildFixtureWard();
+    const distinct = minimalBoard({
+      oversight: [
+        { overseer: 'first_counselor', target: { kind: 'boardGroup', id: BG1 }, fixed: false },
+        { overseer: 'bishop', target: { kind: 'callingGroup', id: CG1 }, fixed: false },
+      ],
+    });
+
+    expect(createBoard(current, fixtureWard).ok).toBe(true);
+    expect(createBoard(distinct, ward).ok).toBe(true);
   });
 });

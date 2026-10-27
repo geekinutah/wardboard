@@ -8,6 +8,7 @@ export const VALIDATION_ERROR_CODES = [
   'duplicate_lineage',
   'duplicate_key',
   'fixed_oversight',
+  'duplicate_oversight',
   'approval_not_placed',
   'duplicate_tag_name',
   'board_kind',

@@ -319,8 +319,36 @@ function isFixedBishopOfPriests(entry: Oversight, board: Board): boolean {
   return group?.key === PRIESTS_QUORUM_KEY;
 }
 
+function targetsPriestsQuorum(entry: Oversight, board: Board): boolean {
+  return entry.target.kind === 'callingGroup' && lookup(board.callingGroups, entry.target.id)?.key === PRIESTS_QUORUM_KEY;
+}
+
+/** Priests-quorum targets among oversight entries, ignoring malformed rows. */
+function countPriestsQuorumTargets(board: Board): number {
+  const oversight: unknown = board.oversight;
+  if (!Array.isArray(oversight)) {
+    return 0;
+  }
+  let count = 0;
+  for (const entry of oversight) {
+    if (!isObject(entry) || !('target' in entry)) {
+      continue;
+    }
+    const target: unknown = entry.target;
+    if (!isObject(target) || !('kind' in target) || !('id' in target)) {
+      continue;
+    }
+    if (target.kind === 'callingGroup' && typeof target.id === 'string' && lookup(board.callingGroups, target.id)?.key === PRIESTS_QUORUM_KEY) {
+      count += 1;
+    }
+  }
+  return count;
+}
+
 function validateOversight(board: Board, errors: ErrorCollector): void {
   let fixedCount = 0;
+  const seenTargets = new Set<string>();
+  const priestsTargets = countPriestsQuorumTargets(board);
   for (const [index, entry] of objectItems(board.oversight, 'oversight', errors)) {
     const path = `oversight[${String(index)}]`;
     if (!isOneOf(OVERSEERS, entry.overseer)) {
@@ -349,6 +377,20 @@ function validateOversight(board: Board, errors: ErrorCollector): void {
         errors.add('fixed_oversight', path, 'the fixed bishop oversight of the priests quorum may appear only once');
       } else {
         fixedCount += 1;
+      }
+    }
+    if (targetsPriestsQuorum(entry, board)) {
+      // A lone non-fixed bishop entry is the missing fixed entry, already reported at `oversight`.
+      const loneBishopEntry = entry.overseer === 'bishop' && priestsTargets === 1;
+      if (!entry.fixed && !loneBishopEntry) {
+        errors.add('fixed_oversight', path, 'the priests quorum is overseen only by the fixed bishop entry');
+      }
+    } else {
+      const key = `${entry.target.kind}\0${entry.target.id}`;
+      if (seenTargets.has(key)) {
+        errors.add('duplicate_oversight', path, 'each oversight target may have only one overseer');
+      } else {
+        seenTargets.add(key);
       }
     }
   }
