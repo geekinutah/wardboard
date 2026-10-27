@@ -4,12 +4,16 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./dev": "./dev/index.ts"
   },
   "scripts": {
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json",
     "lint": "eslint . --max-warnings 0"
+  },
+  "dependencies": {
+    "@wardboard/core": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "26.6.5",

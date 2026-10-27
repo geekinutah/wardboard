@@ -20,3 +20,12 @@ export {
   type Role,
   type User,
 } from './access/index.ts';
+export {
+  openStore,
+  type CurrentRecord,
+  type ProposalSummary,
+  type Store,
+  type StoreClock,
+  type StoreError,
+  type StoreResult,
+} from './store/index.ts';
