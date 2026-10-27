@@ -65,6 +65,7 @@ scripts/verify.sh    The single quality gate
 | T-027 | Photo storage | T-002 | `apps/server/src/photos/` | Validate type/size, process and store locally, serve only to signed-in users |
 | T-028 | Backup and restore | T-005, T-027 | `apps/server/src/backup/` | Consistent SQLite snapshot plus photos and settings in one archive; restore validates first and is atomic (a failed restore leaves data unchanged) |
 | T-029 | Web sync layer | T-024, T-003 | `apps/web/src/sync/` | Client sends operations and applies only committed results; offline/stale banner; resync on reconnect; camera, tab and selection state stay local |
+| T-068 | Local dev run with the fictional ward | T-022, T-023 | `apps/server/dev/`, `apps/web/e2e/checkout-server.ts` (seed seam), root `package.json` (`dev` script) | `pnpm dev` serves the app on 127.0.0.1 with a persistent data dir seeded once from the fictional fixture ward and a fictional signed-in admin; the e2e/GUI checkout server seeds the same data |
 
 ## Milestone 4 — Desktop board (`apps/web`)
 
