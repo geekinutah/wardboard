@@ -125,7 +125,7 @@ See the official [OpenCode agents documentation](https://opencode.ai/docs/agents
 
 Start the Antigravity session from the repository root workspace. Antigravity ingests `AGENTS.md` natively as a project rule from the repository root at startup. Because Antigravity uses dynamic subagents defined at runtime via tool calls, no static adapter directory (such as `.claude/` or `.grok/`) is required.
 
-Gemini 4 (`gemini-4-argon-high`) is recommended for running the main session controller to manage multi-step reasoning, plan decomposition, handoff packet preparation, and verification review.
+Gemini 4 Argon (`gemini-4-argon-high`) is recommended for running the main session controller to manage multi-step reasoning, plan decomposition, handoff packet preparation, and verification review.
 
 Prompt the main session to act as controller:
 
@@ -147,13 +147,16 @@ Record verification in the task's evidence file per the Evidence record rule in 
 
 ### Model choice (Google Antigravity)
 
-For each implementer and independent verifier handoff, choose the model based on task complexity and verification risk, and pass `Model` explicitly (`'flash'` or `'pro'`) on each `invoke_subagent` call rather than inheriting (`'inherit'`). The controller must never leave `Model` as `'inherit'`; every invocation must declare its target model:
-- Default to `'flash'` (Gemini Flash / `gemini-3.8-flash`) for well-specified, routine bounded tasks.
-- Escalate to `'pro'` (Gemini 4 Argon / `gemini-4-argon`) for multi-step code reasoning, security-sensitive work, concurrency/race-condition logic, cross-cutting architectural changes, or tasks retrying after a round failure.
+For every implementer and verifier handoff, choose the model from task complexity and verification risk. There are two tiers: Gemini Flash (`gemini-3.8-flash`) and Gemini 4 Argon (`gemini-4-argon`).
 
-Gemini 4 (`gemini-4-argon-high`) is recommended for the controller role. Assess verifier risk independently of implementation size and escalate the verifier to `'pro'` whenever candidate changes involve complex verification logic, security invariants, or subtle race conditions.
+- Default to Gemini Flash for well-specified, routine, bounded tasks.
+- Escalate to Gemini 4 Argon for multi-step code reasoning, security-sensitive work, concurrency/race-condition logic, cross-cutting architectural changes, and correction rounds. Escalate the verifier to Gemini 4 Argon on its own risk assessment (complex verification logic, security invariants, subtle races).
+- `invoke_subagent`'s `Model` values are harness tier aliases, not model names: currently `'flash'` selects Gemini Flash and `'pro'` selects Gemini 4 Argon. There is no Gemini Pro model. If the installed tool exposes a different value for Argon, use that value.
+- Always pass `Model` explicitly. Never `'inherit'`.
+- In the handoff packet and controller report, name the model (e.g. "Gemini 4 Argon (`Model: 'pro'`)"), not just the alias.
+- If no exposed value maps to the intended model, use a supported one, report the actual model and the limitation, and do not claim the escalation happened.
 
-Name the chosen model explicitly in both the handoff packet and the controller report.
+Gemini 4 Argon (`gemini-4-argon-high`) is recommended for the controller.
 
 Source read-only discipline during verification is governed by the shared verifier workflow rule in `docs/agents/verifier.md` ("Verification requires shell execution, build artifacts, and disposable mutation space; source read-only is a workflow rule, not a claim that a read-only OS sandbox can run every gate"), matching the practice for Codex CLI. Candidate source must remain untouched during independent verification, and disposable copies or temporary worktrees must be used for mutation checks.
 
