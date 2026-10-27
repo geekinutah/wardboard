@@ -2,7 +2,7 @@
 
 Read `AGENTS.md` first. The shared [protocol](protocol.md) defines handoffs, capabilities, and reports; [controller](controller.md), [implementer](implementer.md), and [verifier](verifier.md) define the roles. `SPEC.md`, task contracts, and STATUS.md remain the durable product/work state. Backlog intake follows AGENTS.md.
 
-Only adapters are harness-specific. Model settings remain unset in committed adapters; harness guidance below describes selection at invocation or handoff. Choose providers and models through your installed harness's supported settings; role behavior and quality gates remain the same. Different models can implement and verify when each supports the required capabilities.
+Only adapters are harness-specific. Model settings remain unset in committed adapters, except OpenCode, which pins `lmstudio/qwen3.8-27b-splash` (see Model choice (OpenCode)); harness guidance below describes selection at invocation or handoff. Choose providers and models through your installed harness's supported settings; role behavior and quality gates remain the same. Different models can implement and verify when each supports the required capabilities.
 
 ## Claude Code
 
@@ -108,7 +108,14 @@ If your OpenCode session is sandboxed, the Playwright browser download block in 
 
 ### Model choice (OpenCode)
 
-No model is pinned in the committed adapters. Subagents inherit the invoking session's model unless the controller passes an explicit per-invocation override; choose the model per handoff based on task complexity and verification risk rather than silently inheriting. Name the actual model in the handoff packet and controller report. Model choice must not weaken any acceptance, quality, mutation, or GUI gate.
+Every OpenCode role (controller, implementer, verifier) runs on `lmstudio/qwen3.8-27b-splash`, pinned in the frontmatter of the committed adapters in `.opencode/agents/`. This is Mike's standing decision; only Mike changes it, by editing these docs.
+
+- Do not pass a `model` override on the subagent tool, and do not switch model or provider for any handoff, including correction rounds and security-sensitive tasks.
+- Do not apply another harness's model guidance in OpenCode.
+- Do not infer a model's capability from its name, release date, or other metadata.
+- Independence comes from a fresh verifier session, not a different model.
+- Name the model in the handoff packet and the controller report.
+- If the pinned model cannot do a task, or the pin fails to load, report BLOCKED to Mike rather than switching models.
 
 Record verification in the task's evidence file per the Evidence record rule in `docs/agents/protocol.md`.
 
