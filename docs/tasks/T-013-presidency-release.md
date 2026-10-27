@@ -4,8 +4,6 @@
 **Depends on:** T-009, T-010, T-011, T-012
 **Spec refs:** SPEC.md §5 (releasing a president also releases that presidency's counselors, Handbook 30.6; counselors keep their other callings and enter the dugout only if left with no callings; **no confirmation**; same atomic change; **PROPOSED** and adopted here: also applies to a bishop and the bishopric counselors, and to replacing a president through Release occupant; secretaries are not released), §3 (multiple callings), §12 scenario "Releasing a president also releases the counselors in the same atomic change…"
 
-Note: SPEC §13 question 4 still says "with a confirmation"; §5 and §12 (both later and CONFIRMED) say no confirmation. This contract follows §5.
-
 ## Goal
 Every board operation that releases the occupant of a president position also releases the counselors of that presidency, in the same operation, without touching secretaries or anyone's other callings.
 

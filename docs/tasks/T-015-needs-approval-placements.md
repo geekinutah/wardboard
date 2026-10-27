@@ -2,7 +2,7 @@
 
 **Milestone:** 2 — Board domain
 **Depends on:** T-009
-**Spec refs:** SPEC.md §6 (a `needs_approval` member requires explicit approval each time they are proposed for a calling; any Editor or Admin may approve; approval is specific to member, position and proposal; store approver and time; fresh approval when member or position changes; **v0.19:** setting the flag makes existing proposed placements — suggested callings relative to the baseline — in Draft proposals require approval; Accepted proposals are unaffected until returned to Draft; clearing the flag removes the requirement; duplicating a proposal never copies approvals; the flag is not a tag), §7 (Approval), §12 scenario "Proposing a calling for a member with `needs_approval` set requires explicit approval…"
+**Spec refs:** SPEC.md §6 (a `needs_approval` member requires explicit approval each time they are proposed for a calling; any Editor or Admin may approve; approval is specific to member, position and proposal; store approver and time; fresh approval when member or position changes; **v0.19:** setting the flag makes existing proposed placements — suggested callings relative to the baseline — in Draft proposals require approval; Accepted proposals are unaffected until returned to Draft; clearing the flag removes the requirement; duplicating a proposal never copies approvals; the flag is not a tag), §7 (Approval), §3 (**v0.20:** a proposal cannot be accepted while a placement that requires approval is unapproved), §12 scenarios on approval and acceptance
 
 ## Goal
 `packages/core/src/rules/approval.ts` derives which placements of a proposal need approval and whether each has one, and provides the operation that records an approval plus the helpers the server needs when the flag is set or a proposal is duplicated.
@@ -13,7 +13,7 @@
 - **`approvalRequirements(proposal: Proposal, ward: Ward): readonly ApprovalRequirement[]`** with `ApprovalRequirement = { memberId; positionId; approval: Approval | null }`.
   - Returns `[]` for an Accepted proposal (unaffected until returned to Draft; once its status is Draft again the same function reports requirements, because they are derived).
   - Ordered by board structural order of the position (board group `order` → calling-group chain `order`s → assignment `order` → position `order` → id). A small local helper is fine; do not depend on `src/derive/`.
-- **`unapprovedPlacements(proposal, ward)`** = the requirements whose `approval` is null.
+- **`unapprovedPlacements(proposal, ward)`** = the requirements whose `approval` is null. A Draft proposal with any unapproved placement cannot be accepted (SPEC §3, v0.20). This function is the core input to that check; the combined acceptance check (removal reasons from T-017 plus these) is assembled by the proposal lifecycle (T-025). Do not edit T-017's files.
 - **`approvePlacement(board, ctx, { baseline, memberId, positionId, approvedBy, approvedAt })`** — an operation following the T-009 conventions (`OperationResult`, `checkEditable`, `finalizeBoard`, no change to `id`/`kind`/`version`):
   - Member and position must exist → `not_found`. M must occupy P → `not_placed`.
   - The placement must require approval (flag set and a suggested calling vs `baseline`) → otherwise `approval_not_required`.
@@ -21,7 +21,7 @@
   - `approvedBy` must be a non-empty string and `approvedAt` an ISO timestamp with `Z` or an offset → otherwise `invalid_operation`. Time is supplied by the caller (no clock in core).
   - `baseline` must have kind `baseline` → otherwise `invalid_operation`.
   - Effect: appends `{ memberId, positionId, approvedBy, approvedAt }` to `approvals`; nothing else changes.
-  - Who may approve (Editor or Admin) and whether the proposal is Draft are server checks (T-024/T-025), not core.
+  - Any Editor or Admin may approve (SPEC §6, v0.20: not Admin-only); the role check and whether the proposal is Draft are server checks (T-024/T-025), not core.
 - **`dropMemberApprovals(board, ward, memberId): Board`** — removes every approval of that member; used by the server when an Admin **sets** the flag, so existing placements need fresh approval. Works on any board kind; returns an equal board (same content) when there is nothing to drop.
 - **`dropAllApprovals(board, ward): Board`** — removes every approval; used by the server when duplicating a proposal (duplicates never copy approvals).
 - Clearing the flag needs no helper: the requirement disappears because it is derived; stored approvals stay harmlessly until a change drops them. (If the flag is set again, the server calls `dropMemberApprovals` first, so old approvals never satisfy the new requirement.)
@@ -66,7 +66,7 @@ The fixture's needs-approval member is Cy Mockup (a Primary Teacher in Current).
 | `clearing the flag removes the requirement` | ward with Cy Mockup's flag cleared → `[]` | — |
 | `dropMemberApprovals removes only that member's approvals` | two approved members → one remains | drops all |
 | `dropAllApprovals empties approvals and keeps placements` | — | placements dropped |
-| `unapprovedPlacements lists only unapproved requirements` | one approved, one not → one | — |
+| `unapprovedPlacements lists only unapproved requirements` | one approved, one not → one; after approving the other → `[]` | — |
 | `results are frozen and inputs untouched` | — | mutation |
 
 ## Edge cases (each needs a test)
@@ -78,4 +78,4 @@ The fixture's needs-approval member is Cy Mockup (a Primary Teacher in Current).
 none
 
 ## Out of scope
-- Setting or clearing the flag (Admin-only, T-026), who may approve (server), the needs-approval dialog (T-035), whether unapproved placements block acceptance (open question; see the controller report).
+- Setting or clearing the flag (Admin-only, T-026), who may approve (server), the needs-approval dialog (T-035), refusing acceptance on the server (T-025).
