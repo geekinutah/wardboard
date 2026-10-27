@@ -40,7 +40,7 @@ Server → client, for an op:
   - `not_editable`: Current, a baseline, or an Accepted proposal.
   - `unknown_operation`.
   - `bad_request`: the request fails shape validation.
-  - Any core operation error code, passed through unchanged (for example `duplicate_list_member`).
+  - Any core operation error code, passed through unchanged (for example `already_in_list`).
 - Commit, sent to every connection subscribed to `boardId`, including the sender: `{ "type": "committed", "boardId", "version", "board", "requestId", "by": login }`.
 
 ### Operation registry (`apps/server/src/ws/operations.ts`)
