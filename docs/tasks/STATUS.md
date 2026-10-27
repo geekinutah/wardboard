@@ -34,3 +34,5 @@ Candidate and discovered work that has not yet been promoted into a task contrac
 | T-024 | Operation channel | 3 — Server and collaboration | done | 1 | none |
 | T-068 | Local dev run with the fictional ward | 3 — Server and collaboration | todo | 0 | none |
 | T-063 | Tailscale and Mac Studio runbook | 7 — Deployment | todo | 0 | first install + serve + backup/restore drill on the Mac Studio (pending Human Backlog item) |
+| T-029 | Web sync layer | 3 — Server and collaboration | todo | 0 | two windows: offline on server stop, Live + Reconnected on restart |
+| T-031 | Canvas and zoom levels | 4 — Desktop board | todo | 0 | zoom/pan feel and thresholds in Chrome; TV readability |

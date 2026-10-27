@@ -72,7 +72,7 @@ scripts/verify.sh    The single quality gate
 | ID | Title | Depends on | Scope | Done when |
 |---|---|---|---|---|
 | T-030 | App shell | T-004, T-029 | `apps/web/src/shell/` | Header (brand, board tabs, search slot, presence, account) and status strip per artboard 1; search bar present on every desktop screen |
-| T-031 | Canvas and zoom levels | T-030 | `apps/web/src/features/canvas/` | Pan, wheel/pinch zoom with level thresholds, double-click into an area, zoom-out/Esc up one level, Fit ward, keyboard zoom buttons, single click selects (artboard 17) |
+| T-031 | Canvas and zoom levels | T-004 (standalone; mounted by T-030/T-032+) | `apps/web/src/features/canvas/` | Pan, wheel/pinch zoom with level thresholds, double-click into an area, zoom-out/Esc up one level, Fit ward, keyboard zoom buttons, single click selects (artboard 17) |
 | T-032 | Level 1: ward overview | T-031 | `apps/web/src/features/ward-overview/` | Organization tiles with leaders, vacancy and change counts (artboard 1) |
 | T-033 | Level 2: organization | T-031 | `apps/web/src/features/org-view/` | Leadership cards, group summary rows with counts, "Overseen by" label |
 | T-034 | Level 3: group detail and add position | T-031, T-012 | `apps/web/src/features/group-view/` | Every position, list vs single, vacancy placeholders, + add position and + Add group (artboards 2, 13) |
