@@ -2,7 +2,7 @@
 
 **Priority:** P1  
 **Area:** core model  
-**State:** accepted  
+**State:** resolved  
 **Found:** 2026-10-26, T-007 verifier  
 **Promoted to:** T-018
 
@@ -21,6 +21,9 @@ Decide that each target has at most one overseer and that the priests quorum is 
 ## Evidence
 
 - `docs/tasks/evidence/T-007.md` (verifier Note 1)
+- `docs/tasks/evidence/T-018.md` — `validateOversight` rejects a second overseer and a non-fixed priests-quorum entry. Verified on `b890cdb`.
+
+The SQLite table still has no uniqueness constraint on a target. That gap is B-023. T-018 did not change the schema.
 
 ## Decision
 
