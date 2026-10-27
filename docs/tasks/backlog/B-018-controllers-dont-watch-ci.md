@@ -2,7 +2,7 @@
 
 **Priority:** P1  
 **Area:** agent process / CI  
-**State:** accepted  
+**State:** resolved  
 **Found:** 2026-10-26, controller investigation of B-015  
 **Promoted to:** T-067
 

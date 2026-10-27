@@ -47,5 +47,6 @@ observation / review finding
 | B-015 | P1 | docker | resolved | Docker image ships `packages/core/src/fixtures/`; docker smoke fails on main |
 | B-016 | P2 | server security | candidate | `authenticatedIdentities` WeakMap is exported mutable |
 | B-017 | P2 | agent docs (OpenCode) | candidate | OpenCode model test doesn't pin the "fresh session, not a different model" wording |
-| B-018 | P1 | agent process / CI | accepted | No controller watches CI; integrated gate skips the Docker smoke (CI red on main since T-006) |
+| B-018 | P1 | agent process / CI | resolved | No controller watches CI; integrated gate skips the Docker smoke (CI red on main since T-006) |
 | B-019 | P2 | core fixtures | candidate | Sunday School secretary has no leadership role, so a filled seat would not cascade |
+| B-020 | P2 | tooling / quality gate | candidate | Gate structural tests miss an early `exit 0` and `set +e` in the smoke |
