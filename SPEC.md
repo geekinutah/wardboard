@@ -1,6 +1,6 @@
 # Ward Transfer Board — Product Specification
 
-**Version:** 0.20 (build baseline, revised October 26, 2026)
+**Version:** 0.21 (build baseline, revised October 26, 2026)
 **Owner:** Ward Bishopric (bishop and two counselors)
 **Purpose:** Define a private visual aid for discussing and exploring changes to ward callings.
 
@@ -141,7 +141,7 @@ Examples:
 
 **CONFIRMED:** Dropping from a calling onto an occupied single-person destination offers **Swap**, **Release occupant**, or **Cancel**. Swap exchanges the two selected placements. Release occupant places the incoming person in the destination and releases the displaced person from that calling. The displaced person enters the dugout automatically only if they have no remaining callings; otherwise their other placements remain visible. The source becomes vacant unless filled by a swap. Each operation is atomic and appears to collaborators as one change.
 
-**CONFIRMED:** Releasing a president in a proposal also releases that presidency's counselors (Handbook 30.6). Counselors' other callings are preserved; each enters the dugout only if left with no callings. **CONFIRMED:** No confirmation is shown; the counselor releases happen in the same atomic change as the president's release. **PROPOSED:** The rule also applies to a bishop and the bishopric counselors, and to replacing a president through Release occupant. Secretaries are not released by this rule; Handbook 30.6 addresses counselors only.
+**CONFIRMED:** Releasing a president in a proposal also releases that presidency's counselors (Handbook 30.6) and its secretary. Their other callings are preserved; each enters the dugout only if left with no callings. **CONFIRMED:** No confirmation is shown; these releases happen in the same atomic change as the president's release. **PROPOSED:** The rule also applies to a bishop and the bishopric counselors, and to replacing a president through Release occupant. **CONFIRMED (v0.21):** The secretary of that same presidency is released with the counselors. Clerks and the executive secretary are support roles outside the bishopric and are not released when the bishop is released.
 
 **OPEN edge case:** A person dragged from the dugout has no source calling for a swap. **PROPOSED:** Offer release-and-replace or cancel in that case. For a list source, swapping moves the displaced occupant into that list. A swap must respect the destination types and must not duplicate an existing list member.
 
@@ -349,7 +349,7 @@ These describe intended outcomes, not claims that software exists or has been ve
 - Multiple experimental moves reduce to the final net changes; moving back cancels the corresponding differences.
 - Multiple-callings operations release only the specifically selected calling.
 - Add to dugout from search keeps all of a person's callings and shows no warning; placing someone so they would hold more than one calling requires confirmation citing Handbook 30.1.1.
-- Releasing a president also releases the counselors in the same atomic change, without a confirmation; counselors with other callings stay off the dugout; the secretary is unaffected.
+- Releasing a president also releases that presidency's counselors and secretary in the same atomic change, without a confirmation; anyone who keeps another calling stays off the dugout. Clerks and the executive secretary are not released with the bishop.
 - Current cannot be edited by dragging; Start proposal creates a proposal from Current or a duplicate.
 - The + control on a group adds a position only to the board being edited.
 - The bishop appears in the priests quorum as a fixed linked reference; reassigning counselor oversight produces no suggested callings or releases.
@@ -365,7 +365,7 @@ These describe intended outcomes, not claims that software exists or has been ve
 1. Confirm “Ward-wide Callings” as the overview umbrella for mission, temple/family history, music, activities, and other supporting callings.
 2. Resolved (v0.19): adding beyond a list's configured size automatically creates an extra position, reported as a position change (section 5).
 3. How should proposal archive/delete work?
-4. Resolved (v0.17, corrected v0.20): releasing a president releases the counselors in the same atomic change, without a confirmation (section 5).
+4. Resolved (v0.17, corrected v0.21): releasing a president releases that presidency's counselors and secretary in the same atomic change, without a confirmation (section 5). Clerks and the executive secretary are not included.
 5. Resolved (v0.19): setting the flag requires approval for existing proposed placements in Draft proposals; clearing it removes the requirement; duplicates never copy approvals (section 6).
 6. Is a CSV proposal summary useful, or is visual brainstorming sufficient? (Printing is out of scope.)
 7. Which privacy, retention, account, and backup defaults should be adopted before real data is used?
