@@ -24,3 +24,4 @@ Candidate and discovered work that has not yet been promoted into a task contrac
 | T-014 | Second-calling detection | 2 — Board domain | done | 1 | none |
 | T-015 | Needs-approval placements | 2 — Board domain | done | 1 | none |
 | T-065 | OpenCode always uses qwen3.8-27b-splash | — (agent infra, off-roadmap) | done | 2 | OpenCode run confirms all roles on lmstudio/qwen3.8-27b-splash |
+| T-066 | Keep nested fixtures out of the Docker image | 1 — Foundations | todo | 0 | none |
