@@ -2,6 +2,7 @@ import { access, mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fixtureIdentityProvider, startServer } from '@wardboard/server';
+import { seedFixtureDataDir } from '@wardboard/server/dev';
 
 /** Env var global setup uses to hand the server's bound URL to the workers. */
 export const BASE_URL_ENV = 'WARDBOARD_E2E_BASE_URL';
@@ -23,8 +24,9 @@ export type CheckoutServer = {
  * here, before the server starts. Never seed real member data.
  */
 export async function seedFixtureWard(dataDir: string): Promise<void> {
-  // Intentionally a no-op until the board model and fixture ward exist.
-  await Promise.resolve(dataDir);
+  seedFixtureDataDir(dataDir);
+  // The seam stays async (its callers await it) even though the seeding is synchronous.
+  await Promise.resolve();
 }
 
 /**
