@@ -2,9 +2,9 @@
 
 **Priority:** P1  
 **Area:** agent process / CI  
-**State:** candidate  
+**State:** accepted  
 **Found:** 2026-10-26, controller investigation of B-015  
-**Promoted to:** —
+**Promoted to:** T-067
 
 ## Finding
 
@@ -21,7 +21,7 @@ Options, not mutually exclusive:
 - The integrated gate also runs `./scripts/docker-smoke.sh` when Docker is available and the merge touches `docker/`, `.dockerignore`, `scripts/docker-smoke.sh`, or any path the Dockerfile copies (`apps/server/src`, `packages/core/src`, `apps/web/**` via the build, package manifests, lockfile).
 - Consider whether `verify.sh` should run the smoke (cost: a Docker build per gate) or whether CI plus the controller check is enough.
 
-Needs Mike's decision on how much gate time to spend.
+**Decision (Mike, 2026-10-26):** run the smoke in `verify.sh` unconditionally (third option) and drop the separate CI job. Controller CI-watching guidance not adopted. Measured cost ~21 s local (warm cache), ~35–40 s CI.
 
 ## Evidence
 
