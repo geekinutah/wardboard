@@ -50,3 +50,5 @@ observation / review finding
 | B-018 | P1 | agent process / CI | resolved | No controller watches CI; integrated gate skips the Docker smoke (CI red on main since T-006) |
 | B-019 | P2 | core fixtures | candidate | Sunday School secretary has no leadership role, so a filled seat would not cascade |
 | B-020 | P2 | tooling / quality gate | candidate | Gate structural tests miss an early `exit 0` and `set +e` in the smoke |
+| B-021 | P2 | core tests | candidate | Fixture proposals share every position/assignment id with their baseline, so id-vs-lineage bugs go undetected |
+| B-022 | P2 | core diff | candidate | Diff list correspondence untested when a list's first position has a new lineage |
