@@ -33,3 +33,4 @@ Candidate and discovered work that has not yet been promoted into a task contrac
 | T-023 | Board persistence | 3 — Server and collaboration | in progress | 1 | none |
 | T-024 | Operation channel | 3 — Server and collaboration | todo | 0 | none |
 | T-068 | Local dev run with the fictional ward | 3 — Server and collaboration | todo | 0 | none |
+| T-063 | Tailscale and Mac Studio runbook | 7 — Deployment | todo | 0 | first install + serve + backup/restore drill on the Mac Studio (pending Human Backlog item) |
