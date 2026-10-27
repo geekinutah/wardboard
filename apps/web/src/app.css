@@ -13,18 +13,94 @@ body {
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
 
+.shell {
+  min-width: 0;
+}
+
 .shell-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
   padding: 16px 24px;
   border-bottom: 1px solid rgb(24 33 43 / 15%);
 }
 
 .shell-brand {
+  min-width: 0;
   font-size: 1.25rem;
   font-weight: 700;
 }
 
+.shell-connection {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.3;
+}
+
+.shell-connection-dot {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.shell-connection-dot-live {
+  background: var(--wb-accepted, #2e5b3a);
+}
+
+.shell-connection-dot-connecting {
+  background: var(--wb-vacancy-border, #c9772e);
+}
+
+.shell-connection-dot-offline {
+  background: var(--wb-vacancy-text, #8a4209);
+}
+
+.shell-connection-dot-forbidden {
+  background: var(--wb-needs-approval-text, #5b2b6e);
+}
+
 .shell-main {
   padding: 24px;
+}
+
+.shell-sync-banner {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0 0 16px;
+  padding: 12px;
+  border: 1px solid rgb(24 33 43 / 20%);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.shell-sync-notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.shell-sync-notice p,
+.shell-sync-offline {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.shell-sync-dismiss {
+  flex: none;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 8px 16px;
 }
 
 .shell-status {
