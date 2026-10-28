@@ -75,3 +75,4 @@ Candidate and discovered work that has not yet been promoted into a task contrac
 | T-082 | Proposal summary page in the app | 4 — Desktop board | done | 1 | none |
 | T-083 | Out-of-Unit tile, view and drags on the board | 4 — Desktop board | todo | 0 | office TV: Out-of-Unit tile reads as separate |
 | T-084 | e2e specs edit their own proposals, not the shared fixture | 4 — Desktop board | in progress | 1 | none |
+| T-085 | Update OpenCode model test pin to arch-llama/qwen3.8-27b | — (agent infra, off-roadmap) | in progress | 0 | none |
