@@ -340,6 +340,7 @@ describe('proposals', () => {
         boardId: boardId('b-board'),
         version: 0,
         updatedAt: FIXED_ISO,
+        acceptedAt: null,
       },
       {
         id: proposalId('a'),
@@ -349,6 +350,7 @@ describe('proposals', () => {
         boardId: boardId('m-board'),
         version: 0,
         updatedAt: FIXED_ISO,
+        acceptedAt: null,
       },
       {
         id: proposalId('m'),
@@ -358,6 +360,7 @@ describe('proposals', () => {
         boardId: boardId('a-board'),
         version: 0,
         updatedAt: FIXED_ISO,
+        acceptedAt: null,
       },
     ]);
   });
