@@ -21,8 +21,8 @@ On the real board, level 2 for the Aaronic Priesthood board group renders `Aaron
 - Read-only rules are unchanged (`readOnly` for Current and Accepted).
 
 ## Scope
-May change: `apps/web/src/shell/BoardShell.tsx` (render the helper, fetch Current), `apps/web/src/shell/board-levels.tsx` (new), `apps/web/src/shell/board-levels.test.tsx` (new), `apps/web/e2e/board-views.spec.ts`, `apps/web/e2e/gui/board-views.capture.ts` (new). For the removed scenario the e2e may seed through the existing seed seam in `apps/web/e2e/checkout-server.ts` **only if** that file already supports it. Otherwise cover removed markers in unit tests only and say so.
-Must not change: features, sync, server, packages, existing tests.
+May change: `apps/web/src/sync/react.tsx` (expose `fetchBoard: client.fetchBoard` on `useSync()`), `apps/web/src/shell/BoardShell.tsx` (render the helper, fetch Current), `apps/web/src/shell/board-levels.tsx` (new), `apps/web/src/shell/board-levels.test.tsx` (new), `apps/web/e2e/board-views.spec.ts`, `apps/web/e2e/gui/board-views.capture.ts` (new). For the removed scenario the e2e may seed through the existing seed seam in `apps/web/e2e/checkout-server.ts` **only if** that file already supports it. Otherwise cover removed markers in unit tests only and say so.
+Must not change: features, other sync files, server, packages, existing tests.
 
 ## Acceptance criteria
 | # | Check | Command | Expected result |
