@@ -47,13 +47,14 @@
 
 ### Store
 - Add `deleteTag(id: TagId): StoreResult<{ ward: Ward; boards: readonly Board[] }>` (returning the changed Current and working boards, after the version bump) and `tagUsage(id: TagId): StoreResult<TagUsage>` to `Store`, implemented in `store/index.ts` with helpers in `persist.ts` as needed.
-- Add `acceptedAt` to `ProposalSummary` / `listProposalSummaries`.
+- Add `acceptedAt` to `ProposalSummary` / `listProposalSummaries`. The TypeScript field is `acceptedAt?: string | null` (optional), because `apps/web` test fixtures build `ProposalSummary` values without it. The server always sends it, as a string or null. (Amended in round 2.)
 
 ## Scope
 May change:
 - `apps/server/src/ws/channel.ts`
 - `apps/server/src/store/index.ts`, `apps/server/src/store/types.ts`, `apps/server/src/store/persist.ts`
 - `apps/server/test/ws/tags.test.ts` (new), `apps/server/test/store/delete-tag.test.ts` (new)
+- `apps/server/test/store/proposals.test.ts`: **only** to add `acceptedAt: null` to the three expected entries in `listProposals orders by tabOrder then id`, the exact-equality test that the new field breaks. No other edit. Keep the assertion an exact `toEqual`. (Amended in round 2.)
 
 Must not change:
 - Existing tests, `packages/**`, `apps/web/**`, migrations / the DB schema (no schema change is needed; if one is, stop and report).
@@ -65,7 +66,7 @@ New dependencies allowed: none.
 |---|---|---|---|
 | 1 | Store tests | `pnpm --filter @wardboard/server exec vitest run test/store/delete-tag.test.ts` | all pass |
 | 2 | Channel tests | `pnpm --filter @wardboard/server exec vitest run test/ws/tags.test.ts` | all pass |
-| 3 | Existing tests untouched | `git diff origin/main --stat -- 'apps/server/test/**' ':!apps/server/test/ws/tags.test.ts' ':!apps/server/test/store/delete-tag.test.ts'` | empty output |
+| 3 | Existing tests untouched except the allowed field | `git diff origin/main -- 'apps/server/test/**' ':!apps/server/test/ws/tags.test.ts' ':!apps/server/test/store/delete-tag.test.ts'` | only `proposals.test.ts`, and only three added lines `acceptedAt: null,` (no removed lines) |
 | 4 | Scope | `git diff origin/main --name-only` | only the paths under "May change" |
 | 5 | Gate | `./scripts/verify.sh` | exits 0 |
 

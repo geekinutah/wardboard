@@ -23,7 +23,7 @@
   - `setProposalStatus(proposalId: string, status: 'draft' | 'accepted'): Promise<RequestResult<{ status: 'draft' | 'accepted' }>>`. Reply `statusChanged`.
   - `getProposal(proposalId: string): Promise<RequestResult<{ proposal: ProposalDetailView }>>`. Reply `proposalDetail`.
 - `ProposalDetailView` goes in `sync/protocol.ts`. It mirrors the server `ProposalDetail` (id, name, status, rationale, baselineBoardId, boardId, createdAt, updatedAt, accepted `{ byLogin, at, summary: SummaryGroup[] } | null`). `SummaryGroup` is the core type. The reader validates the shape. A malformed detail resolves `{ ok: false, code: 'bad_reply' }`.
-- `readProposalSummary` accepts `acceptedAt: string | null`. An entry without it, or with a non-string, non-null value, is dropped like other malformed entries.
+- `readProposalSummary` accepts `acceptedAt: string | null`. When the field is absent it is treated as `null`: the server type is optional, and existing web fixtures omit it. An entry whose `acceptedAt` is present but neither a string nor null is dropped like other malformed entries. The returned entry always has `acceptedAt` set.
 - The ward, board and boards pushes that follow these requests are already applied by the existing handlers. Do not add new local state.
 
 ## Scope
@@ -55,7 +55,7 @@ New dependencies allowed: none.
 | `tag-status.test.ts` › `offline and timeout → REQUEST_OFFLINE` (injected timers) | resilience | a promise that hangs forever |
 | `tag-status.test.ts` › `getTagUsage with negative or non-integer counts → bad_reply` | validation | trusting junk |
 | `tag-status.test.ts` › `getProposal with a malformed accepted block → bad_reply` | validation | crash later in the view |
-| `tag-status.test.ts` › `boards entries keep acceptedAt; an entry with acceptedAt 5 is dropped` | list | missing field |
+| `tag-status.test.ts` › `boards entries keep acceptedAt; absent → null; an entry with acceptedAt 5 is dropped` | list | missing field, or dropping legacy entries |
 | `tag-status.node.test.ts` › `createTag then deleteTag: the ward push loses the tag; getTagUsage before delete reports the seeded member count` | real round trip | method not wired |
 | `tag-status.node.test.ts` › `setNeedsApproval by an editor is refused forbidden; by an admin it succeeds` | auth surfaced | swallowed refusal |
 | `tag-status.node.test.ts` › `setProposalStatus accepted then getProposal returns a frozen summary and boards shows acceptedAt; draft clears it` | status | wrong reply type |

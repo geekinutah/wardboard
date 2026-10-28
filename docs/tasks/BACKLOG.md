@@ -74,3 +74,4 @@ observation / review finding
 | B-042 | P1 | server / web sync / shell | accepted | Tags editor and Accepted view have no server/sync path in the app (no `deleteTag` message, no client methods) |
 | B-043 | P3 | server proposals | candidate | The server accepts two proposals with the same name |
 | B-044 | P3 | web sync types | candidate | `RequestResult` success type rejects a plain `{ ok: true }`; callers cast |
+| B-045 | P2 | web e2e / gate | candidate | e2e drag tests fail when two worktrees run Playwright at once |
