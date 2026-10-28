@@ -45,6 +45,8 @@ export type OperationChannel = {
     user: User,
     identity: Identity,
   ): void;
+  /** Close every open socket. The server keeps accepting new connections. */
+  closeAll(code: number): void;
   terminate(): void;
 };
 
@@ -807,6 +809,16 @@ export function createOperationChannel(deps: {
           }
         });
       });
+    },
+    closeAll(code: number): void {
+      for (const connection of [...connections]) {
+        connection.open = false;
+        connection.subscription = null;
+        const state = connection.ws.readyState;
+        if (state === WebSocket.CONNECTING || state === WebSocket.OPEN) {
+          connection.ws.close(code);
+        }
+      }
     },
     terminate() {
       for (const socket of [...wss.clients]) {

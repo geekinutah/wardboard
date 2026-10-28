@@ -3,6 +3,7 @@ import { mkdir, readFile, realpath, stat } from 'node:fs/promises';
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import path from 'node:path';
 import { setAuthenticatedUser, createAccess, type Access } from './access/index.ts';
+import { handleBackupRequest, MAX_BACKUP_BYTES } from './backup/index.ts';
 import type { Config } from './config.ts';
 import { databasePath, migrate, openDatabase } from './db/index.ts';
 import {
@@ -18,6 +19,7 @@ export type StartServerOptions = {
   identityProvider?: IdentityProvider;
   clock?: () => Date;
   ids?: () => string;
+  maxBackupBytes?: number;
 };
 
 function parseIpv6(host: string): number[] | null {
@@ -257,6 +259,12 @@ async function handleRequest(
   access: Access,
   listenOrigin: string,
   photos: PhotoStore,
+  backup: {
+    db: ReturnType<typeof openDatabase>;
+    clock: () => Date;
+    maxBackupBytes: number;
+    onRestored: () => void;
+  },
 ): Promise<void> {
   const method = req.method ?? 'GET';
   if (req.url === undefined) {
@@ -296,6 +304,25 @@ async function handleRequest(
       photos,
       appOrigin: new URL(config.baseUrl).origin,
       listenOrigin,
+    });
+    return;
+  }
+
+  if (pathname === '/api/admin/backup' || pathname === '/api/admin/restore') {
+    await handleBackupRequest({
+      req,
+      res,
+      method,
+      pathname,
+      url: req.url,
+      db: backup.db,
+      dataDir: config.dataDir,
+      clock: backup.clock,
+      maxBackupBytes: backup.maxBackupBytes,
+      role: resolved.user.role,
+      appOrigin: new URL(config.baseUrl).origin,
+      listenOrigin,
+      onRestored: backup.onRestored,
     });
     return;
   }
@@ -363,12 +390,20 @@ export async function startServer(
     const store = openStore(db, clock);
     const photos = createPhotoStore(config.dataDir);
     const appOrigin = new URL(config.baseUrl).origin;
+    const maxBackupBytes = options?.maxBackupBytes ?? MAX_BACKUP_BYTES;
     let listenOrigin = '';
     channel = createOperationChannel({ store, access, clock, ids });
     const operationChannel = channel;
 
     server = createServer((req, res) => {
-      void handleRequest(req, res, config, provider, access, listenOrigin, photos).catch(() => {
+      void handleRequest(req, res, config, provider, access, listenOrigin, photos, {
+        db,
+        clock,
+        maxBackupBytes,
+        onRestored: () => {
+          operationChannel.closeAll(4000);
+        },
+      }).catch(() => {
         if (res.headersSent || res.writableEnded) {
           res.destroy();
           return;

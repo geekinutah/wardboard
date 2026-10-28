@@ -52,3 +52,14 @@ export {
   type PhotoStore,
   type SanitizeResult,
 } from './photos/index.ts';
+export {
+  MAX_BACKUP_BYTES,
+  createBackup,
+  readTar,
+  restoreBackup,
+  writeTar,
+  type BackupSummary,
+  type RestoreOptions,
+  type RestoreResult,
+  type TarEntry,
+} from './backup/index.ts';
