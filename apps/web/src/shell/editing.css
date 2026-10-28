@@ -1,0 +1,123 @@
+@import '../design/tokens.css';
+
+/* Desktop editing layer: canvas and dugout panel, plus the header search. */
+
+.editing-layer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.editing-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.editing-canvas {
+  min-width: 0;
+}
+
+.editing-dugout {
+  min-width: 0;
+  border: 1px solid var(--wb-line);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--wb-surface);
+}
+
+.editing-dugout:focus-visible {
+  outline: 2px solid var(--wb-accent-dark);
+  outline-offset: 2px;
+}
+
+.editing-dugout .wb-dugout {
+  width: 100%;
+  min-height: 0;
+  border-left: 0;
+}
+
+/* Desktop and TV: the dugout sits to the right of the canvas. */
+@media (min-width: 1024px) {
+  .editing-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+    align-items: start;
+  }
+
+  .editing-dugout {
+    position: sticky;
+    top: 16px;
+    max-height: calc(100vh - 32px);
+    overflow: auto;
+  }
+}
+
+.editing-alert {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--wb-line);
+  border-left: 4px solid var(--wb-vacancy-border);
+  border-radius: 8px;
+  background: var(--wb-surface);
+}
+
+.editing-alert-text {
+  min-width: 0;
+  margin: 0;
+  color: var(--wb-ink);
+  overflow-wrap: anywhere;
+}
+
+/*
+ * Header search. The field keeps its place in the header; the filters and
+ * results drop down over the board instead of growing the header.
+ */
+.editing-search {
+  position: relative;
+  flex: 1 1 280px;
+  width: min(640px, 100%);
+  max-width: 640px;
+  min-width: 0;
+  height: 48px;
+}
+
+.editing-search .wb-search {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 40;
+  gap: 8px;
+}
+
+.editing-search .wb-search-filters {
+  display: none;
+  padding: 10px 12px;
+  border: 1px solid var(--wb-line);
+  border-radius: 12px;
+  background: var(--wb-surface);
+  box-shadow: 0 8px 24px rgb(24 33 43 / 12%);
+}
+
+.editing-search:focus-within .wb-search-filters {
+  display: flex;
+}
+
+.editing-search:not(:focus-within) .wb-search-panel {
+  display: none;
+}
+
+@media (max-width: 720px) {
+  .editing-search {
+    flex-basis: 100%;
+    width: 100%;
+    max-width: 100%;
+  }
+}

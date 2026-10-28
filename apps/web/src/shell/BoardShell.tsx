@@ -18,6 +18,7 @@ import { WardOverview } from '../features/ward-overview/WardOverview.tsx';
 import { checkHealth, type HealthClient, type HealthState } from '../health.ts';
 import type { Me, ProposalView } from '../sync/protocol.ts';
 import { ConnectionIndicator, SyncBanner, useBaseline, useMe, useSync } from '../sync/react.tsx';
+import { EditingLayer, ShellSearch } from './EditingLayer.tsx';
 
 const STATUS_TEXT: Readonly<Record<HealthState, string>> = {
   pending: 'Checking server…',
@@ -90,15 +91,6 @@ function BrandMark(): ReactElement {
   );
 }
 
-function SearchIcon(): ReactElement {
-  return (
-    <svg className="shell-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-      <circle cx="11" cy="11" r="7" />
-      <path d="m20 20-3.5-3.5" />
-    </svg>
-  );
-}
-
 export function BoardShell({ healthClient }: { healthClient: HealthClient }): ReactElement {
   const { boards, board, ward, proposal, subscribedBoardId, open, send } = useSync();
   const me = useMe();
@@ -161,6 +153,7 @@ export function BoardShell({ healthClient }: { healthClient: HealthClient }): Re
 
   const proposals = boards === null ? [] : [...boards.proposals].sort(byTabOrder);
   const readOnly = proposal === null || proposal.status === 'accepted';
+  const tabBoardIds = boards === null ? [] : [boards.current?.boardId ?? '', ...proposals.map((item) => item.boardId)];
   const ready = board !== null && ward !== null;
 
   return (
@@ -201,15 +194,14 @@ export function BoardShell({ healthClient }: { healthClient: HealthClient }): Re
             </TabButton>
           ))}
         </div>
-        <label className="shell-search-field">
-          <SearchIcon />
-          <input
-            className="shell-search"
-            type="search"
-            aria-label="Search people, callings, tags"
-            placeholder="Search people, callings, tags"
-          />
-        </label>
+        <ShellSearch
+          board={board}
+          ward={ward}
+          tabBoardIds={tabBoardIds}
+          readOnly={readOnly}
+          onSelectBoard={selectBoard}
+          onCameraChange={dispatch}
+        />
         {me === null ? null : (
           <p className="shell-account">
             <span className="shell-account-name">{me.displayName}</span>
@@ -236,6 +228,15 @@ export function BoardShell({ healthClient }: { healthClient: HealthClient }): Re
             {STATUS_TEXT[health]}
           </p>
           {ready ? (
+            <EditingLayer
+              board={board}
+              ward={ward}
+              proposal={proposal}
+              baseline={baseline}
+              me={me}
+              readOnly={readOnly}
+              onCameraChange={dispatch}
+            >
             <div className="shell-canvas">
               <Canvas
                 camera={shown}
@@ -281,6 +282,7 @@ export function BoardShell({ healthClient }: { healthClient: HealthClient }): Re
                 }}
               />
             </div>
+            </EditingLayer>
           ) : (
             <p className="shell-loading">Loading board…</p>
           )}
