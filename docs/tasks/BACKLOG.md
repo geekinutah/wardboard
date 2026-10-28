@@ -71,3 +71,4 @@ observation / review finding
 | B-039 | P3 | web presentation / core model | candidate | Presentation footer lacks ward name and baseline date (Board model has no capture time) |
 | B-040 | P2 | web settings / phone layout | candidate | Settings user-row actions overflow on phones with no scroll cue |
 | B-041 | P3 | web shell | candidate | Returning from Settings resets board tab, zoom and camera |
+| B-042 | P1 | server / web sync / shell | candidate | Tags editor and Accepted view have no server/sync path in the app (no `deleteTag` message, no client methods) |
