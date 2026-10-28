@@ -72,5 +72,5 @@ Candidate and discovered work that has not yet been promoted into a task contrac
 | T-079 | Read-only Current bar and Start proposal in the app | 4 — Desktop board | in progress | 1 | none |
 | T-080 | Settings page in the app | 4 — Desktop board | in progress | 1 | Mac Studio: download a backup from Settings and restore it (T-063 drill) |
 | T-081 | Presentation mode in the app | 4 — Desktop board | in progress | 1 | office TV: present from the laptop; readable; Exit by keyboard |
-| T-082 | Proposal summary page in the app | 4 — Desktop board | in progress | 1 | none |
+| T-082 | Proposal summary page in the app | 4 — Desktop board | done | 1 | none |
 | T-083 | Out-of-Unit tile, view and drags on the board | 4 — Desktop board | todo | 0 | office TV: Out-of-Unit tile reads as separate |
