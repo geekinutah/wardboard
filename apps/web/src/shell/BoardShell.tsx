@@ -9,11 +9,13 @@ import {
 import type { ProposalSummary } from '@wardboard/server';
 import { Canvas, useCamera, type SelectTarget } from '../features/canvas/Canvas.tsx';
 import { cameraReducer, type Camera, type ZoomTarget } from '../features/canvas/camera.ts';
+import { Button } from '../design/Button.tsx';
 import { RemovedSummary } from '../features/removed/RemovedSummary.tsx';
 import { checkHealth, type HealthClient, type HealthState } from '../health.ts';
 import type { Me, ProposalView } from '../sync/protocol.ts';
 import { ConnectionIndicator, SyncBanner, useBaseline, useMe, useSync } from '../sync/react.tsx';
 import { EditingLayer, ShellSearch } from './EditingLayer.tsx';
+import { SummaryMode } from './SummaryMode.tsx';
 import { renderBoardLevel, useCurrentBoard, useRemovedState } from './board-levels.tsx';
 
 const STATUS_TEXT: Readonly<Record<HealthState, string>> = {
@@ -91,6 +93,7 @@ export function BoardShell({ healthClient }: { healthClient: HealthClient }): Re
   const [health, setHealth] = useState<HealthState>('pending');
   const [camera, dispatch] = useCamera();
   const [selection, setSelection] = useState<ZoomTarget | null>(null);
+  const [summaryOpen, setSummaryOpen] = useState(false);
   const openedCurrent = useRef(false);
   const fallbackKey = useRef<string | null>(null);
 
@@ -126,6 +129,7 @@ export function BoardShell({ healthClient }: { healthClient: HealthClient }): Re
 
   function selectBoard(nextBoardId: string): void {
     if (nextBoardId === subscribedBoardId) return;
+    setSummaryOpen(false);
     setSelection(null);
     dispatch({ type: 'fit' });
     open(nextBoardId);
@@ -206,61 +210,88 @@ export function BoardShell({ healthClient }: { healthClient: HealthClient }): Re
         <ConnectionIndicator />
       </header>
       <main className="shell-main">
-        {ready ? (
-          <section className="shell-status-strip" aria-label="Board status">
-            <StatusBadge proposal={proposal} />
-            <p className="shell-date">
-              {proposal === null
-                ? `Imported ${formatUtc(IMPORTED_DATE, boards?.current?.importedAt ?? '')}`
-                : 'Compared with its baseline'}
-            </p>
-            <Counts board={board} proposal={proposal} baseline={baseline} />
-          </section>
-        ) : null}
-        <div className="shell-body">
-          <SyncBanner />
-          <p className="shell-status" role="status" data-state={health}>
-            {STATUS_TEXT[health]}
-          </p>
-          {proposal !== null && summaryRows !== null ? <RemovedSummary rows={summaryRows} /> : null}
-          {ready ? (
-            <EditingLayer
-              board={board}
-              ward={ward}
-              proposal={proposal}
-              baseline={baseline}
-              me={me}
-              readOnly={readOnly}
-              onCameraChange={dispatch}
-            >
-              <div className="shell-canvas">
-                <Canvas
-                  camera={shown}
+        {summaryOpen && proposal !== null ? (
+          <SummaryMode
+            proposal={proposal}
+            baseline={baseline}
+            board={board}
+            ward={ward}
+            current={currentBoard}
+            importedAt={boards?.current?.importedAt ?? null}
+            onExit={() => {
+              setSummaryOpen(false);
+            }}
+          />
+        ) : (
+          <>
+            {ready ? (
+              <section className="shell-status-strip" aria-label="Board status">
+                <StatusBadge proposal={proposal} />
+                <p className="shell-date">
+                  {proposal === null
+                    ? `Imported ${formatUtc(IMPORTED_DATE, boards?.current?.importedAt ?? '')}`
+                    : 'Compared with its baseline'}
+                </p>
+                <Counts board={board} proposal={proposal} baseline={baseline} />
+                {proposal !== null ? (
+                  <Button
+                    variant="secondary"
+                    className="shell-summary-button"
+                    onClick={() => {
+                      setSummaryOpen(true);
+                    }}
+                  >
+                    Summary
+                  </Button>
+                ) : null}
+              </section>
+            ) : null}
+            <div className="shell-body">
+              <SyncBanner />
+              <p className="shell-status" role="status" data-state={health}>
+                {STATUS_TEXT[health]}
+              </p>
+              {proposal !== null && summaryRows !== null ? <RemovedSummary rows={summaryRows} /> : null}
+              {ready ? (
+                <EditingLayer
+                  board={board}
+                  ward={ward}
+                  proposal={proposal}
+                  baseline={baseline}
+                  me={me}
+                  readOnly={readOnly}
                   onCameraChange={dispatch}
-                  onSelect={onSelect}
-                  onOpenNotes={() => undefined}
-                  selection={selection}
-                  renderLevel={(levelCamera) =>
-                    renderBoardLevel(levelCamera, {
-                      board,
-                      ward,
-                      baseline,
-                      selection,
-                      readOnly,
-                      removed,
-                      onAddPosition,
-                      onAddGroup,
-                      onSetOversight: (r) => void send('setOversight', r),
-                      onCameraChange: dispatch,
-                    })
-                  }
-                />
-              </div>
-            </EditingLayer>
-          ) : (
-            <p className="shell-loading">Loading board…</p>
-          )}
-        </div>
+                >
+                  <div className="shell-canvas">
+                    <Canvas
+                      camera={shown}
+                      onCameraChange={dispatch}
+                      onSelect={onSelect}
+                      onOpenNotes={() => undefined}
+                      selection={selection}
+                      renderLevel={(levelCamera) =>
+                        renderBoardLevel(levelCamera, {
+                          board,
+                          ward,
+                          baseline,
+                          selection,
+                          readOnly,
+                          removed,
+                          onAddPosition,
+                          onAddGroup,
+                          onSetOversight: (r) => void send('setOversight', r),
+                          onCameraChange: dispatch,
+                        })
+                      }
+                    />
+                  </div>
+                </EditingLayer>
+              ) : (
+                <p className="shell-loading">Loading board…</p>
+              )}
+            </div>
+          </>
+        )}
       </main>
     </div>
   );
