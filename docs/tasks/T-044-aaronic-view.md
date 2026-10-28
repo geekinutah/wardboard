@@ -55,11 +55,13 @@ The fixture proposal's Young Men / Aaronic Priesthood board group. Emitted reque
 May change:
 - `apps/server/src/ws/operations.ts` (two registry entries and the comment)
 - `apps/server/test/ws/oversight.test.ts` (new)
+- `apps/server/test/ws/registry.test.ts`: append exactly `'setOversight'` and `'clearOversight'` to the expected kind list (amendment after the round-1 BLOCKED). This test exists to force a contract decision when a kind is added, and this contract makes that decision.
+- `apps/server/test/ws/protocol.test.ts`: in the two unknown-operation cases (around lines 209–217 and 266–271), replace the kind `'setOversight'` with a kind that stays unregistered, for example `'renameMember'`. Change nothing else: keep the same `unknown_operation` assertions.
 - `apps/web/src/features/aaronic/**` (new)
 - `apps/web/e2e/aaronic.spec.ts`, `apps/web/e2e/gui/aaronic.capture.ts` (new)
 
 Must not change:
-- `apps/server/src/ws/channel.ts`, `packages/**`, existing tests, other `features/**`, `apps/web/src/design/**`, `apps/web/src/preview/**`, `App.tsx`, `main.tsx`.
+- `apps/server/src/ws/channel.ts`, `packages/**`, existing tests other than the two edits listed above, other `features/**`, `apps/web/src/design/**`, `apps/web/src/preview/**`, `App.tsx`, `main.tsx`.
 
 New dependencies allowed: none.
 
@@ -68,7 +70,7 @@ New dependencies allowed: none.
 |---|---|---|---|
 | 1 | Oversight ops over the channel (real server, ephemeral port, fixture identity) | `pnpm --filter @wardboard/server exec vitest run test/ws/oversight.test.ts` | every `oversight.test.ts` test in the table passes |
 | 2 | Component | `pnpm --filter web exec vitest run src/features/aaronic` | every `features/aaronic` test passes |
-| 3 | Existing tests unchanged and green | `git diff main --stat -- apps/server/test/ws/registry.test.ts apps/server/test/ws/operations.test.ts && pnpm --filter @wardboard/server test && pnpm --filter web test` | empty diff; both runs exit 0 |
+| 3 | Existing tests changed only as allowed, and green | `git diff main -- apps/server/test apps/web/src ':!apps/server/test/ws/oversight.test.ts' ':!apps/web/src/features/aaronic' && pnpm --filter @wardboard/server test && pnpm --filter web test` | the diff contains only the two kind additions in `registry.test.ts` and the kind swap in `protocol.test.ts`; both runs exit 0 |
 | 4 | E2E | `pnpm --filter web run test:e2e` | exits 0, including `aaronic.spec.ts` on all four projects |
 | 5 | GUI capture | `pnpm --filter web run gui:capture` | exits 0. `gui-artifacts/aaronic/` has desktop, phone and TV PNGs (default and Change open), inspected against artboard 16 |
 | 6 | Quality gate | `./scripts/verify.sh` | exits 0 |
