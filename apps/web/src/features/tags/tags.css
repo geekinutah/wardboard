@@ -1,0 +1,601 @@
+@import '../../design/tokens.css';
+
+/* Cards: shared by the member editor, calling editor, and tag library (artboard 10). */
+
+.wb-tags-card {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  padding: 20px;
+  background: var(--wb-surface);
+  border: 1px solid var(--wb-line);
+  border-radius: 12px;
+  color: var(--wb-ink);
+  font-family: var(--wb-font-sans);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.wb-tags-card *,
+.wb-tags-card *::before,
+.wb-tags-card *::after {
+  box-sizing: border-box;
+}
+
+.wb-tags-card button,
+.wb-tags-card input {
+  font-family: inherit;
+}
+
+.wb-tags-head {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.wb-tags-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--wb-accent);
+}
+
+.wb-tags-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.wb-tags-subtitle {
+  font-size: 13px;
+  color: var(--wb-muted);
+}
+
+.wb-tags-label {
+  margin: 0;
+  font-size: var(--wb-section-label-size);
+  font-weight: var(--wb-section-label-weight);
+  letter-spacing: var(--wb-section-label-spacing);
+  text-transform: var(--wb-section-label-transform);
+  color: var(--wb-muted);
+}
+
+.wb-tags-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wb-tags-section-ruled {
+  border-top: 1px solid var(--wb-line-inner-soft);
+  padding-top: 16px;
+}
+
+.wb-tags-help,
+.wb-tags-note {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--wb-muted);
+}
+
+.wb-tags-none {
+  font-size: 13px;
+  color: var(--wb-muted);
+}
+
+.wb-tags-error {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: var(--wb-vacancy-fill);
+  border: 1px solid var(--wb-vacancy-border);
+  color: var(--wb-vacancy-text);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.wb-tags-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* Chips */
+
+.wb-tags-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.wb-tags-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-height: 32px;
+  padding: 0 4px 0 10px;
+  border-radius: 6px;
+  background: var(--wb-line-inner-soft);
+  color: var(--wb-ink);
+  font-size: 13px;
+}
+
+.wb-tags-chip-static {
+  padding-right: 10px;
+}
+
+.wb-tags-chip-accent {
+  background: var(--wb-accent-soft);
+  color: var(--wb-accent-dark);
+  font-weight: 600;
+}
+
+.wb-tags-chip-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.wb-tags-chip-remove:hover:not(:disabled) {
+  background: rgba(24, 33, 43, 0.1);
+}
+
+.wb-tags-chip-remove:disabled,
+.wb-tags-add:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.wb-tags-add {
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px dashed #aeb5ae;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--wb-ink-2);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.wb-tags-add-accent {
+  border-color: #7fa9b0;
+  color: var(--wb-accent-dark);
+}
+
+/* Combobox */
+
+.wb-tags-combobox {
+  display: flex;
+  flex-direction: column;
+}
+
+.wb-tags-combobox-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--wb-line);
+  border-radius: 8px;
+  color: var(--wb-muted);
+  background: var(--wb-surface);
+}
+
+.wb-tags-combobox-field:focus-within,
+.wb-tags-combobox[data-open='true'] .wb-tags-combobox-field {
+  border: 2px solid var(--wb-accent);
+  padding: 0 11px;
+}
+
+.wb-tags-combobox[data-open='true'] .wb-tags-combobox-field {
+  border-radius: 8px 8px 0 0;
+}
+
+.wb-tags-combobox-field input {
+  flex: 1;
+  min-width: 0;
+  min-height: 40px;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--wb-ink);
+  font-size: 14px;
+}
+
+.wb-tags-listbox {
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  border: 2px solid var(--wb-accent);
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  background: var(--wb-surface);
+}
+
+.wb-tags-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 10px;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.wb-tags-option[aria-selected='true'] {
+  background: var(--wb-accent-soft);
+}
+
+.wb-tags-option-count {
+  font-size: 12px;
+  color: var(--wb-muted);
+}
+
+.wb-tags-option-create {
+  justify-content: flex-start;
+  border-top: 1px solid var(--wb-line-inner-soft);
+  border-radius: 0 0 6px 6px;
+  color: var(--wb-accent);
+  font-weight: 600;
+}
+
+/* Needs approval (a neutral member property, not a tag) */
+
+.wb-tags-approval {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  border: 1px solid #e3d4ea;
+  border-radius: 10px;
+  background: #f7f2f9;
+}
+
+.wb-tags-switch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 44px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--wb-needs-approval-text);
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.wb-tags-switch:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.wb-tags-switch-name {
+  color: var(--wb-needs-approval-text);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.wb-tags-switch-state {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.wb-tags-switch-track {
+  position: relative;
+  flex: none;
+  width: 40px;
+  height: 24px;
+  border-radius: 12px;
+  background: #c9b6d2;
+  transition: background-color 0.12s;
+}
+
+.wb-tags-switch-track::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.12s;
+}
+
+.wb-tags-switch[aria-checked='true'] .wb-tags-switch-track {
+  background: var(--wb-needs-approval-text);
+}
+
+.wb-tags-switch[aria-checked='true'] .wb-tags-switch-track::after {
+  transform: translateX(16px);
+}
+
+.wb-tags-approval .wb-tags-help {
+  color: var(--wb-ink-2);
+}
+
+/* Dugout match line */
+
+.wb-tags-matches {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 8px;
+  background: var(--wb-ground);
+  color: var(--wb-accent-dark);
+}
+
+.wb-tags-matches-text {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  color: var(--wb-ink);
+}
+
+/* Buttons */
+
+.wb-tags-small-button {
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--wb-line);
+  border-radius: 8px;
+  background: var(--wb-surface);
+  color: var(--wb-ink);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.wb-tags-small-button-primary {
+  border-color: var(--wb-ink);
+  background: var(--wb-ink);
+  color: #fff;
+  font-weight: 600;
+}
+
+.wb-tags-small-button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Library */
+
+.wb-tags-library-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.wb-tags-newform {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.wb-tags-newform .wb-tags-error {
+  flex-basis: 100%;
+}
+
+.wb-tags-input {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--wb-line);
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--wb-ink);
+  background: var(--wb-surface);
+}
+
+.wb-tags-input:focus {
+  outline: 2px solid var(--wb-accent);
+  outline-offset: 0;
+}
+
+.wb-tags-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.wb-tags-table th {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--wb-line-inner-soft);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-align: left;
+  text-transform: uppercase;
+  color: var(--wb-muted);
+}
+
+.wb-tags-table td {
+  padding: 4px 0;
+  border-bottom: 1px solid var(--wb-line-inner-soft);
+  vertical-align: middle;
+}
+
+.wb-tags-table-name {
+  overflow-wrap: anywhere;
+}
+
+.wb-tags-table-used {
+  width: 56px;
+  color: var(--wb-muted);
+}
+
+.wb-tags-table-actions {
+  width: 1%;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.wb-tags-row-delete {
+  min-height: 36px;
+  padding: 0 10px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--wb-ink-2);
+  font-size: 13px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* Delete confirmation */
+
+.wb-tags-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(24, 33, 43, 0.4);
+}
+
+.wb-tags-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 380px;
+  padding: 16px;
+  border: 1px solid #b9bec4;
+  border-radius: 10px;
+  background: var(--wb-surface);
+  box-shadow: 0 10px 28px rgba(24, 33, 43, 0.16);
+}
+
+.wb-tags-dialog-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.wb-tags-dialog-body {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--wb-ink-2);
+}
+
+.wb-tags-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.wb-tags-dialog-button {
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--wb-line);
+  border-radius: 8px;
+  background: var(--wb-surface);
+  color: var(--wb-ink);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.wb-tags-dialog-button-danger {
+  border-color: var(--wb-ink);
+  background: var(--wb-ink);
+  color: #fff;
+  font-weight: 600;
+}
+
+.wb-tags-dialog-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.wb-tags-dialog-button:focus-visible,
+.wb-tags-small-button:focus-visible,
+.wb-tags-add:focus-visible,
+.wb-tags-chip-remove:focus-visible,
+.wb-tags-switch:focus-visible,
+.wb-tags-row-delete:focus-visible {
+  outline: 2px solid var(--wb-accent);
+  outline-offset: 2px;
+}
+
+/* Preview layout: three columns on desktop, stacked on a phone. */
+
+.wb-tags-preview {
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px;
+  align-items: start;
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 28px;
+}
+
+/* Touch targets: at least 44px tall on a phone (docs/gui-verification.md). */
+
+@media (max-width: 600px) {
+  .wb-tags-preview {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 16px;
+    gap: 16px;
+  }
+
+  .wb-tags-chips {
+    row-gap: 8px;
+  }
+
+  .wb-tags-chip {
+    min-height: 44px;
+  }
+
+  .wb-tags-chip-remove {
+    width: 44px;
+    height: 44px;
+    margin-right: -4px;
+  }
+
+  .wb-tags-add,
+  .wb-tags-small-button,
+  .wb-tags-row-delete,
+  .wb-tags-dialog-button {
+    min-height: 44px;
+  }
+}
+
+.wb-tags-preview-column {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
