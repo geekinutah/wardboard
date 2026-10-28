@@ -86,7 +86,7 @@ Candidate and discovered work that has not yet been promoted into a task contrac
 | T-048 | Phone board and organization screens | 5 — Phone | done | 1 | iPhone, after the shell is mounted at /: tap Primary and confirm the list and back control are comfortable one-handed |
 | T-049 | Phone person and move sheets | 5 — Phone | done | 1 | iPhone, after the shell is mounted at /: tap a member on the Board tab, tap Move…, filter and tap a vacant destination, and confirm both sheets feel natural one-handed |
 | T-050 | Phone search and dugout | 5 — Phone | in progress | 0 | iPhone, after the shell is mounted at /: switch to the Search and Dugout tabs, filter by chip, and confirm scrolling and tap targets feel comfortable one-handed |
-| T-051 | Phone changes screen | 5 — Phone | in progress | 0 | iPhone, after the shell is mounted at /: open the Changes tab on a proposal, expand and collapse the sections, and confirm the Accept bar and bottom nav sit cleanly above the home indicator |
+| T-051 | Phone changes screen | 5 — Phone | done | 1 | iPhone, after the shell is mounted at /: open the Changes tab on a proposal, expand and collapse the sections, and confirm the Accept bar and bottom nav sit cleanly above the home indicator |
 | T-056 | Allow-list and leakage checks | 6 — Import and photos | in progress | 0 | none |
 | T-060 | Photo upload and comparison | 6 — Import and photos | in progress | 0 | iPhone: open /__preview/photos and confirm the comparison can be used one-handed without sideways scrolling |
 | T-091 | Machine-wide Playwright slot pool | — (test infrastructure, off-roadmap) | in progress | 0 | none |
