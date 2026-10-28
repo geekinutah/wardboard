@@ -1,0 +1,120 @@
+@import '../../design/tokens.css';
+
+/* Diff-style removed summary (artboard 9): a bordered panel with a grey
+   heading band and monospace diff lines. Text, not color, carries the state. */
+
+.wb-removed-summary {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  border: 1px solid #b9bec4;
+  border-radius: 12px;
+  background: var(--wb-surface);
+  overflow: hidden;
+  font-family: var(--wb-font-sans);
+}
+
+.wb-removed-summary-heading {
+  margin: 0;
+  padding: 14px 18px;
+  background: var(--wb-line-inner-soft);
+  border-bottom: 1px solid var(--wb-line);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--wb-ink);
+  overflow-wrap: anywhere;
+}
+
+.wb-removed-summary-block + .wb-removed-summary-block {
+  border-top: 1px solid var(--wb-line-inner-soft);
+}
+
+.wb-removed-summary-block-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  margin: 0;
+  padding: 12px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--wb-ink);
+}
+
+.wb-removed-summary-minus {
+  width: 20px;
+  text-align: center;
+  font-family: var(--wb-font-mono);
+  color: var(--wb-ink-2);
+}
+
+.wb-removed-summary-count {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--wb-muted);
+}
+
+.wb-removed-summary-lines {
+  list-style: none;
+  margin: 0;
+  padding: 0 18px 12px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.wb-removed-summary-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: #f1f2f0;
+  font-size: 13px;
+  min-width: 0;
+}
+
+.wb-removed-summary-mark {
+  font-family: var(--wb-font-mono);
+  color: var(--wb-ink-2);
+  overflow-wrap: anywhere;
+}
+
+.wb-removed-summary-note {
+  color: var(--wb-muted);
+  overflow-wrap: anywhere;
+}
+
+/* Preview page layout for the removed scenario. */
+
+.wb-removed-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 1100px;
+  min-width: 0;
+  margin: 0 auto;
+  padding: 24px 16px 40px;
+}
+
+@media (min-width: 1800px) {
+  .wb-removed-summary-heading {
+    font-size: 22px;
+  }
+
+  .wb-removed-summary-block-title {
+    font-size: 20px;
+  }
+
+  .wb-removed-summary-line {
+    font-size: 19px;
+  }
+
+  .wb-removed-preview {
+    max-width: 1400px;
+  }
+}
