@@ -1,0 +1,517 @@
+@import '../../design/tokens.css';
+
+/* Cards that can be dragged: the browser must not pan or show a callout on touch. */
+.wb-dnd-surface[data-dnd-enabled='true'] [data-member-id] {
+  touch-action: none;
+  -webkit-touch-callout: none;
+  cursor: grab;
+}
+
+/* While dragging: no text selection anywhere, grabbing cursor. */
+.wb-dnd-dragging,
+.wb-dnd-dragging * {
+  cursor: grabbing !important;
+  -webkit-user-select: none !important;
+  user-select: none !important;
+}
+
+.wb-dnd-surface [data-dragging='true'] {
+  opacity: 0.45;
+}
+
+.wb-dnd-surface [data-drop-active='true'] {
+  outline: 2px dashed var(--wb-accent);
+  outline-offset: 2px;
+  border-radius: 8px;
+  background-color: var(--wb-accent-soft);
+}
+
+.wb-dnd-highlight {
+  position: fixed;
+  z-index: 40;
+  box-sizing: border-box;
+  border: 2px dashed var(--wb-accent);
+  border-radius: 8px;
+  pointer-events: none;
+}
+
+.wb-dnd-highlight-label {
+  position: absolute;
+  top: 0;
+  left: 8px;
+  transform: translateY(-50%);
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: var(--wb-accent);
+  color: var(--wb-surface);
+  font-family: var(--wb-font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+/* The ghost sits above and to the right of the pointer so it never covers the target under it. */
+.wb-dnd-ghost {
+  position: fixed;
+  z-index: 50;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: min(320px, calc(100vw - 24px));
+  padding: 10px 12px;
+  transform: translate(12px, calc(-100% - 14px)) rotate(-2deg);
+  border: 1px solid var(--wb-accent);
+  border-radius: 10px;
+  background: var(--wb-surface);
+  color: var(--wb-ink);
+  box-shadow: 0 10px 24px rgba(24, 33, 43, 0.18);
+  font-family: var(--wb-font-sans);
+  pointer-events: none;
+}
+
+.wb-dnd-ghost-avatar {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.wb-dnd-ghost-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.wb-dnd-ghost-name {
+  font-size: 14px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.wb-dnd-ghost-from {
+  color: var(--wb-muted);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.wb-dnd-alert {
+  position: fixed;
+  z-index: 60;
+  bottom: 16px;
+  left: 50%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  padding: 10px 12px 10px 16px;
+  transform: translateX(-50%);
+  border: 1px solid var(--wb-line);
+  border-left: 4px solid var(--wb-vacancy-border);
+  border-radius: 10px;
+  background: var(--wb-surface);
+  color: var(--wb-ink);
+  box-shadow: 0 10px 24px rgba(24, 33, 43, 0.18);
+  font-family: var(--wb-font-sans);
+}
+
+.wb-dnd-alert-text {
+  min-width: 0;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.wb-dnd-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(24, 33, 43, 0.55);
+}
+
+.wb-dnd-dialog {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: min(600px, 100%);
+  max-height: calc(100vh - 32px);
+  max-height: calc(100dvh - 32px);
+  padding: 26px;
+  overflow: auto;
+  border-radius: 14px;
+  background: var(--wb-surface);
+  color: var(--wb-ink);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.3);
+  font-family: var(--wb-font-sans);
+}
+
+.wb-dnd-approval-dialog {
+  width: min(580px, 100%);
+}
+
+.wb-dnd-second-dialog {
+  width: min(600px, 100%);
+  gap: 16px;
+}
+
+.wb-dnd-dialog-head {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.wb-dnd-dialog-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.wb-dnd-dialog-sub {
+  margin: 0;
+  color: var(--wb-ink-2);
+  font-size: 13px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.wb-dnd-dialog-text {
+  margin: 0;
+  color: var(--wb-muted);
+  font-size: 14px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.wb-dnd-dialog-guidance {
+  margin: 0;
+  color: var(--wb-ink-2);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.wb-dnd-dialog-note {
+  margin: 0;
+  color: var(--wb-muted);
+  font-size: 12px;
+}
+
+.wb-dnd-dialog-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.wb-dnd-dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.wb-dnd-dialog-actions-end {
+  justify-content: flex-end;
+}
+
+.wb-dnd-confirm-outline {
+  border-color: var(--wb-ink);
+}
+
+.wb-dnd-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.wb-dnd-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.wb-dnd-option {
+  box-sizing: border-box;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  min-height: 44px;
+  padding: 14px;
+  border: 1px solid var(--wb-line);
+  border-radius: 10px;
+  background: var(--wb-surface);
+  cursor: pointer;
+}
+
+.wb-dnd-option.is-checked {
+  padding: 13px;
+  border: 2px solid var(--wb-accent);
+  background: var(--wb-accent-soft);
+}
+
+.wb-dnd-option input {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin: 2px 0 0;
+  accent-color: var(--wb-accent);
+}
+
+.wb-dnd-option-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.wb-dnd-option-name {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.wb-dnd-option.is-checked .wb-dnd-option-name {
+  color: var(--wb-accent-dark);
+}
+
+.wb-dnd-option-detail {
+  color: var(--wb-ink-2);
+  font-size: 13px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.wb-dnd-callings {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--wb-ground);
+  font-size: 13px;
+  line-height: 1.4;
+  list-style: none;
+  overflow-wrap: anywhere;
+}
+
+.wb-dnd-adding {
+  font-weight: 600;
+}
+
+.wb-dnd-approval-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.wb-dnd-lock {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: var(--wb-needs-approval-fill);
+  color: var(--wb-needs-approval-text);
+}
+
+.wb-dnd-approval {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.wb-dnd-approval-facts {
+  display: grid;
+  grid-template-columns: minmax(64px, 120px) minmax(0, 1fr);
+  gap: 10px 16px;
+  margin: 0;
+  padding: 16px;
+  border-radius: 10px;
+  background: var(--wb-ground);
+  font-size: 14px;
+}
+
+.wb-dnd-approval-facts dt {
+  color: var(--wb-muted);
+}
+
+.wb-dnd-approval-facts dd {
+  margin: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.wb-dnd-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.wb-dnd-check input {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  margin: 0;
+  accent-color: var(--wb-accent);
+}
+
+.wb-dnd-check label {
+  min-height: 24px;
+  cursor: pointer;
+}
+
+@media (max-width: 480px) {
+  .wb-dnd-dialog {
+    padding: 20px;
+  }
+}
+
+/* Preview (/__preview/dnd) layout only. */
+.wb-dnd-preview {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  min-width: 0;
+  padding: 16px;
+  background: var(--wb-ground);
+  color: var(--wb-ink);
+  font-family: var(--wb-font-sans);
+}
+
+.wb-dnd-preview-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  min-width: 0;
+}
+
+.wb-dnd-preview-status {
+  min-width: 0;
+  margin: 0;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.wb-dnd-preview-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    'presidency'
+    'primary'
+    'teachers'
+    'outside'
+    'dugout';
+  gap: 16px;
+  align-items: start;
+  min-width: 0;
+}
+
+@media (min-width: 900px) {
+  .wb-dnd-preview-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(280px, 420px);
+    grid-template-areas:
+      'presidency primary dugout'
+      'teachers outside dugout';
+  }
+}
+
+.wb-dnd-preview-cell {
+  box-sizing: border-box;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--wb-line);
+  border-radius: 12px;
+  background: var(--wb-surface);
+}
+
+.wb-dnd-preview-presidency {
+  grid-area: presidency;
+}
+
+.wb-dnd-preview-primary {
+  grid-area: primary;
+}
+
+.wb-dnd-preview-teachers {
+  grid-area: teachers;
+}
+
+.wb-dnd-preview-outside {
+  grid-area: outside;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.wb-dnd-preview-dugout {
+  grid-area: dugout;
+  padding: 0;
+  overflow: hidden;
+}
+
+.wb-dnd-preview-dugout .wb-dugout {
+  width: 100%;
+  border-left: none;
+}
+
+.wb-dnd-preview-heading {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.wb-dnd-preview-member {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--wb-line);
+  border-radius: 8px;
+  background: var(--wb-surface);
+}
+
+.wb-dnd-preview-name {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.wb-dnd-preview-detail {
+  color: var(--wb-muted);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
