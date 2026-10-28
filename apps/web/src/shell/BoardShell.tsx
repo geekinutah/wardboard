@@ -1,24 +1,20 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactElement, type ReactNode } from 'react';
 import {
-  boardGroupId,
-  callingGroupId,
   diffBoards,
   vacancies,
   type AddAssignmentRequest,
   type AddCallingGroupRequest,
   type Board,
-  type BoardGroupId,
 } from '@wardboard/core';
 import type { ProposalSummary } from '@wardboard/server';
 import { Canvas, useCamera, type SelectTarget } from '../features/canvas/Canvas.tsx';
 import { cameraReducer, type Camera, type ZoomTarget } from '../features/canvas/camera.ts';
-import { GroupDetail } from '../features/group-view/GroupDetail.tsx';
-import { OrganizationView } from '../features/org-view/OrganizationView.tsx';
-import { WardOverview } from '../features/ward-overview/WardOverview.tsx';
+import { RemovedSummary } from '../features/removed/RemovedSummary.tsx';
 import { checkHealth, type HealthClient, type HealthState } from '../health.ts';
 import type { Me, ProposalView } from '../sync/protocol.ts';
 import { ConnectionIndicator, SyncBanner, useBaseline, useMe, useSync } from '../sync/react.tsx';
 import { EditingLayer, ShellSearch } from './EditingLayer.tsx';
+import { renderBoardLevel, useCurrentBoard, useRemovedState } from './board-levels.tsx';
 
 const STATUS_TEXT: Readonly<Record<HealthState, string>> = {
   pending: 'Checking server…',
@@ -75,11 +71,6 @@ function safeCamera(board: Board, camera: Camera): Camera {
   return next;
 }
 
-function overviewSelection(selection: ZoomTarget | null): BoardGroupId | undefined {
-  if (selection === null || selection.kind !== 'org') return undefined;
-  return boardGroupId(selection.id);
-}
-
 function BrandMark(): ReactElement {
   return (
     <svg className="shell-mark" width="28" height="28" viewBox="0 0 28 28" aria-hidden="true">
@@ -92,9 +83,11 @@ function BrandMark(): ReactElement {
 }
 
 export function BoardShell({ healthClient }: { healthClient: HealthClient }): ReactElement {
-  const { boards, board, ward, proposal, subscribedBoardId, open, send } = useSync();
+  const currentBoard = useCurrentBoard();
   const me = useMe();
   const baseline = useBaseline();
+  const { boards, board, ward, proposal, subscribedBoardId, open, send } = useSync();
+
   const [health, setHealth] = useState<HealthState>('pending');
   const [camera, dispatch] = useCamera();
   const [selection, setSelection] = useState<ZoomTarget | null>(null);
@@ -155,6 +148,8 @@ export function BoardShell({ healthClient }: { healthClient: HealthClient }): Re
   const readOnly = proposal === null || proposal.status === 'accepted';
   const tabBoardIds = boards === null ? [] : [boards.current?.boardId ?? '', ...proposals.map((item) => item.boardId)];
   const ready = board !== null && ward !== null;
+
+  const { removed, summaryRows } = useRemovedState(proposal, baseline, board, ward, currentBoard);
 
   return (
     <div className="shell">
@@ -227,6 +222,7 @@ export function BoardShell({ healthClient }: { healthClient: HealthClient }): Re
           <p className="shell-status" role="status" data-state={health}>
             {STATUS_TEXT[health]}
           </p>
+          {proposal !== null && summaryRows !== null ? <RemovedSummary rows={summaryRows} /> : null}
           {ready ? (
             <EditingLayer
               board={board}
@@ -237,51 +233,29 @@ export function BoardShell({ healthClient }: { healthClient: HealthClient }): Re
               readOnly={readOnly}
               onCameraChange={dispatch}
             >
-            <div className="shell-canvas">
-              <Canvas
-                camera={shown}
-                onCameraChange={dispatch}
-                onSelect={onSelect}
-                onOpenNotes={() => undefined}
-                selection={selection}
-                renderLevel={(levelCamera) => {
-                  if (levelCamera.level === 1) {
-                    return (
-                      <WardOverview
-                        board={board}
-                        ward={ward}
-                        baseline={baseline}
-                        selectedId={overviewSelection(selection)}
-                      />
-                    );
+              <div className="shell-canvas">
+                <Canvas
+                  camera={shown}
+                  onCameraChange={dispatch}
+                  onSelect={onSelect}
+                  onOpenNotes={() => undefined}
+                  selection={selection}
+                  renderLevel={(levelCamera) =>
+                    renderBoardLevel(levelCamera, {
+                      board,
+                      ward,
+                      baseline,
+                      selection,
+                      readOnly,
+                      removed,
+                      onAddPosition,
+                      onAddGroup,
+                      onSetOversight: (r) => void send('setOversight', r),
+                      onCameraChange: dispatch,
+                    })
                   }
-                  if (levelCamera.level === 2 && levelCamera.orgId !== null) {
-                    return (
-                      <OrganizationView
-                        board={board}
-                        ward={ward}
-                        baseline={baseline}
-                        boardGroupId={boardGroupId(levelCamera.orgId)}
-                      />
-                    );
-                  }
-                  if (levelCamera.level === 3 && levelCamera.groupId !== null) {
-                    return (
-                      <GroupDetail
-                        board={board}
-                        ward={ward}
-                        baseline={baseline}
-                        callingGroupId={callingGroupId(levelCamera.groupId)}
-                        readOnly={readOnly}
-                        onAddPosition={onAddPosition}
-                        onAddGroup={onAddGroup}
-                      />
-                    );
-                  }
-                  return null;
-                }}
-              />
-            </div>
+                />
+              </div>
             </EditingLayer>
           ) : (
             <p className="shell-loading">Loading board…</p>

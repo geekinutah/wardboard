@@ -126,6 +126,7 @@ export function useSync(): SyncState & {
   open: (boardId: string) => void;
   send: (kind: OpKind, request: object) => Promise<OpOutcome>;
   dismissNotice: () => void;
+  fetchBoard: (boardId: string) => Promise<Board | null>;
 } {
   const client = useContext(SyncContext);
   if (client === null) throw new Error('useSync must be used within SyncProvider');
@@ -143,6 +144,7 @@ export function useSync(): SyncState & {
     open: client.open,
     send: client.send,
     dismissNotice: client.dismissNotice,
+    fetchBoard: client.fetchBoard,
   };
 }
 
