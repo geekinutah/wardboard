@@ -62,3 +62,4 @@ observation / review finding
 | B-030 | P1 | core rules / import / UI | accepted | Members with out-of-unit callings are unavailable for ward callings, but nothing shows or enforces it |
 | B-031 | P1 | web dnd / integration | accepted | Needs-approval drop onto a full list sends approvePlacement with a client-invented position id |
 | B-032 | P2 | web dnd | candidate | DnD polish: can't-drop hover state, touch-action on phones, null-label lockout, technical alert text |
+| B-033 | P2 | design tokens | candidate | summary page copy grammar: singular forms for collapsed row and divergence heading |
