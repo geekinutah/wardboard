@@ -1,0 +1,364 @@
+@import '../../design/tokens.css';
+
+.wb-phone-board,
+.wb-phone-org {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  color: var(--wb-ink);
+  font-family: var(--wb-font-sans);
+}
+
+.wb-phone-board-list {
+  list-style: none;
+  margin: 0;
+  padding: 12px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-sizing: border-box;
+}
+
+.wb-phone-board-list li {
+  margin: 0;
+  min-width: 0;
+}
+
+.wb-phone-board-empty,
+.wb-phone-org-empty,
+.wb-phone-org-missing,
+.wb-phone-board-placeholder {
+  margin: 0;
+  padding: 16px;
+  font-size: 14px;
+  color: var(--wb-muted);
+  overflow-wrap: anywhere;
+}
+
+.wb-phone-org-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 64px;
+  min-width: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--wb-line);
+  border-radius: 12px;
+  background: var(--wb-surface);
+  color: var(--wb-ink);
+  font-family: inherit;
+  font-size: 15px;
+  text-align: left;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.wb-phone-org-row-avatars {
+  display: flex;
+  flex: none;
+}
+
+.wb-phone-org-row-avatar {
+  width: 28px;
+  height: 28px;
+  margin-left: -10px;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  box-sizing: border-box;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wb-phone-org-row-avatar:first-child {
+  margin-left: 0;
+}
+
+.wb-phone-org-row-avatar-vacant {
+  background: var(--wb-vacancy-fill);
+  border: 2px dashed var(--wb-vacancy-border);
+}
+
+.wb-phone-org-row-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.wb-phone-org-row-name {
+  font-size: 15px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.wb-phone-org-row-changes {
+  font-size: 12px;
+  color: var(--wb-muted);
+  overflow-wrap: anywhere;
+}
+
+.wb-phone-org-row-vacant {
+  flex: none;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--wb-vacancy-text);
+  background: var(--wb-vacancy-fill-deep);
+  border: 1px dashed var(--wb-vacancy-border);
+  border-radius: 6px;
+  padding: 2px 7px;
+  white-space: nowrap;
+}
+
+.wb-phone-org-chevron {
+  flex: none;
+  color: var(--wb-muted);
+}
+
+.wb-phone-org-header {
+  background: var(--wb-surface);
+  border-bottom: 1px solid var(--wb-line);
+  padding: 8px 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-sizing: border-box;
+}
+
+.wb-phone-org-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  align-self: flex-start;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 8px;
+  border: none;
+  background: transparent;
+  color: var(--wb-accent);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.wb-phone-org-title-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 8px;
+  min-width: 0;
+}
+
+.wb-phone-org-title {
+  margin: 0;
+  min-width: 0;
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.wb-phone-org-vacant {
+  flex: none;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--wb-vacancy-text);
+  white-space: nowrap;
+}
+
+.wb-phone-org-overseer {
+  margin: 0;
+  padding: 0 8px;
+  font-size: 12px;
+  color: var(--wb-muted);
+  overflow-wrap: anywhere;
+}
+
+.wb-phone-org-body {
+  padding: 12px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.wb-phone-org-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.wb-phone-org-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.wb-phone-org-section-head h2 {
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--wb-muted);
+  overflow-wrap: anywhere;
+}
+
+.wb-phone-org-add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 1px solid var(--wb-line);
+  border-radius: 8px;
+  background: var(--wb-surface);
+  color: var(--wb-ink);
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.wb-phone-org-rows {
+  background: var(--wb-surface);
+  border: 1px solid var(--wb-line);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.wb-phone-org-person,
+.wb-phone-org-vacancy {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 56px;
+  min-width: 44px;
+  padding: 6px 12px;
+  border: none;
+  border-top: 1px solid var(--wb-line-inner-soft);
+  background: var(--wb-surface);
+  color: var(--wb-ink);
+  font-family: inherit;
+  text-align: left;
+  box-sizing: border-box;
+}
+
+.wb-phone-org-rows > :first-child {
+  border-top: none;
+}
+
+.wb-phone-org-person {
+  cursor: pointer;
+}
+
+.wb-phone-org-person-proposed {
+  background: var(--wb-proposed-fill-soft);
+}
+
+.wb-phone-org-vacancy {
+  background: var(--wb-vacancy-fill);
+  cursor: pointer;
+}
+
+.wb-phone-org-vacancy-static {
+  cursor: default;
+}
+
+.wb-phone-org-avatar {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  box-sizing: border-box;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wb-phone-org-avatar-vacant {
+  background: var(--wb-vacancy-fill);
+  border: 2px dashed var(--wb-vacancy-border);
+}
+
+.wb-phone-org-copy {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.wb-phone-org-person-name,
+.wb-phone-org-vacancy-name {
+  font-size: 14px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.wb-phone-org-vacancy-name {
+  color: var(--wb-vacancy-text);
+}
+
+.wb-phone-org-person-title {
+  font-size: 12px;
+  color: var(--wb-muted);
+  overflow-wrap: anywhere;
+}
+
+.wb-phone-org-proposed {
+  flex: none;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--wb-proposed-text);
+  background: var(--wb-proposed-fill);
+  border-radius: 4px;
+  padding: 2px 6px;
+  white-space: nowrap;
+}
+
+.wb-phone-org-hint,
+.wb-phone-board-status {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--wb-muted);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.wb-phone-board-status {
+  padding: 8px 16px;
+  font-size: 14px;
+  color: var(--wb-ink);
+  background: var(--wb-accent-soft);
+  text-align: left;
+}
+
+.wb-phone-org-row:focus-visible,
+.wb-phone-org-back:focus-visible,
+.wb-phone-org-add:focus-visible,
+.wb-phone-org-person:focus-visible,
+.wb-phone-org-vacancy:focus-visible {
+  outline: 2px solid var(--wb-accent);
+  outline-offset: -2px;
+}
