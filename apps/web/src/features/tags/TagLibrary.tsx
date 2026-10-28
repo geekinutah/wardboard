@@ -7,7 +7,9 @@ import { deleteConfirmation, memberCountByTag } from './tag-model.ts';
 
 export interface TagLibraryProps {
   ward: Ward;
-  usageOf: (tagId: TagId) => TagUsage;
+  usageOf: (tagId: TagId) => TagUsage | null;
+  /** Called once each time a delete dialog opens, so the caller can fetch the counts. */
+  onDeleteRequested?: (tagId: TagId) => void;
   onCreateTag: (name: string) => Promise<RequestResult<{ tagId: TagId }>>;
   onDeleteTag: (tagId: TagId) => Promise<RequestResult>;
 }
@@ -88,7 +90,7 @@ function DeleteDialog({
   onDelete,
 }: {
   name: string;
-  usage: TagUsage;
+  usage: TagUsage | null;
   onCancel: () => void;
   onDelete: () => Promise<RequestResult>;
 }): ReactElement {
@@ -96,7 +98,8 @@ function DeleteDialog({
   const action = useAction();
   const cancelRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
-  const copy = deleteConfirmation(name, usage);
+  const copy =
+    usage === null ? { title: `Delete “${name}”?`, body: "Counting where it's used…" } : deleteConfirmation(name, usage);
 
   useEffect(() => {
     cancelRef.current?.focus();
@@ -145,7 +148,7 @@ function DeleteDialog({
           <button
             type="button"
             className="wb-tags-dialog-button wb-tags-dialog-button-danger"
-            disabled={action.pending}
+            disabled={action.pending || usage === null}
             onClick={() => {
               void action.run(onDelete).then((ok) => {
                 if (ok) {
@@ -163,7 +166,13 @@ function DeleteDialog({
 }
 
 /** Ward-wide tag list with usage, creation, and delete-after-confirmation (SPEC §6). */
-export function TagLibrary({ ward, usageOf, onCreateTag, onDeleteTag }: TagLibraryProps): ReactElement {
+export function TagLibrary({
+  ward,
+  usageOf,
+  onCreateTag,
+  onDeleteTag,
+  onDeleteRequested,
+}: TagLibraryProps): ReactElement {
   const headingId = useId();
   const [creating, setCreating] = useState(false);
   const [deleting, setDeleting] = useState<TagId | null>(null);
@@ -231,6 +240,7 @@ export function TagLibrary({ ward, usageOf, onCreateTag, onDeleteTag }: TagLibra
                     onClick={(event) => {
                       opener.current = event.currentTarget;
                       setDeleting(tag.id);
+                      onDeleteRequested?.(tag.id);
                     }}
                   >
                     Delete <span className="wb-tags-sr">{tag.name}</span>

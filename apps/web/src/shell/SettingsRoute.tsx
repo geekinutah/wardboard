@@ -11,6 +11,7 @@ import type {
 import type { SyncClient } from '../sync/client.ts';
 import type { RequestResult } from '../sync/protocol.ts';
 import { useAccess, useMe, useSettings, useSync, useSyncClient } from '../sync/react.tsx';
+import { TagLibrarySection } from './TagLibrarySection.tsx';
 import './settings-route.css';
 
 export const SETTINGS_PATH = '/settings';
@@ -201,6 +202,7 @@ export function SettingsRoute(): ReactElement {
         onBack={backToBoard}
         onRestored={reloadBoard}
       />
+      <TagLibrarySection />
     </div>
   );
 }
