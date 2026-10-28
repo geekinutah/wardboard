@@ -2,7 +2,7 @@
 
 **Priority:** P2  
 **Area:** web e2e / quality gate  
-**State:** accepted  
+**State:** resolved  
 **Found:** 2026-10-28, T-086 implementer round 1  
 **Promoted to:** T-091
 
@@ -30,3 +30,4 @@ Decided with Mike on 2026-10-28: a machine-wide pool of Playwright worker slots,
 - docs/tasks/evidence/T-086.md, round 1 note 3 and round 2 AC5 run 1
 - docs/tasks/evidence/T-089.md, verifier notes (`proposals.spec.ts:14`)
 - `apps/web/e2e/playwright.config.ts` (no `workers` setting), `apps/web/e2e/checkout-server.ts` (ephemeral port, `mkdtemp` data directory)
+- Resolved by T-091 (2026-10-28): `scripts/e2e-slot.pl`; evidence in docs/tasks/evidence/T-091.md. Specs that still time out after every run uses the pool are tracked in B-052.
