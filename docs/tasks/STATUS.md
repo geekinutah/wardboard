@@ -59,7 +59,7 @@ Candidate and discovered work that has not yet been promoted into a task contrac
 | T-041 | Read-only Current and Start proposal | 4 — Desktop board | done | 1 | none |
 | T-053 | Callings by Organization parser | 6 — Import and photos | done | 1 | none |
 | T-054 | Members without Callings parser | 6 — Import and photos | done | 1 | none |
-| T-055 | Out-of-Unit Callings parser | 6 — Import and photos | in progress | 2 | none |
+| T-055 | Out-of-Unit Callings parser | 6 — Import and photos | done | 2 | none |
 | T-046 | Settings | 4 — Desktop board | done | 1 | none |
 | T-047 | Phone shell and board switcher | 5 — Phone | done | 1 | iPhone: bottom tabs clear the home indicator; switcher sheet comfortable one-handed (after integration) |
 | T-073 | Out-of-unit rules: dugout, second-calling, search | 2 — Board domain | todo | 0 | none |
