@@ -476,22 +476,25 @@ describe('T-056: allow-list and leakage checks', () => {
     const withoutTexts = textItems(fixtureDocs.withoutCallings);
     const organizationTexts = textItems(fixtureDocs.organizations);
     const outTexts = textItems(fixtureDocs.outOfUnit);
-    const phones = collectMatches(withoutTexts, PHONE_RE);
-    // The members-without-callings fixture has phones and birth dates, but no
-    // email addresses. Those live in the organizations fixture. Out-of-unit
-    // sustained dates do not include the literal "1 Jan 2026"; that birth date
-    // is in the other two extracted documents.
-    const emails = collectMatches([...withoutTexts, ...organizationTexts, ...outTexts], EMAIL_RE);
-    const withoutDates = printedDates(fixtureDocs.withoutCallings);
-    const outDates = printedDates(fixtureDocs.outOfUnit);
-    const organizationDates = printedDates(fixtureDocs.organizations);
+    const rawTexts = [...withoutTexts, ...organizationTexts, ...outTexts];
+    const phones = collectMatches(rawTexts, PHONE_RE);
+    const withoutPhones = collectMatches(withoutTexts, PHONE_RE);
+    const emails = collectMatches(rawTexts, EMAIL_RE);
+    const withoutEmails = collectMatches(withoutTexts, EMAIL_RE);
+    const printed = [
+      ...printedDates(fixtureDocs.organizations),
+      ...printedDates(fixtureDocs.withoutCallings),
+      ...printedDates(fixtureDocs.outOfUnit),
+    ];
 
-    assert.ok(phones.size >= 1);
+    assert.ok(phones.size > withoutPhones.size);
+    assert.equal(phones.has('555-0100'), true);
+    assert.equal(withoutPhones.has('555-0100'), false);
     assert.ok(emails.size >= 1);
-    assert.ok(withoutDates.length >= 1);
-    assert.ok(outDates.length >= 1);
-    assert.equal(outTexts.join('\n').includes('1 Jan 2026'), false);
+    assert.equal(withoutEmails.size, 0);
+    assert.ok(printed.length >= 1);
     assert.equal(withoutTexts.join('\n').includes('1 Jan 2026'), true);
+    assert.equal(outTexts.join('\n').includes('1 Jan 2026'), false);
 
     const logs: string[] = [];
     const bundle = importReports(fixtureDocs, (line) => {
@@ -508,11 +511,10 @@ describe('T-056: allow-list and leakage checks', () => {
       assert.equal(json.includes(email), false, email);
       assert.equal(logText.includes(email), false, email);
     }
-    for (const date of [...withoutDates, ...outDates, ...organizationDates]) {
+    for (const date of printed) {
       assert.equal(json.includes(date), false, date);
+      assert.equal(logText.includes(date), false, date);
     }
-    assert.equal(json.includes('1 Jan 2026'), false);
-    assert.equal(logText.includes('1 Jan 2026'), false);
   });
 
   it('extra cells on a member row do not enter the bundle or the log', () => {
