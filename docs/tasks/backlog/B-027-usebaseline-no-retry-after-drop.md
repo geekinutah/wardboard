@@ -2,9 +2,9 @@
 
 **Priority:** P2  
 **Area:** web sync  
-**State:** candidate  
+**State:** accepted  
 **Found:** 2026-10-27, T-071 verifier  
-**Promoted to:** —
+**Promoted to:** T-030
 
 ## Finding
 
