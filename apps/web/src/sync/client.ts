@@ -1,4 +1,4 @@
-import type { Board, Ward } from '@wardboard/core';
+import { SUMMARY_GROUP_KEYS, type Board, type SummaryGroup, type Ward } from '@wardboard/core';
 import type { OpKind, ProposalSummary } from '@wardboard/server';
 import type {
   AccessDirectory,
@@ -7,9 +7,11 @@ import type {
   CurrentInfo,
   Me,
   MemberPatch,
+  ProposalDetailView,
   ProposalView,
   RequestResult,
   Settings,
+  TagUsage,
 } from './protocol.ts';
 
 export type ConnectionStatus = 'connecting' | 'live' | 'offline' | 'forbidden';
@@ -67,7 +69,23 @@ const REQUEST_OFFLINE: { ok: false; code: string; message: string } = {
   message: 'offline',
 };
 
-type ResultReply = 'proposalCreated' | 'memberUpdated' | 'settings' | 'access' | 'accessUpdated';
+type ResultReply =
+  | 'proposalCreated'
+  | 'memberUpdated'
+  | 'settings'
+  | 'access'
+  | 'accessUpdated'
+  | 'tagCreated'
+  | 'tagDeleted'
+  | 'tagUsage'
+  | 'statusChanged'
+  | 'proposalDetail';
+
+const BAD_REPLY = (what: string): { ok: false; code: string; message: string } => ({
+  ok: false,
+  code: 'bad_reply',
+  message: `malformed ${what} reply`,
+});
 
 type StoredResult = RequestResult<Record<string, unknown>>;
 
@@ -144,7 +162,66 @@ function readProposalSummary(value: unknown): ProposalSummary | null {
   if (typeof value.tabOrder !== 'number' || !Number.isInteger(value.tabOrder)) return null;
   if (!isNonEmpty(value.boardId) || !isVersion(value.version)) return null;
   if (typeof value.updatedAt !== 'string') return null;
-  return value as ProposalSummary;
+  const acceptedAt = value.acceptedAt === undefined ? null : value.acceptedAt;
+  if (acceptedAt !== null && typeof acceptedAt !== 'string') return null;
+  return { ...(value as ProposalSummary), acceptedAt };
+}
+
+function isCount(value: unknown): value is number {
+  return typeof value === 'number' && Number.isInteger(value) && value >= 0;
+}
+
+function readSummaryLines(value: unknown): boolean {
+  return (
+    Array.isArray(value) &&
+    value.every(
+      (line) =>
+        isRecord(line) &&
+        typeof line.memberId === 'string' &&
+        typeof line.name === 'string' &&
+        typeof line.positionId === 'string' &&
+        typeof line.text === 'string',
+    )
+  );
+}
+
+function readSummaryGroups(value: unknown): SummaryGroup[] | null {
+  if (!Array.isArray(value)) return null;
+  for (const group of value) {
+    if (!isRecord(group)) return null;
+    if (!(SUMMARY_GROUP_KEYS as readonly unknown[]).includes(group.key)) return null;
+    if (typeof group.heading !== 'string') return null;
+    if (!readSummaryLines(group.callings) || !readSummaryLines(group.releases)) return null;
+  }
+  return value as SummaryGroup[];
+}
+
+function readProposalDetail(value: unknown): ProposalDetailView | null {
+  if (!isRecord(value)) return null;
+  if (!isNonEmpty(value.id) || typeof value.name !== 'string') return null;
+  if (value.status !== 'draft' && value.status !== 'accepted') return null;
+  if (!(typeof value.rationale === 'string' || value.rationale === null)) return null;
+  if (!isNonEmpty(value.baselineBoardId) || !isNonEmpty(value.boardId)) return null;
+  if (typeof value.createdAt !== 'string' || typeof value.updatedAt !== 'string') return null;
+  let accepted: ProposalDetailView['accepted'] = null;
+  if (value.accepted !== null) {
+    const block = value.accepted;
+    if (!isRecord(block) || typeof block.byLogin !== 'string' || typeof block.at !== 'string') return null;
+    const summary = readSummaryGroups(block.summary);
+    if (summary === null) return null;
+    accepted = { byLogin: block.byLogin, at: block.at, summary };
+  }
+  return {
+    id: value.id as ProposalDetailView['id'],
+    name: value.name,
+    status: value.status,
+    rationale: value.rationale,
+    baselineBoardId: value.baselineBoardId as ProposalDetailView['baselineBoardId'],
+    boardId: value.boardId as ProposalDetailView['boardId'],
+    createdAt: value.createdAt,
+    updatedAt: value.updatedAt,
+    accepted,
+  };
 }
 
 function readProposalView(value: unknown): ProposalView | null | undefined {
@@ -415,6 +492,39 @@ export class SyncClient {
       'settings',
     );
 
+  createTag = (name: string): Promise<RequestResult<{ tagId: string }>> =>
+    this.requestResult<{ tagId: string }>((requestId) => ({ type: 'createTag', requestId, name }), 'tagCreated');
+
+  renameTag = (tagId: string, name: string): Promise<RequestResult> =>
+    this.requestResult((requestId) => ({ type: 'renameTag', requestId, tagId, name }), 'memberUpdated');
+
+  deleteTag = (tagId: string): Promise<RequestResult> =>
+    this.requestResult((requestId) => ({ type: 'deleteTag', requestId, tagId }), 'tagDeleted');
+
+  getTagUsage = (tagId: string): Promise<RequestResult<TagUsage>> =>
+    this.requestResult<TagUsage>((requestId) => ({ type: 'getTagUsage', requestId, tagId }), 'tagUsage');
+
+  setNeedsApproval = (memberId: string, value: boolean): Promise<RequestResult> =>
+    this.requestResult(
+      (requestId) => ({ type: 'setNeedsApproval', requestId, memberId, value }),
+      'memberUpdated',
+    );
+
+  setProposalStatus = (
+    proposalId: string,
+    status: 'draft' | 'accepted',
+  ): Promise<RequestResult<{ status: 'draft' | 'accepted' }>> =>
+    this.requestResult<{ status: 'draft' | 'accepted' }>(
+      (requestId) => ({ type: 'setProposalStatus', requestId, proposalId, status }),
+      'statusChanged',
+    );
+
+  getProposal = (proposalId: string): Promise<RequestResult<{ proposal: ProposalDetailView }>> =>
+    this.requestResult<{ proposal: ProposalDetailView }>(
+      (requestId) => ({ type: 'getProposal', requestId, proposalId }),
+      'proposalDetail',
+    );
+
   listAccess = (): Promise<RequestResult<{ users: AccessUser[]; invitations: AccessInvitation[] }>> =>
     this.requestResult<{ users: AccessUser[]; invitations: AccessInvitation[] }>(
       (requestId) => ({ type: 'listAccess', requestId }),
@@ -511,6 +621,14 @@ export class SyncClient {
     else if (parsed.type === 'proposalCreated') this.applyProposalCreated(parsed);
     else if (parsed.type === 'memberUpdated') this.applyMemberUpdated(parsed);
     else if (parsed.type === 'accessUpdated') this.applyAccessUpdated(parsed);
+    else if (
+      parsed.type === 'tagCreated' ||
+      parsed.type === 'tagDeleted' ||
+      parsed.type === 'tagUsage' ||
+      parsed.type === 'statusChanged' ||
+      parsed.type === 'proposalDetail'
+    )
+      this.applyTypedReply(parsed.type, parsed);
     else if (parsed.type === 'access') this.applyAccess(parsed);
     else if (parsed.type === 'rejected') {
       const message = readRejected(parsed);
@@ -823,6 +941,37 @@ export class SyncClient {
     const waiter = this.results.get(requestId);
     if (waiter === undefined || waiter.reply !== 'memberUpdated') return;
     this.finishResult(requestId, { ok: true });
+  }
+
+  private applyTypedReply(type: ResultReply, message: Record<string, unknown>): void {
+    const requestId = typeof message.requestId === 'string' ? message.requestId : '';
+    const waiter = this.results.get(requestId);
+    if (waiter === undefined || waiter.reply !== type) return;
+    if (type === 'tagCreated') {
+      this.finishResult(
+        requestId,
+        isNonEmpty(message.tagId) ? { ok: true, tagId: message.tagId } : BAD_REPLY('tagCreated'),
+      );
+    } else if (type === 'tagDeleted') {
+      this.finishResult(requestId, { ok: true });
+    } else if (type === 'tagUsage') {
+      const { members, callingPreferences, callingTags } = message;
+      this.finishResult(
+        requestId,
+        isCount(members) && isCount(callingPreferences) && isCount(callingTags)
+          ? { ok: true, members, callingPreferences, callingTags }
+          : BAD_REPLY('tagUsage'),
+      );
+    } else if (type === 'statusChanged') {
+      const { status } = message;
+      this.finishResult(
+        requestId,
+        status === 'draft' || status === 'accepted' ? { ok: true, status } : BAD_REPLY('statusChanged'),
+      );
+    } else {
+      const proposal = readProposalDetail(message.proposal);
+      this.finishResult(requestId, proposal === null ? BAD_REPLY('proposalDetail') : { ok: true, proposal });
+    }
   }
 
   private applyAccessUpdated(message: Record<string, unknown>): void {

@@ -1,4 +1,4 @@
-import type { Board, Proposal, ProposalStatus } from '@wardboard/core';
+import type { Board, Proposal, ProposalStatus, SummaryGroup } from '@wardboard/core';
 
 /** `boards.current`. Not exported by the server package; matches `channel.ts`. */
 export type CurrentInfo = {
@@ -62,4 +62,24 @@ export type AccessInvitation = {
 export type AccessDirectory = {
   users: AccessUser[];
   invitations: AccessInvitation[];
+};
+
+/** Mirrors server `ProposalDetail` (`getProposal` → `proposalDetail`). */
+export type ProposalDetailView = {
+  id: Proposal['id'];
+  name: string;
+  status: ProposalStatus;
+  rationale: string | null;
+  baselineBoardId: Board['id'];
+  boardId: Board['id'];
+  createdAt: string;
+  updatedAt: string;
+  accepted: { byLogin: string; at: string; summary: SummaryGroup[] } | null;
+};
+
+/** `tagUsage` counts: how many records reference a tag. */
+export type TagUsage = {
+  members: number;
+  callingPreferences: number;
+  callingTags: number;
 };
