@@ -6,7 +6,8 @@ import { expect, test, type Locator, type Page, type TestInfo } from '@playwrigh
  * proposal, started from Current over the operation channel, so projects
  * running in parallel never edit the same board. The phone projects only
  * check that the page renders without horizontal scrolling: the desktop
- * shell is not the phone layout.
+ * shell is not the phone layout, and its drag and drop stays off there
+ * (SPEC §10, B-032) so a swipe on a card scrolls the page.
  */
 
 const SEARCH = 'Search people, callings, tags';
@@ -106,6 +107,20 @@ async function centerOf(locator: Locator): Promise<{ x: number; y: number }> {
   return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
 }
 
+/**
+ * Keeps the pointer on `target` until it is the active drop target. A proposal
+ * created by a test running in parallel adds a header tab, which can wrap the
+ * header and shift the board mid-drag; a person would follow the card too.
+ */
+async function followTarget(page: Page, target: Locator): Promise<void> {
+  await expect(async () => {
+    const box = await target.boundingBox();
+    if (box === null) throw new Error('target has no box');
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2, { steps: 2 });
+    await expect(target).toHaveAttribute('data-drop-active', 'true', { timeout: 500 });
+  }).toPass();
+}
+
 /** A real mouse drag: press, move past the threshold in steps, release over the target. */
 async function mouseDrag(page: Page, source: Locator, target: Locator): Promise<void> {
   const to = await centerOf(target);
@@ -115,7 +130,7 @@ async function mouseDrag(page: Page, source: Locator, target: Locator): Promise<
   await page.mouse.move(from.x + 12, from.y + 12, { steps: 4 });
   await page.mouse.move(to.x, to.y, { steps: 12 });
   await expect(page.locator('[data-dnd-ghost]')).toBeVisible();
-  await expect(target).toHaveAttribute('data-drop-active', 'true');
+  await followTarget(page, target);
   await page.mouse.up();
 }
 
@@ -187,4 +202,73 @@ test('search for a person and jump to their calling', async ({ page }, testInfo)
   await expect(page.locator('.wb-group-detail [data-member-id]').filter({ hasText: 'Hal Testwell' })).toBeVisible();
   // Leaving the field closes the results so the board is visible again.
   await expect(results).toBeHidden();
+});
+
+/** The computed `touch-action` of an element (a card must not block page panning on phones). */
+async function touchAction(locator: Locator): Promise<string> {
+  return locator.evaluate((element) => getComputedStyle(element).touchAction);
+}
+
+/** A one-finger swipe with Chromium's touch input, from `start` downwards by `distance` pixels. */
+async function touchSwipeDown(page: Page, start: { x: number; y: number }, distance: number): Promise<void> {
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: start.x, y: start.y }] });
+  for (let step = 1; step <= 15; step += 1) {
+    await cdp.send('Input.dispatchTouchEvent', {
+      type: 'touchMove',
+      touchPoints: [{ x: start.x, y: start.y + (distance * step) / 15 }],
+    });
+  }
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  await cdp.detach();
+}
+
+test('drag and drop is on for desktop and TV, and off on phones where a swipe on a card scrolls (B-032)', async ({
+  page,
+  browserName,
+}, testInfo) => {
+  const name = `Editing touch ${testInfo.project.name}`;
+  await openApp(page);
+  await createProposal(page, name);
+  const tab = page.getByRole('tab', { name });
+  await tab.click();
+  await expect(tab).toHaveAttribute('aria-selected', 'true');
+  await expect(page.getByText('PROPOSED', { exact: true })).toBeVisible();
+  // The suggested-callings count appears once the baseline has loaded.
+  await expect(page.locator('.shell-count-callings')).toBeVisible();
+  await openOrg(page, 'Relief Society');
+  const card = orgCard(page, 'First Counselor');
+  await expect(card).toContainText('Gwen Imaginary');
+  await expect(card).toHaveAttribute('data-member-id', /.+/u);
+  const row = await dugoutRow(page, 'Ivy Notreal');
+
+  if (!isPhone(testInfo)) {
+    await expect(page.locator('.wb-dnd-surface')).toHaveAttribute('data-dnd-enabled', 'true');
+    expect(await touchAction(card)).toBe('none');
+    expect(await touchAction(row)).toBe('none');
+    return;
+  }
+
+  // Phones get their own interaction model (SPEC §10): the desktop drag surface stays off.
+  await expect(page.locator('.wb-dnd-surface')).toHaveAttribute('data-dnd-enabled', 'false');
+  expect(await touchAction(card)).toBe('auto');
+  expect(await touchAction(row)).toBe('auto');
+  await expectNoHorizontalOverflow(page);
+  if (browserName !== 'chromium') return;
+
+  // A real touch swipe that starts on a dugout row scrolls the page and starts no drag.
+  await row.evaluate((element) => {
+    element.scrollIntoView({ block: 'center' });
+  });
+  const before = await page.evaluate(() => window.scrollY);
+  expect(before).toBeGreaterThan(200);
+  const box = await row.boundingBox();
+  if (box === null) throw new Error('dugout row has no box');
+  const viewport = page.viewportSize();
+  if (viewport === null) throw new Error('no viewport');
+  const start = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+  await touchSwipeDown(page, start, Math.min(200, viewport.height - 10 - start.y));
+  await expect(page.locator('[data-dnd-ghost]')).toHaveCount(0);
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeLessThan(before - 50);
+  await expect(page.getByRole('dialog')).toHaveCount(0);
 });

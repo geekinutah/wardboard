@@ -1,4 +1,12 @@
-import { useEffect, useLayoutEffect, useRef, useState, type ReactElement, type ReactNode } from 'react';
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type ReactElement,
+  type ReactNode,
+} from 'react';
 import {
   callingGroupId,
   callingsOf,
@@ -24,6 +32,32 @@ import './editing.css';
 
 /** The element search focuses when a person has no calling. */
 const DUGOUT_REGION_ID = 'wb-editing-dugout';
+
+/**
+ * Phone widths (the dugout stacks under the canvas) and touch-primary screens.
+ * Phones get their own interaction model (SPEC §10, B-032), so desktop drag and
+ * drop stays off there and a swipe on a card scrolls the page.
+ */
+export const NO_DRAG_MEDIA = '(max-width: 1023px), (hover: none) and (pointer: coarse)';
+
+function subscribeNoDrag(onChange: () => void): () => void {
+  if (typeof window.matchMedia !== 'function') return () => undefined;
+  const list = window.matchMedia(NO_DRAG_MEDIA);
+  list.addEventListener('change', onChange);
+  return () => {
+    list.removeEventListener('change', onChange);
+  };
+}
+
+function readNoDrag(): boolean {
+  // Without matchMedia (jsdom), the shell is the desktop one.
+  return typeof window.matchMedia === 'function' && window.matchMedia(NO_DRAG_MEDIA).matches;
+}
+
+/** True while the window is phone-sized or touch-primary; follows changes. */
+function useNoDrag(): boolean {
+  return useSyncExternalStore(subscribeNoDrag, readNoDrag, () => false);
+}
 
 const ZOOM_TARGET_PATTERN = /^(org|group):(.+)$/u;
 
@@ -203,9 +237,10 @@ export function EditingLayer({
     if (target !== null) onCameraChange({ type: 'enter', target });
   }
 
+  const noDrag = useNoDrag();
   const core = coreProposal(proposal, baseline, board);
   // Without the baseline, approvals can't be checked, so nothing is draggable yet.
-  const locked = readOnly || core === null || sending;
+  const locked = readOnly || noDrag || core === null || sending;
 
   return (
     <div className="editing-layer">

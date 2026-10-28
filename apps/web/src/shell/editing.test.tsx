@@ -313,6 +313,75 @@ function slot(id: PositionId): HTMLElement {
   return found;
 }
 
+/**
+ * A fake `window.matchMedia` for one device. Phone widths and touch-primary
+ * screens are the phone layout's (SPEC §10), so drag and drop must stay off there.
+ */
+type Device = { width: number; touch: boolean };
+type MediaStub = { change(next: Device): void };
+
+function queryMatches(query: string, device: Device): boolean {
+  // Each comma-separated media query matches when all of its features match.
+  return query.split(',').some((part) => {
+    const features = [...part.matchAll(/\(([^)]+)\)/gu)].map((match) => (match[1] ?? '').replace(/\s+/gu, ''));
+    return (
+      features.length > 0 &&
+      features.every((feature) => {
+        const [name, value] = feature.split(':');
+        const pixels = Number.parseFloat(value ?? '');
+        switch (name) {
+          case 'max-width':
+            return device.width <= pixels;
+          case 'min-width':
+            return device.width >= pixels;
+          case 'hover':
+            return value === (device.touch ? 'none' : 'hover');
+          case 'any-hover':
+            return value === (device.touch ? 'none' : 'hover');
+          case 'pointer':
+            return value === (device.touch ? 'coarse' : 'fine');
+          case 'any-pointer':
+            return value === (device.touch ? 'coarse' : 'fine');
+          default:
+            return false;
+        }
+      })
+    );
+  });
+}
+
+function stubMedia(initial: Device): MediaStub {
+  let device = initial;
+  const lists: { query: string; listeners: Set<() => void> }[] = [];
+  Object.defineProperty(window, 'matchMedia', {
+    configurable: true,
+    value: (query: string) => {
+      const entry = { query, listeners: new Set<() => void>() };
+      lists.push(entry);
+      return {
+        media: query,
+        get matches() {
+          return queryMatches(query, device);
+        },
+        onchange: null,
+        addEventListener: (_type: string, listener: () => void) => entry.listeners.add(listener),
+        removeEventListener: (_type: string, listener: () => void) => entry.listeners.delete(listener),
+        addListener: (listener: () => void) => entry.listeners.add(listener),
+        removeListener: (listener: () => void) => entry.listeners.delete(listener),
+        dispatchEvent: () => true,
+      };
+    },
+  });
+  return {
+    change(next) {
+      device = next;
+      act(() => {
+        for (const entry of lists) for (const listener of [...entry.listeners]) listener();
+      });
+    },
+  };
+}
+
 let underPointer: Element | null = null;
 const originalElementFromPoint = Object.getOwnPropertyDescriptor(Document.prototype, 'elementFromPoint');
 
@@ -323,6 +392,7 @@ beforeEach(() => {
 
 afterEach(() => {
   Reflect.deleteProperty(document, 'elementFromPoint');
+  Reflect.deleteProperty(window, 'matchMedia');
   if (originalElementFromPoint !== undefined) {
     Object.defineProperty(Document.prototype, 'elementFromPoint', originalElementFromPoint);
   }
@@ -553,6 +623,62 @@ describe('desktop editing layer', () => {
     await tryDrag(accepted.board);
 
     expect(opFrames(harness)).toEqual([]);
+  });
+
+  it('no drag at phone widths or on touch screens, even on a Draft (B-032)', async () => {
+    const media = stubMedia({ width: 390, touch: true });
+    const proposal = buildFixtureProposal(current, wardNeedingApproval(fixture.ward, 'Ivy Notreal'));
+    const { harness, user } = await openProposal(proposal, wardNeedingApproval(fixture.ward, 'Ivy Notreal'));
+    const surface = (): Element | null => document.querySelector('.wb-dnd-surface');
+    const tryDrag = async (): Promise<void> => {
+      const ivy = await dugoutRow(user, memberNamed(fixture.ward, 'Ivy Notreal'));
+      const secretary = vacancyIn(proposal.board, assignmentIn(proposal.board, 'Sunday School Presidency', 'Secretary'));
+      press(ivy);
+      moveOver(slot(secretary));
+      expect(ghost()).toBeNull();
+      releaseOver(slot(secretary));
+      expect(screen.queryByRole('dialog')).toBeNull();
+    };
+
+    // The dugout panel still shows; only dragging is off.
+    expect(dugoutPanel()).toBeInTheDocument();
+    await zoomToOrg(user, 'Sunday School');
+    expect(surface()).toHaveAttribute('data-dnd-enabled', 'false');
+    await tryDrag();
+
+    // A wide window with a touch-primary pointer (a tablet) stays off too.
+    media.change({ width: 1440, touch: true });
+    expect(surface()).toHaveAttribute('data-dnd-enabled', 'false');
+    await tryDrag();
+
+    // A narrow desktop window with a mouse is the stacked phone width: off.
+    media.change({ width: 900, touch: false });
+    expect(surface()).toHaveAttribute('data-dnd-enabled', 'false');
+    await tryDrag();
+    expect(opFrames(harness)).toEqual([]);
+
+    // Widening to desktop with a mouse turns drag and drop on, and back off again.
+    media.change({ width: 1440, touch: false });
+    expect(surface()).toHaveAttribute('data-dnd-enabled', 'true');
+    media.change({ width: 390, touch: true });
+    expect(surface()).toHaveAttribute('data-dnd-enabled', 'false');
+  });
+
+  it('drag works at desktop widths with a mouse', async () => {
+    stubMedia({ width: 1024, touch: false });
+    const ward = wardNeedingApproval(fixture.ward, 'Ivy Notreal');
+    const proposal = buildFixtureProposal(current, ward);
+    const { harness, user } = await openProposal(proposal, ward);
+    expect(document.querySelector('.wb-dnd-surface')).toHaveAttribute('data-dnd-enabled', 'true');
+    const ivy = memberNamed(ward, 'Ivy Notreal');
+    const secretary = vacancyIn(proposal.board, assignmentIn(proposal.board, 'Sunday School Presidency', 'Secretary'));
+    await zoomToOrg(user, 'Sunday School');
+    drag(await dugoutRow(user, ivy), slot(secretary));
+    await approve(user);
+    await settle();
+    expect(opFrames(harness)).toEqual([
+      expect.objectContaining({ kind: 'placeInPosition', request: { memberId: ivy, from: null, to: secretary } }),
+    ]);
   });
 
   it('hover-open zooms the camera like a double-click', async () => {
