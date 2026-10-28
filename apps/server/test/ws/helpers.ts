@@ -25,6 +25,7 @@ import {
   startServer,
   type Config,
   type Identity,
+  type IdentityProvider,
   type RunningServer,
   type StartServerOptions,
   type Store,
@@ -115,6 +116,61 @@ export function startAdmin(seed?: (store: Store, db: DatabaseSync) => void): Pro
     initialAdminLogin: ADMIN.login,
     ...(seed !== undefined ? { seed } : {}),
   });
+}
+
+const actorIdentities = new WeakMap<Session, Map<string, Identity>>();
+
+/** Fixture identities are chosen per connection so an admin and an editor can share one channel. */
+export async function startActorSession(): Promise<Session> {
+  const identities = new Map<string, Identity>();
+  const parent = await mkdtemp(path.join(tmpdir(), 'wardboard-t072-'));
+  directories.push(parent);
+  const dataDir = path.join(parent, 'data');
+  const config: Config = {
+    dataDir,
+    baseUrl: BASE_URL,
+    port: 0,
+    host: '127.0.0.1',
+    initialAdminLogin: ADMIN.login,
+  };
+  const identityProvider: IdentityProvider = {
+    identify(req) {
+      const token = new URL(req.url ?? '/', 'http://127.0.0.1').searchParams.get('actor');
+      const found = token === null ? undefined : identities.get(token);
+      const snapshot = found === undefined ? null : { login: found.login, displayName: found.displayName };
+      return fixtureIdentityProvider(snapshot).identify(req);
+    },
+  };
+  const options: StartServerOptions = {
+    identityProvider,
+    clock: fixedClock,
+    ids: countingIds('id'),
+  };
+  const server = await startServer(config, options);
+  servers.push(server);
+  const db = openDatabase(databasePath(dataDir));
+  databases.push(db);
+  const session: Session = {
+    server,
+    dataDir,
+    config,
+    options,
+    db,
+    store: openStore(db, fixedClock),
+    access: createAccess(db, fixedClock, countingIds('side')),
+  };
+  actorIdentities.set(session, identities);
+  return session;
+}
+
+export function openActor(session: Session, identity: Identity): Promise<WebSocket> {
+  const identities = actorIdentities.get(session);
+  if (identities === undefined) {
+    throw new Error('openActor requires startActorSession');
+  }
+  const token = `actor-${String(identities.size + 1)}`;
+  identities.set(token, identity);
+  return openSocket(session, new URL(BASE_URL).origin, `?actor=${token}`);
 }
 
 export async function restart(session: Session): Promise<void> {

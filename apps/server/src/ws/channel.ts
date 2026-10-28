@@ -743,6 +743,200 @@ export function createOperationChannel(deps: {
     broadcastSettings(store.loadSettings().showNeedsApproval);
   }
 
+  function isRole(value: unknown): value is 'editor' | 'admin' {
+    return value === 'editor' || value === 'admin';
+  }
+
+  function accessErrorText(code: string): string {
+    if (code === 'forbidden') return 'only an admin can manage access';
+    if (code === 'not_found') return 'not found';
+    if (code === 'invalid_login') return 'invalid login';
+    if (code === 'already_user') return 'already a user';
+    if (code === 'already_invited') return 'already invited';
+    if (code === 'last_admin') return 'cannot change the last admin';
+    if (code === 'revoked') return 'already revoked';
+    return 'request failed';
+  }
+
+  function requestShape(
+    connection: Connection,
+    message: Record<string, unknown>,
+    keys: readonly string[],
+    description: string,
+  ): string | undefined {
+    if (!exact(message, keys)) {
+      refuse(connection, message, 'bad_request', description);
+      return undefined;
+    }
+    if (!boundedRequestId(message.requestId)) {
+      refuse(connection, message, 'bad_request', 'requestId must be a string of 1 to 64 characters');
+      return undefined;
+    }
+    return message.requestId;
+  }
+
+  function rejectAccess(connection: Connection, message: Record<string, unknown>, code: string): void {
+    refuse(connection, message, code, accessErrorText(code));
+  }
+
+  // Validation, the access write, and the broadcast stay on the same stack with no await between them.
+  function broadcastAccess(): void {
+    const admins: Connection[] = [];
+    for (const candidate of connections) {
+      if (!candidate.open || candidate.ws.readyState !== WebSocket.OPEN) continue;
+      const resolved = access.resolve(candidate.identity);
+      if (!resolved.ok || resolved.user.role !== 'admin') continue;
+      admins.push(candidate);
+    }
+    const frame = {
+      type: 'access',
+      requestId: '',
+      users: access.listUsers(),
+      invitations: access.listInvitations(),
+    };
+    for (const adminConnection of admins) sendJson(adminConnection.ws, frame);
+  }
+
+  function closeRevokedUser(userId: string): void {
+    const payload = JSON.stringify({ type: 'error', code: 'forbidden' });
+    for (const target of [...connections]) {
+      if (target.user.id !== userId) continue;
+      target.open = false;
+      target.subscription = null;
+      if (target.ws.readyState !== WebSocket.OPEN) continue;
+      target.ws.send(payload, () => {
+        target.ws.close(4403);
+      });
+    }
+  }
+
+  function finishAccessChange(connection: Connection, requestId: string, revokedUserId: string | null): void {
+    sendJson(connection.ws, { type: 'accessUpdated', requestId });
+    broadcastAccess();
+    if (revokedUserId !== null) closeRevokedUser(revokedUserId);
+  }
+
+  function listAccess(connection: Connection, message: Record<string, unknown>, actor: User): void {
+    const requestId = requestShape(connection, message, ['type', 'requestId'], 'listAccess must have requestId');
+    if (requestId === undefined) return;
+    if (!requireAdmin(connection, message, actor, 'list access')) return;
+    sendJson(connection.ws, {
+      type: 'access',
+      requestId,
+      users: access.listUsers(),
+      invitations: access.listInvitations(),
+    });
+  }
+
+  function invite(connection: Connection, message: Record<string, unknown>, actor: User): void {
+    const requestId = requestShape(
+      connection,
+      message,
+      ['type', 'requestId', 'login'],
+      'invite must have requestId and login',
+    );
+    if (requestId === undefined) return;
+    if (!nonEmpty(message.login)) {
+      refuse(connection, message, 'bad_request', 'login must be a non-empty string');
+      return;
+    }
+    if (!requireAdmin(connection, message, actor, 'invite')) return;
+    const invited = access.invite(actor.id, message.login);
+    if (!invited.ok) {
+      rejectAccess(connection, message, invited.code);
+      return;
+    }
+    finishAccessChange(connection, requestId, null);
+  }
+
+  function revokeInvitation(connection: Connection, message: Record<string, unknown>, actor: User): void {
+    const requestId = requestShape(
+      connection,
+      message,
+      ['type', 'requestId', 'invitationId'],
+      'revokeInvitation must have requestId and invitationId',
+    );
+    if (requestId === undefined) return;
+    if (!nonEmpty(message.invitationId)) {
+      refuse(connection, message, 'bad_request', 'invitationId must be a non-empty string');
+      return;
+    }
+    if (!requireAdmin(connection, message, actor, 'revoke an invitation')) return;
+    const revoked = access.revokeInvitation(actor.id, message.invitationId);
+    if (!revoked.ok) {
+      rejectAccess(connection, message, revoked.code);
+      return;
+    }
+    finishAccessChange(connection, requestId, null);
+  }
+
+  function revokeUser(connection: Connection, message: Record<string, unknown>, actor: User): void {
+    const requestId = requestShape(
+      connection,
+      message,
+      ['type', 'requestId', 'userId'],
+      'revokeUser must have requestId and userId',
+    );
+    if (requestId === undefined) return;
+    if (!nonEmpty(message.userId)) {
+      refuse(connection, message, 'bad_request', 'userId must be a non-empty string');
+      return;
+    }
+    if (!requireAdmin(connection, message, actor, 'revoke a user')) return;
+    const revoked = access.revokeUser(actor.id, message.userId);
+    if (!revoked.ok) {
+      rejectAccess(connection, message, revoked.code);
+      return;
+    }
+    finishAccessChange(connection, requestId, message.userId);
+  }
+
+  function setRole(connection: Connection, message: Record<string, unknown>, actor: User): void {
+    const requestId = requestShape(
+      connection,
+      message,
+      ['type', 'requestId', 'userId', 'role'],
+      'setRole must have requestId, userId, and role',
+    );
+    if (requestId === undefined) return;
+    if (!nonEmpty(message.userId)) {
+      refuse(connection, message, 'bad_request', 'userId must be a non-empty string');
+      return;
+    }
+    if (!isRole(message.role)) {
+      refuse(connection, message, 'bad_request', 'role must be editor or admin');
+      return;
+    }
+    if (!requireAdmin(connection, message, actor, 'set a role')) return;
+    const updated = access.setRole(actor.id, message.userId, message.role);
+    if (!updated.ok) {
+      rejectAccess(connection, message, updated.code);
+      return;
+    }
+    finishAccessChange(connection, requestId, null);
+  }
+
+  function transferAdmin(connection: Connection, message: Record<string, unknown>, actor: User): void {
+    const requestId = requestShape(
+      connection,
+      message,
+      ['type', 'requestId', 'toUserId'],
+      'transferAdmin must have requestId and toUserId',
+    );
+    if (requestId === undefined) return;
+    if (!nonEmpty(message.toUserId)) {
+      refuse(connection, message, 'bad_request', 'toUserId must be a non-empty string');
+      return;
+    }
+    if (!requireAdmin(connection, message, actor, 'transfer admin')) return;
+    const transferred = access.transferAdmin(actor.id, message.toUserId);
+    if (!transferred.ok) {
+      rejectAccess(connection, message, transferred.code);
+      return;
+    }
+    finishAccessChange(connection, requestId, null);
+  }
+
   function dispatch(connection: Connection, parsed: unknown, actor: User): void {
     if (!isRecord(parsed) || typeof parsed.type !== 'string') {
       sendJson(connection.ws, { type: 'error', code: 'bad_request' });
@@ -806,6 +1000,30 @@ export function createOperationChannel(deps: {
     }
     if (parsed.type === 'setShowNeedsApproval') {
       setShowNeedsApproval(connection, parsed, actor);
+      return;
+    }
+    if (parsed.type === 'listAccess') {
+      listAccess(connection, parsed, actor);
+      return;
+    }
+    if (parsed.type === 'invite') {
+      invite(connection, parsed, actor);
+      return;
+    }
+    if (parsed.type === 'revokeInvitation') {
+      revokeInvitation(connection, parsed, actor);
+      return;
+    }
+    if (parsed.type === 'revokeUser') {
+      revokeUser(connection, parsed, actor);
+      return;
+    }
+    if (parsed.type === 'setRole') {
+      setRole(connection, parsed, actor);
+      return;
+    }
+    if (parsed.type === 'transferAdmin') {
+      transferAdmin(connection, parsed, actor);
       return;
     }
     sendJson(connection.ws, { type: 'error', code: 'bad_request' });
