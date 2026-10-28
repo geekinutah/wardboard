@@ -11,6 +11,7 @@ import { Button } from '../design/Button.tsx';
 import { NotesDialog, type NoteSaveResult } from '../features/person/NotesDialog.tsx';
 import { PersonInspector } from '../features/person/PersonInspector.tsx';
 import { useSync, useSyncClient } from '../sync/react.tsx';
+import { MemberTagsSection } from './TagsWiring.tsx';
 
 export interface PersonPanelProps {
   readonly board: Board | null;
@@ -168,6 +169,7 @@ export function PersonPanel({
           void send('addToDugout', { memberId: id });
         }}
       />
+      <MemberTagsSection ward={ward} memberId={selectedMemberId} />
     </div>
   );
 

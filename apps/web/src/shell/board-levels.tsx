@@ -24,6 +24,7 @@ import { removedRows, type RemovedRows } from '../features/removed/rows.ts';
 import { WardOverview } from '../features/ward-overview/WardOverview.tsx';
 import type { ProposalView } from '../sync/protocol.ts';
 import { useSync } from '../sync/react.tsx';
+import { CallingTagsPanel } from './TagsWiring.tsx';
 
 /** The zoom-target id of the Out-of-Unit area; it is not a board group. */
 export const OUT_OF_UNIT_ID = 'out-of-unit';
@@ -122,16 +123,19 @@ export function renderBoardLevel(levelCamera: Camera, ctx: BoardLevelContext): R
   }
   if (levelCamera.level === 3 && levelCamera.groupId !== null) {
     return (
-      <GroupDetail
-        board={ctx.board}
-        ward={ctx.ward}
-        baseline={ctx.baseline}
-        callingGroupId={callingGroupId(levelCamera.groupId)}
-        readOnly={ctx.readOnly}
-        onAddPosition={ctx.onAddPosition}
-        onAddGroup={ctx.onAddGroup}
-        removed={ctx.removed}
-      />
+      <>
+        <GroupDetail
+          board={ctx.board}
+          ward={ctx.ward}
+          baseline={ctx.baseline}
+          callingGroupId={callingGroupId(levelCamera.groupId)}
+          readOnly={ctx.readOnly}
+          onAddPosition={ctx.onAddPosition}
+          onAddGroup={ctx.onAddGroup}
+          removed={ctx.removed}
+        />
+        <CallingTagsPanel board={ctx.board} ward={ctx.ward} callingGroupId={callingGroupId(levelCamera.groupId)} />
+      </>
     );
   }
   return null;

@@ -11,6 +11,8 @@ export interface MemberTagsEditorProps {
   onSetTags: (tagIds: TagId[]) => Promise<RequestResult>;
   onCreateTag: (name: string) => Promise<RequestResult<{ tagId: TagId }>>;
   onSetNeedsApproval: (value: boolean) => Promise<RequestResult>;
+  /** Render the member-name heading (default). Embedders that already name the member pass false. */
+  showName?: boolean;
 }
 
 /** Edits one member's ward-wide tags, plus the Admin-only Needs approval switch (SPEC §6). */
@@ -21,6 +23,7 @@ export function MemberTagsEditor({
   onSetTags,
   onCreateTag,
   onSetNeedsApproval,
+  showName = true,
 }: MemberTagsEditorProps): ReactElement {
   const headingId = useId();
   const helpId = useId();
@@ -28,12 +31,17 @@ export function MemberTagsEditor({
   const carried = member.tagIds;
 
   return (
-    <section className="wb-tags-card" aria-labelledby={headingId}>
+    <section
+      className="wb-tags-card"
+      {...(showName ? { 'aria-labelledby': headingId } : { 'aria-label': 'Member tags' })}
+    >
       <header className="wb-tags-head">
         <span className="wb-tags-eyebrow">MEMBER TAGS · WARD-WIDE</span>
-        <h2 id={headingId} className="wb-tags-title">
-          {member.name}
-        </h2>
+        {showName ? (
+          <h2 id={headingId} className="wb-tags-title">
+            {member.name}
+          </h2>
+        ) : null}
       </header>
 
       {carried.length > 0 ? (
