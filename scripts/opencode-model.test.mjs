@@ -33,7 +33,7 @@ const controllerSection = () =>
   extractSection(readFileSync(controllerPath, 'utf8'), '## Model choice (OpenCode)');
 const readmeSection = (heading) => extractSection(readFileSync(readmePath, 'utf8'), heading);
 
-const PIN = 'lmstudio/qwen3.8-27b-splash';
+const PIN = 'arch-llama/qwen3.8-27b';
 const ADAPTERS = ['controller', 'implementer', 'verifier'];
 
 /**
@@ -70,7 +70,7 @@ describe('opencode model choice', () => {
     assert.throws(() => extractFrontmatter('---\na: 1\n'), /not closed/);
   });
 
-  it('every opencode adapter pins qwen3.8-27b-splash', () => {
+  it('every opencode adapter pins arch-llama/qwen3.8-27b', () => {
     for (const a of ADAPTERS) {
       const fm = extractFrontmatter(readFileSync(join(adapterDir, `${a}.md`), 'utf8'), a);
       const keys = fm.split('\n').filter((l) => /^model\s*:/.test(l));
