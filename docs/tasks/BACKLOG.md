@@ -67,7 +67,7 @@ observation / review finding
 | B-035 | P2 | web shell | candidate | A collaborator's new proposal tab can wrap the header and shift the board mid-drag |
 | B-036 | P2 | web canvas / phone layout | candidate | The canvas viewport blocks page scrolling on phones |
 | B-037 | P3 | web shell / search | candidate | Desktop editing UX polish from T-077 |
-| B-038 | P1 | web e2e | candidate | Concurrent e2e specs mutate the shared fixture proposal `Spring adjustments` |
+| B-038 | P1 | web e2e | accepted | Concurrent e2e specs mutate the shared fixture proposal `Spring adjustments` |
 | B-039 | P3 | web presentation / core model | candidate | Presentation footer lacks ward name and baseline date (Board model has no capture time) |
 | B-040 | P2 | web settings / phone layout | candidate | Settings user-row actions overflow on phones with no scroll cue |
 | B-041 | P3 | web shell | candidate | Returning from Settings resets board tab, zoom and camera |

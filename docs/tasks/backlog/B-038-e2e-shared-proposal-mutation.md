@@ -2,9 +2,9 @@
 
 **Priority:** P1  
 **Area:** web e2e  
-**State:** candidate  
+**State:** accepted  
 **Found:** 2026-10-28 (T-079 implementer)  
-**Promoted to:** —
+**Promoted to:** T-084
 
 ## Finding
 
