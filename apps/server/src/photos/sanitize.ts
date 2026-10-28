@@ -22,6 +22,33 @@ function mediaType(contentType: string): string {
   return raw.trim().toLowerCase();
 }
 
+/** TEM, RST0–RST7, SOI, and EOI have no length. T.81 Table B.1. */
+function isParameterlessMarker(marker: number): boolean {
+  return marker === 0x01 || (marker >= 0xd0 && marker <= 0xd9);
+}
+
+/** Markers other than SOS that carry a 2-byte length. 0x00 and reserved codes do not. */
+function hasSegmentLength(marker: number): boolean {
+  return marker >= 0xc0 && marker <= 0xfe && marker !== 0xda && !isParameterlessMarker(marker);
+}
+
+function isDroppedJpegMarker(marker: number): boolean {
+  return marker === 0xe1 || marker === 0xed || marker === 0xfe;
+}
+
+/**
+ * The marker code is the first non-0xFF byte after the introducer.
+ * Extra 0xFF bytes are fill, not a marker code and not a length.
+ */
+function readMarkerCode(bytes: Uint8Array, markerStart: number): { code: number; next: number } | null {
+  if (bytes[markerStart] !== 0xff) return null;
+  let offset = markerStart + 1;
+  while (offset < bytes.length && bytes[offset] === 0xff) offset += 1;
+  const code = bytes[offset];
+  if (code === undefined) return null;
+  return { code, next: offset + 1 };
+}
+
 /**
  * JPEG segment length includes its own two bytes and excludes the marker.
  * A length below 2 is not a real segment.
@@ -34,26 +61,34 @@ function sanitizeJpeg(bytes: Uint8Array): Uint8Array | null {
   const parts: Uint8Array[] = [bytes.subarray(0, 2)];
   let offset = 2;
   while (offset < bytes.length) {
-    if (bytes[offset] !== 0xff) return null;
-    const marker = bytes[offset + 1];
-    if (marker === undefined) return null;
-    if (marker === 0xda) {
+    const markerStart = offset;
+    const marker = readMarkerCode(bytes, markerStart);
+    if (marker === null) return null;
+    offset = marker.next;
+
+    if (marker.code === 0xda) {
       const endHi = bytes[bytes.length - 2];
       const endLo = bytes[bytes.length - 1];
       if (endHi !== 0xff || endLo !== 0xd9) return null;
-      parts.push(bytes.subarray(offset));
+      parts.push(bytes.subarray(markerStart));
       return concatBytes(parts);
     }
-    if (offset + 4 > bytes.length) return null;
-    const lengthHi = bytes[offset + 2];
-    const lengthLo = bytes[offset + 3];
+    if (isParameterlessMarker(marker.code)) {
+      parts.push(bytes.subarray(markerStart, offset));
+      continue;
+    }
+    // 0x00 is byte-stuffing and 0x02–0xBF are reserved. Neither has a length;
+    // reading one would keep a following APP1/APP13/COM segment.
+    if (!hasSegmentLength(marker.code)) return null;
+    if (offset + 2 > bytes.length) return null;
+    const lengthHi = bytes[offset];
+    const lengthLo = bytes[offset + 1];
     if (lengthHi === undefined || lengthLo === undefined) return null;
     const segmentLength = lengthHi * 256 + lengthLo;
     if (segmentLength < 2) return null;
-    const segmentEnd = offset + 2 + segmentLength;
+    const segmentEnd = offset + segmentLength;
     if (segmentEnd > bytes.length) return null;
-    const drop = marker === 0xe1 || marker === 0xed || marker === 0xfe;
-    if (!drop) parts.push(bytes.subarray(offset, segmentEnd));
+    if (!isDroppedJpegMarker(marker.code)) parts.push(bytes.subarray(markerStart, segmentEnd));
     offset = segmentEnd;
   }
   return null;
