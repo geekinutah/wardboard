@@ -19,6 +19,7 @@ import { SummaryMode } from './SummaryMode.tsx';
 import { StartProposal, StartProposalTabButton } from './StartProposal.tsx';
 import { renderBoardLevel, useCurrentBoard, useRemovedState } from './board-levels.tsx';
 import { SettingsLink } from './SettingsRoute.tsx';
+import { PersonPanel } from './PersonPanel.tsx';
 
 const STATUS_TEXT: Readonly<Record<HealthState, string>> = {
   pending: 'Checking server…',
@@ -95,6 +96,8 @@ export function BoardShell({ healthClient }: { healthClient: HealthClient }): Re
   const [health, setHealth] = useState<HealthState>('pending');
   const [camera, dispatch] = useCamera();
   const [selection, setSelection] = useState<ZoomTarget | null>(null);
+  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
+  const [notesMemberId, setNotesMemberId] = useState<string | null>(null);
   const [summaryOpen, setSummaryOpen] = useState(false);
   const [startProposalOpen, setStartProposalOpen] = useState(false);
   const openedCurrent = useRef(false);
@@ -134,12 +137,18 @@ export function BoardShell({ healthClient }: { healthClient: HealthClient }): Re
     if (nextBoardId === subscribedBoardId) return;
     setSummaryOpen(false);
     setSelection(null);
+    setSelectedMemberId(null);
+    setNotesMemberId(null);
     dispatch({ type: 'fit' });
     open(nextBoardId);
   }
 
   function onSelect(target: SelectTarget): void {
-    if (target.kind === 'member') return;
+    if (target.kind === 'member') {
+      setSelectedMemberId(target.id);
+      return;
+    }
+    setSelectedMemberId(null);
     setSelection(target);
   }
 
@@ -283,39 +292,72 @@ export function BoardShell({ healthClient }: { healthClient: HealthClient }): Re
               </p>
               {proposal !== null && summaryRows !== null ? <RemovedSummary rows={summaryRows} /> : null}
               {ready ? (
-                <EditingLayer
-                  board={board}
-                  ward={ward}
-                  proposal={proposal}
-                  baseline={baseline}
-                  me={me}
-                  readOnly={readOnly}
-                  onCameraChange={dispatch}
-                >
-                  <div className="shell-canvas">
-                    <Canvas
-                      camera={shown}
-                      onCameraChange={dispatch}
-                      onSelect={onSelect}
-                      onOpenNotes={() => undefined}
-                      selection={selection}
-                      renderLevel={(levelCamera) =>
-                        renderBoardLevel(levelCamera, {
-                          board,
-                          ward,
-                          baseline,
-                          selection,
-                          readOnly,
-                          removed,
-                          onAddPosition,
-                          onAddGroup,
-                          onSetOversight: (r) => void send('setOversight', r),
-                          onCameraChange: dispatch,
-                        })
-                      }
-                    />
-                  </div>
-                </EditingLayer>
+                <>
+                  <EditingLayer
+                    board={board}
+                    ward={ward}
+                    proposal={proposal}
+                    baseline={baseline}
+                    me={me}
+                    readOnly={readOnly}
+                    onCameraChange={dispatch}
+                  >
+                    <div
+                      className="shell-canvas"
+                      onClick={(event) => {
+                        const target = event.target;
+                        if (!(target instanceof Element)) return;
+                        if (target.closest('button, a, input, textarea, select')) return;
+                        if (target.closest('[data-member-id]')) return;
+                        if (target.closest('[data-zoom-target]')) return;
+                        setSelectedMemberId(null);
+                      }}
+                    >
+                      <Canvas
+                        camera={shown}
+                        onCameraChange={dispatch}
+                        onSelect={onSelect}
+                        onOpenNotes={(id) => {
+                          setNotesMemberId(id);
+                        }}
+                        selection={selection}
+                        renderLevel={(levelCamera) =>
+                          renderBoardLevel(levelCamera, {
+                            board,
+                            ward,
+                            baseline,
+                            selection,
+                            readOnly,
+                            removed,
+                            onAddPosition,
+                            onAddGroup,
+                            onSetOversight: (r) => void send('setOversight', r),
+                            onCameraChange: dispatch,
+                          })
+                        }
+                      />
+                    </div>
+                  </EditingLayer>
+                  <PersonPanel
+                    board={board}
+                    ward={ward}
+                    readOnly={readOnly}
+                    selectedMemberId={selectedMemberId}
+                    onClearSelection={() => {
+                      setSelectedMemberId(null);
+                    }}
+                    notesMemberId={notesMemberId}
+                    onOpenNotes={(id) => {
+                      setNotesMemberId(id);
+                    }}
+                    onCloseNotes={() => {
+                      setNotesMemberId(null);
+                    }}
+                    onSelectMember={(id) => {
+                      setSelectedMemberId(id);
+                    }}
+                  />
+                </>
               ) : (
                 <p className="shell-loading">Loading board…</p>
               )}
