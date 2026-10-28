@@ -11,6 +11,20 @@
 - New unit tests go in a new file `apps/web/src/shell/<name>.test.tsx`, using the fake `WebSocketLike` + `SyncClient` pattern from `BoardShell.test.tsx`. New e2e specs run against the real checkout server (`apps/web/e2e/checkout-server.ts`, fictional ward) at all four projects, using real mouse and keyboard input.
 - GUI verification is required (`docs/gui-verification.md`): capture the integrated app at `/`, not the previews, at desktop, phone (Chromium and WebKit) and TV, and compare with the named artboards. Integration must not change the phone layout. At 390px the desktop shell renders as it does today until the phone-layout task.
 
+### Shared client accessor (amendment, 2026-10-28)
+`useSync()` doesn't expose the T-075 request methods, and `SyncContext` in `apps/web/src/sync/react.tsx` isn't exported. This task may add exactly the function below to `apps/web/src/sync/react.tsx`, immediately after the closing brace of `useSync()`, and change nothing else in that file. T-078, T-079 and T-080 carry this identical amendment, so whichever merges first adds it and the others' identical hunk applies cleanly. If it's already on `main` when you start or rebase, use it and don't add it again.
+
+```ts
+
+export function useSyncClient(): SyncClient {
+  const client = useContext(SyncContext);
+  if (client === null) throw new Error('useSyncClient must be used within SyncProvider');
+  return client;
+}
+```
+
+Extra unit test in this task's new test file: `useSyncClient returns the provider's client and throws outside SyncProvider` (fails if the hook returns a different client or doesn't throw).
+
 ## Goal
 On Current, the app shows `CurrentReadOnlyBar` with its import date and **Start proposal**. Start proposal is also offered from the header tab strip on every board. `StartProposalDialog` creates the proposal on the server and switches this user's view to the new tab.
 
@@ -24,8 +38,8 @@ On Current, the app shows `CurrentReadOnlyBar` with its import date and **Start 
 - Opening the dialog never changes other users' views (selection is local).
 
 ## Scope
-May change: `apps/web/src/shell/BoardShell.tsx`, `apps/web/src/shell/StartProposal.tsx` (new), `apps/web/src/shell/start-proposal.test.tsx` (new), `apps/web/e2e/start-proposal.spec.ts`, `apps/web/e2e/gui/start-proposal.capture.ts` (new).
-Must not change: features, sync, server, packages, existing tests.
+May change: `apps/web/src/shell/BoardShell.tsx`, `apps/web/src/shell/StartProposal.tsx` (new), `apps/web/src/shell/start-proposal.test.tsx` (new), `apps/web/e2e/start-proposal.spec.ts`, `apps/web/e2e/gui/start-proposal.capture.ts` (new), `apps/web/src/sync/react.tsx` (only the `useSyncClient` addition above).
+Must not change: features, sync (except the `useSyncClient` addition), server, packages, existing tests.
 
 ## Acceptance criteria
 | # | Check | Command | Expected result |

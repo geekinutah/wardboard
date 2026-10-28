@@ -11,6 +11,20 @@
 - New unit tests go in a new file `apps/web/src/shell/<name>.test.tsx`, using the fake `WebSocketLike` + `SyncClient` pattern from `BoardShell.test.tsx`. New e2e specs run against the real checkout server (`apps/web/e2e/checkout-server.ts`, fictional ward) at all four projects, using real mouse and keyboard input.
 - GUI verification is required (`docs/gui-verification.md`): capture the integrated app at `/`, not the previews, at desktop, phone (Chromium and WebKit) and TV, and compare with the named artboards. Integration must not change the phone layout. At 390px the desktop shell renders as it does today until the phone-layout task.
 
+### Shared client accessor (amendment, 2026-10-28)
+`useSync()` doesn't expose the T-075 request methods, and `SyncContext` in `apps/web/src/sync/react.tsx` isn't exported. This task may add exactly the function below to `apps/web/src/sync/react.tsx`, immediately after the closing brace of `useSync()`, and change nothing else in that file. T-078, T-079 and T-080 carry this identical amendment, so whichever merges first adds it and the others' identical hunk applies cleanly. If it's already on `main` when you start or rebase, use it and don't add it again.
+
+```ts
+
+export function useSyncClient(): SyncClient {
+  const client = useContext(SyncContext);
+  if (client === null) throw new Error('useSyncClient must be used within SyncProvider');
+  return client;
+}
+```
+
+Extra unit test in this task's new test file: `useSyncClient returns the provider's client and throws outside SyncProvider` (fails if the hook returns a different client or doesn't throw).
+
 ## Goal
 The account area in the header has a **Settings** link that opens `SettingsPage` at `/settings`, wired to the real server: access management through the T-075 methods, the Show Needs approval switch, backup download, and two-step restore. **Back to board** returns to `/` without a full reload.
 
@@ -27,8 +41,8 @@ The account area in the header has a **Settings** link that opens `SettingsPage`
 - Until `me` loads, show `Loading…`.
 
 ## Scope
-May change: `apps/web/src/App.tsx`, `apps/web/src/shell/BoardShell.tsx` (the header link only), `apps/web/src/shell/SettingsRoute.tsx` (new), `apps/web/src/shell/settings-route.test.tsx` (new), `apps/web/e2e/settings-route.spec.ts`, `apps/web/e2e/gui/settings-route.capture.ts` (new).
-Must not change: `features/settings/**`, sync, server, packages, existing tests (including `App.test.tsx`).
+May change: `apps/web/src/App.tsx`, `apps/web/src/shell/BoardShell.tsx` (the header link only), `apps/web/src/shell/SettingsRoute.tsx` (new), `apps/web/src/shell/settings-route.test.tsx` (new), `apps/web/e2e/settings-route.spec.ts`, `apps/web/e2e/gui/settings-route.capture.ts` (new), `apps/web/src/sync/react.tsx` (only the `useSyncClient` addition above), `apps/web/src/shell/settings-route.css` (new; styles for the header Settings link and route chrome).
+Must not change: `features/settings/**`, sync (except the `useSyncClient` addition), server, packages, existing tests (including `App.test.tsx`).
 
 ## Acceptance criteria
 | # | Check | Command | Expected result |

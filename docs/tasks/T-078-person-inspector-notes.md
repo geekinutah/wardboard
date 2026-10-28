@@ -11,6 +11,20 @@
 - New unit tests go in a new file `apps/web/src/shell/<name>.test.tsx`, using the fake `WebSocketLike` + `SyncClient` pattern from `BoardShell.test.tsx`. New e2e specs run against the real checkout server (`apps/web/e2e/checkout-server.ts`, fictional ward) at all four projects, using real mouse and keyboard input.
 - GUI verification is required (`docs/gui-verification.md`): capture the integrated app at `/`, not the previews, at desktop, phone (Chromium and WebKit) and TV, and compare with the named artboards. Integration must not change the phone layout. At 390px the desktop shell renders as it does today until the phone-layout task.
 
+### Shared client accessor (amendment, 2026-10-28)
+`useSync()` doesn't expose the T-075 request methods, and `SyncContext` in `apps/web/src/sync/react.tsx` isn't exported. This task may add exactly the function below to `apps/web/src/sync/react.tsx`, immediately after the closing brace of `useSync()`, and change nothing else in that file. T-078, T-079 and T-080 carry this identical amendment, so whichever merges first adds it and the others' identical hunk applies cleanly. If it's already on `main` when you start or rebase, use it and don't add it again.
+
+```ts
+
+export function useSyncClient(): SyncClient {
+  const client = useContext(SyncContext);
+  if (client === null) throw new Error('useSyncClient must be used within SyncProvider');
+  return client;
+}
+```
+
+Extra unit test in this task's new test file: `useSyncClient returns the provider's client and throws outside SyncProvider` (fails if the hook returns a different client or doesn't throw).
+
 ## Goal
 Single-clicking a member card on the real board opens `PersonInspector` for that member. Double-clicking a member card, or **Open notes** in the inspector, opens `NotesDialog`, which saves through `updateMember`. Add to dugout in the inspector sends `addToDugout`.
 
@@ -21,8 +35,8 @@ Single-clicking a member card on the real board opens `PersonInspector` for that
 - Notes never render outside the dialog. The panel must not read `member.note`.
 
 ## Scope
-May change: `apps/web/src/shell/BoardShell.tsx`, `apps/web/src/shell/PersonPanel.tsx` (new), `apps/web/src/shell/person-panel.test.tsx` (new), `apps/web/e2e/person-panel.spec.ts`, `apps/web/e2e/gui/person-panel.capture.ts` (new).
-Must not change: features (including `canvas` and `person`), sync, server, packages, existing tests.
+May change: `apps/web/src/shell/BoardShell.tsx`, `apps/web/src/shell/PersonPanel.tsx` (new), `apps/web/src/shell/person-panel.test.tsx` (new), `apps/web/e2e/person-panel.spec.ts`, `apps/web/e2e/gui/person-panel.capture.ts` (new), `apps/web/src/sync/react.tsx` (only the `useSyncClient` addition above).
+Must not change: features (including `canvas` and `person`), sync (except the `useSyncClient` addition), server, packages, existing tests.
 
 ## Acceptance criteria
 | # | Check | Command | Expected result |
