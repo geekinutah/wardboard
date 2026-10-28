@@ -4,10 +4,10 @@
 **Depends on:** T-052 (PDF extraction harness — `done`).
 - Runs in parallel with T-053 and T-054. Each owns its own `src/reports/*` files and test file. The only shared file is the barrel `packages/importer/src/index.ts`, where each task adds exactly one export line; the controller resolves that one-line conflict at merge.
 
-**Spec refs:** SPEC.md §7 (ExternalCalling: brief member-linked context, not a ward placement), §14 "Supplied PDF sample inspection" (three sections, different columns per section; the middle section has serving unit plus calling; **external service must not be mistaken for a local ward placement because its title names a ward role**; keep multiple external callings per member; **Living outside of Unit needs a nonempty sample or an explicit mapping decision before its handling can be verified**), §15 (deterministic; allow-list; actionable errors, never guessed rows).
+**Spec refs:** SPEC.md §7 (ExternalCalling: brief member-linked context, not a ward placement), §14 "Supplied PDF sample inspection" (three sections, different columns per section; the middle section has serving unit plus calling; **external service must not be mistaken for a local ward placement because its title names a ward role**; keep multiple external callings per member; Living outside of Unit: **CONFIRMED 2026-10-28 by Mike — its rows are external callings like the other sections, and anyone listed in this report is not available for ward callings**), §15 (deterministic; allow-list; actionable errors, never guessed rows).
 
 ## Goal
-`parseOutOfUnitReport(doc)` turns an extracted Out-of-Unit Callings PDF into external-calling records: member display name, calling title, the section it came from, and the serving unit where the report gives one. Sustained dates and unit numbers are dropped. Every section's rows are reconciled against its `Count: N`. The output type has no way to express a ward placement. A non-empty Living outside of Unit section is refused with a typed error until Mike decides how to map it.
+`parseOutOfUnitReport(doc)` turns an extracted Out-of-Unit Callings PDF into external-calling records: member display name, calling title, the section it came from, and the serving unit where the report gives one. Sustained dates and unit numbers are dropped. Every section's rows are reconciled against its `Count: N`. The output type has no way to express a ward placement. Living outside of Unit rows are mapped the same way, with no serving unit. *(Amended 2026-10-28: this section was previously refused; it is now mapped.)*
 
 ## Design decisions (binding)
 
@@ -25,8 +25,7 @@ import type { PdfDocument } from '../pdf/index.ts';
 export type OutOfUnitReportErrorCode =
   | 'WRONG_REPORT'
   | 'COUNT_MISMATCH'
-  | 'UNRECOGNIZED_LAYOUT'
-  | 'UNSUPPORTED_SECTION';
+  | 'UNRECOGNIZED_LAYOUT';
 
 export class OutOfUnitReportError extends Error {
   readonly code: OutOfUnitReportErrorCode;
@@ -34,7 +33,7 @@ export class OutOfUnitReportError extends Error {
   constructor(code: OutOfUnitReportErrorCode, page: number, message: string);
 }
 
-export type OutOfUnitSection = 'stake' | 'serving-outside-unit';
+export type OutOfUnitSection = 'stake' | 'serving-outside-unit' | 'living-outside-unit';
 
 export interface ExternalCallingRecord {
   readonly section: OutOfUnitSection;
@@ -42,7 +41,7 @@ export interface ExternalCallingRecord {
   readonly name: string;
   /** Calling title exactly as printed. */
   readonly calling: string;
-  /** 'Serving in Unit' value for 'serving-outside-unit' (e.g. 'Cedar Peak Utah Temple'); null for 'stake'. */
+  /** 'Serving in Unit' value for 'serving-outside-unit' (e.g. 'Cedar Peak Utah Temple'); null for 'stake' and 'living-outside-unit'. */
   readonly servingUnit: string | null;
 }
 
@@ -52,7 +51,7 @@ export interface OutOfUnitReport {
   readonly unitName: string;
   /** Report date from the footer as ISO `YYYY-MM-DD`. */
   readonly reportDate: string;
-  /** Report order: all Stake Callings rows, then Serving outside of assigned unit rows. */
+  /** Report order: Stake Callings rows, then Serving outside of assigned unit rows, then Living outside of Unit rows. */
   readonly externalCallings: readonly ExternalCallingRecord[];
 }
 
@@ -66,7 +65,7 @@ export function parseOutOfUnitReport(doc: PdfDocument): OutOfUnitReport;
 4. Columns are located from each section's own bold header row by `x`:
    - Stake Callings: `Calling / Name / Sustained` → `calling`, `name`, `servingUnit: null`.
    - Serving outside of assigned unit: `Serving in Unit / Calling / Name / Sustained` → `servingUnit`, `calling`, `name`.
-   - Living outside of Unit: `Calling / Name / Sustained`. If its `Count:` is greater than 0 (or any data row appears), throw `UNSUPPORTED_SECTION` with a message saying the section needs a mapping decision. Do not return its rows.
+   - Living outside of Unit: `Calling / Name / Sustained` → `calling`, `name`, `servingUnit: null`, `section: 'living-outside-unit'`.
 5. The Sustained column is read only to recognize the column and is dropped. No logging.
 6. Each section's row count must equal its `Count: N`, else `COUNT_MISMATCH` naming the section (no personal values in the message).
 7. Rows are records, not placements: never merge duplicates. A member with two out-of-unit callings produces two records.
@@ -113,19 +112,19 @@ In `packages/importer/test/out-of-unit-report.test.ts`. Extract the fixture once
 | `keeps multiple callings for one member` | Ivydale (2 serving) and Birchwood Edie (2 stake) | de-duplication by name |
 | `drops sustained dates` | `JSON.stringify(report)` contains none of `May 2026`, `Aug 2021`, `Sustained`; `Object.keys` of each record is exactly `['section','name','calling','servingUnit']` | dates carried along |
 | `accepts an empty Living outside of Unit section` | fixture parses with no error and no third-section records | Count: 0 section treated as an error |
-| `refuses a non-empty Living outside of Unit section` | edited copy throws `UNSUPPORTED_SECTION`; message contains `mapping decision` and not the inserted name | rows silently mapped or dropped |
+| `maps a non-empty Living outside of Unit section` | the edited copy yields 38 records; the last is `{ section: 'living-outside-unit', name: <inserted>, calling: <inserted>, servingUnit: null }`; the sustained value is absent from the output | rows dropped; Sustained read as the name; section mislabeled |
 | `rejects another report as WRONG_REPORT` | the extracted `members-without-callings.pdf` throws `WRONG_REPORT` | empty result instead of error |
 | `throws COUNT_MISMATCH when a row is missing` | delete one serving row → `COUNT_MISMATCH` mentioning `Serving outside of assigned unit` | count unchecked |
 | `throws UNRECOGNIZED_LAYOUT when a section header is missing or unknown` | (a) remove the `Stake Callings` header; (b) rename it `Ward Callings` | guessed section; rows attached to the wrong section |
 | `is deterministic` | two parses `toStrictEqual` | shared state |
 
 ## Edge cases (each needs a test)
-Covered above: empty section, non-empty unsupported section, sections with different column sets, duplicate member names, ward-role titles in external service, wrong report, missing row, missing or unknown section header.
+Covered above: empty section, non-empty Living outside of Unit section, sections with different column sets, duplicate member names, ward-role titles in external service, wrong report, missing row, missing or unknown section header.
 
 ## Human checks
 none
 
 ## Out of scope
-- Deciding how Living outside of Unit rows map (open question for Mike; this task refuses them).
+- Showing or enforcing that listed members are unavailable for ward callings (SPEC §14 OPEN; backlog B-030).
 - Linking records to members (T-057) and storing them as `ExternalCalling` (T-058).
 - Cross-parser allow-list and canary checks (T-056).
