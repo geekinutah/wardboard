@@ -68,3 +68,4 @@ observation / review finding
 | B-036 | P2 | web canvas / phone layout | candidate | The canvas viewport blocks page scrolling on phones |
 | B-037 | P3 | web shell / search | candidate | Desktop editing UX polish from T-077 |
 | B-038 | P2 | web e2e | candidate | Concurrent e2e specs mutate the shared fixture proposal `Spring adjustments` |
+| B-039 | P3 | web presentation / core model | candidate | Presentation footer lacks ward name and baseline date (Board model has no capture time) |
