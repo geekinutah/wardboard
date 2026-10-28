@@ -2,7 +2,7 @@
 
 **Priority:** P1  
 **Area:** web dnd / integration  
-**State:** accepted  
+**State:** resolved  
 **Found:** 2026-10-28, T-035 implementer and verifier (round 1)  
 **Promoted to:** T-077
 

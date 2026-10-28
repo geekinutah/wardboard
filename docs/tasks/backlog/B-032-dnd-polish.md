@@ -13,6 +13,9 @@
 - In the second-calling step, a `null` `destinationLabel` would leave the drop flow set with no dialog, locking out further drags. This can't happen today.
 - Blocked-drop alerts show core's technical messages (e.g. member and list ids) rather than friendly text.
 
+- The "Drop here" chip covers the target card's small role label (e.g. SECRETARY) during a drag (T-077 verifier, `mid-drag-*.png`).
+- T-077 disables drag below 1024px and on touch-primary devices, so the phone `touch-action` item no longer applies to the desktop shell.
+
 ## Risk
 
 Mostly polish. The `touch-action` item matters if the integration task mounts `DndSurface` on phones; the phone design uses tap-to-move (T-049).
