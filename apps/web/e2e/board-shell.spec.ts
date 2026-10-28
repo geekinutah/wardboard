@@ -107,7 +107,10 @@ test('opens Current, switches to its own proposal, zooms to a group, adds a posi
   await expect(page.getByRole('searchbox', { name: 'Search people, callings, tags' })).toBeVisible();
   await addPositionUntilCommitted(page, title);
 
-  await expect(page.getByRole('article', { name: `Vacant, ${title}` })).toHaveCount(1);
+  // Rebuilt from testInfo, not `title`, so a title that drops the repeat index fails here.
+  await expect(
+    page.getByRole('article', { name: `Vacant, ${uniqueProposalName('Fictional Chorister', testInfo)}` }),
+  ).toHaveCount(1);
   await expect(page.getByRole('alert')).toHaveCount(0);
   await expect(page.locator('.wb-canvas-level')).toHaveText('Group');
   await expectNoHorizontalOverflow(page);
