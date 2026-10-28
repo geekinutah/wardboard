@@ -22,3 +22,4 @@ Treat `[role=option]`, `[role=listbox]`, `[role=combobox]` (and probably `[role=
 
 - `apps/web/src/features/canvas/Canvas.tsx:287-300`
 - docs/tasks/evidence/T-088.md, round 1 notes
+- When fixed, remove the T-088 workaround: `onPointerDown` stopPropagation on the Calling tags panel in `apps/web/src/shell/TagsWiring.tsx`.
