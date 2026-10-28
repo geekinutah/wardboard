@@ -1,7 +1,7 @@
 # T-087: Sync client methods for tags, needs approval, and proposal status
 
 **Milestone:** 4 — Desktop board (client support for integration)
-**Depends on:** **T-086 (todo)**. Starts only after T-086 is verified `done`; it uses T-086's wire format and `acceptedAt`. Also depends on T-075 (sync client request pattern), which is `done`.
+**Depends on:** T-086 (`done`); it uses T-086's wire format and `acceptedAt`. Also depends on T-075 (sync client request pattern), which is `done`.
 - Promoted from B-042 (with T-086).
 
 **Spec refs:** SPEC.md §6 (tags; Admin-only `needs_approval`; tag deletion with usage counts), §3 (Draft/Accepted status, frozen summary, Accepted list). The T-086 contract defines the wire format for `deleteTag`, `getTagUsage` and `acceptedAt`. Existing server messages: `createTag` → `tagCreated {requestId, tagId}`; `renameTag` → `memberUpdated {requestId}`; `setNeedsApproval` → `memberUpdated {requestId}`; `setProposalStatus {requestId, proposalId, status}` → `statusChanged {requestId, proposalId, status}`; `getProposal {requestId, proposalId}` → `proposalDetail {requestId, proposal}` (`apps/server/src/proposals/detail.ts` `ProposalDetail`, with `accepted: {byLogin, at, summary: SummaryGroup[]} | null`). Refusals arrive as `rejected {requestId, code, message}`.
