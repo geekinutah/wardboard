@@ -28,6 +28,17 @@ The Settings page (`/settings`) has a **Tags** section with T-039's `TagLibrary`
   - The ward push after a delete updates the table through the existing sync state. No extra local state is needed for rows.
 - Styling uses the existing `settings-route.css` classes where they fit. New rules go in a new `apps/web/src/shell/tag-library-section.css`.
 
+### Round 2 amendments (binding; they replace conflicting text above)
+- **Counts never get stuck.** While a delete dialog is open, its tag's usage must eventually show counts or an error. A `ward` push that arrives while a `getTagUsage` request is in flight must not leave the dialog counting forever. Either refetch after the push for the open dialog's tag, or keep the in-flight reply and invalidate only afterwards; either way, at most one request is outstanding per tag. Cached usage for other tags is still dropped on a ward push.
+- **Refusals show in the dialog.** `TagLibrary` gains an optional prop `usageErrorOf?: (tagId: TagId) => string | null`. When it returns a message, the dialog body shows `Couldn't count where it's used: {message}` in a `role="alert"` element in place of the counting text, and `Delete tag` stays disabled. The section-level fixed toast is removed. Existing `TagLibrary.test.tsx` stays unchanged and passing.
+- **Placement in the cards column.** `features/settings/SettingsPage.tsx` gains an optional prop `extra?: ReactNode`, rendered after the last card inside the same main cards column (`.wb-settings-main`), with no other change. `SettingsRoute.tsx` passes `<TagLibrarySection />` as `extra` instead of rendering it as a sibling. On desktop the Tags card then sits directly below the Backup card, left-aligned with the other cards, with no viewport-height gap. Existing settings tests stay unchanged and passing.
+- **Scope additions:** `apps/web/src/features/settings/SettingsPage.tsx` (the `extra` prop only), `apps/web/src/features/settings/SettingsPage.extra.test.tsx` (new). `SettingsRoute.tsx` may change only how `TagLibrarySection` is mounted.
+- **New tests:**
+  - `tag-library-section.test.tsx` › `a ward push while getTagUsage is in flight still ends with counts and Delete enabled` (deterministic: send the ward push before the tagUsage reply).
+  - `TagLibrary.usage.test.tsx` › `usageErrorOf message replaces the counting text and Delete stays disabled`.
+  - `SettingsPage.extra.test.tsx` › `extra renders inside the main column after the last card`.
+- **Stability evidence:** run `pnpm exec playwright test -c e2e/playwright.config.ts e2e/tag-library.spec.ts --repeat-each=5` from `apps/web`; it must pass every repeat on all four projects.
+
 ## Scope
 May change:
 - `apps/web/src/features/tags/TagLibrary.tsx`
