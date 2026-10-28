@@ -60,3 +60,5 @@ observation / review finding
 | B-028 | P2 | design tokens | candidate | removed summary CSS uses raw artboard hex colors without tokens |
 | B-029 | P2 | design tokens | candidate | artboard 9 removed-card date and hint line absent from shipped RemovedCard |
 | B-030 | P1 | core rules / import / UI | accepted | Members with out-of-unit callings are unavailable for ward callings, but nothing shows or enforces it |
+| B-031 | P1 | web dnd / integration | candidate | Needs-approval drop onto a full list sends approvePlacement with a client-invented position id |
+| B-032 | P2 | web dnd | candidate | DnD polish: can't-drop hover state, touch-action on phones, null-label lockout, technical alert text |
