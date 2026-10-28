@@ -83,3 +83,4 @@ Candidate and discovered work that has not yet been promoted into a task contrac
 | T-088 | Member and calling tags in the app | 4 — Desktop board | done | 2 | none |
 | T-089 | Tag library on the Settings page | 4 — Desktop board | in progress | 1 | none |
 | T-090 | Accepted view and Accept in the app | 4 — Desktop board | done | 1 | none |
+| T-048 | Phone board and organization screens | 5 — Phone | in progress | 0 | iPhone, after the shell is mounted at /: tap Primary and confirm the list and back control are comfortable one-handed |
