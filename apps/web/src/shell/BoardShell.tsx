@@ -14,7 +14,7 @@ import { Button } from '../design/Button.tsx';
 import { RemovedSummary } from '../features/removed/RemovedSummary.tsx';
 import { checkHealth, type HealthClient, type HealthState } from '../health.ts';
 import type { Me, ProposalView } from '../sync/protocol.ts';
-import { ConnectionIndicator, SyncBanner, useBaseline, useMe, useSettings, useSync } from '../sync/react.tsx';
+import { ConnectionIndicator, SyncBanner, useBaseline, useMe, useSync, useSyncClient } from '../sync/react.tsx';
 import { EditingLayer, ShellSearch } from './EditingLayer.tsx';
 import { SummaryMode } from './SummaryMode.tsx';
 import { StartProposal, StartProposalTabButton } from './StartProposal.tsx';
@@ -93,8 +93,8 @@ export function BoardShell({ healthClient }: { healthClient: HealthClient }): Re
   const currentBoard = useCurrentBoard();
   const me = useMe();
   const baseline = useBaseline();
-  const settings = useSettings();
-  const { boards, board, ward, proposal, subscribedBoardId, open, send } = useSync();
+  const client = useSyncClient();
+  const { boards, board, ward, proposal, subscribedBoardId, open, send, settings, status } = useSync();
 
   const [health, setHealth] = useState<HealthState>('pending');
   const [presenting, setPresenting] = useState(false);
@@ -123,6 +123,14 @@ export function BoardShell({ healthClient }: { healthClient: HealthClient }): Re
     openedCurrent.current = true;
     if (subscribedBoardId === null) open(boards.current.boardId);
   }, [boards, subscribedBoardId, open]);
+
+  // Presentation is the only shell consumer of settings. Fetch it on entry
+  // (and again after a reconnect while presenting) so that the shell's normal
+  // request sequence stays unchanged for boards that are never presented.
+  useEffect(() => {
+    if (!presenting || status !== 'live') return;
+    void client.loadSettings();
+  }, [client, presenting, status]);
 
   const shown = board === null ? camera : safeCamera(board, camera);
 

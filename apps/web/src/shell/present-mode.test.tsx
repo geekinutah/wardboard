@@ -193,7 +193,7 @@ function levelText(): string {
   return node.textContent;
 }
 
-/** Reply to the `getSettings` request the shell makes when it goes live. */
+/** Reply to the `getSettings` request the shell makes when the user presents. */
 function respondToSettings(socket: FakeSocket, harness: Harness, showNeedsApproval: boolean): void {
   act(() => {
     socket.receive({ type: 'settings', requestId: lastRequestId(harness.sockets, 'getSettings'), showNeedsApproval });
@@ -228,9 +228,9 @@ async function presentProposal(user: UserEvent, harness: Harness): Promise<FakeS
   });
   await user.click(screen.getByRole('tab', { name: 'Spring adjustments' }));
   openSpring(socket);
-  respondToSettings(socket, harness, false);
   await respondToBaseline(socket, harness);
   await user.click(screen.getByRole('button', { name: 'Present' }));
+  respondToSettings(socket, harness, false);
   return socket;
 }
 
