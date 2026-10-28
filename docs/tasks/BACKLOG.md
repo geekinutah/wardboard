@@ -73,3 +73,4 @@ observation / review finding
 | B-041 | P3 | web shell | candidate | Returning from Settings resets board tab, zoom and camera |
 | B-042 | P1 | server / web sync / shell | candidate | Tags editor and Accepted view have no server/sync path in the app (no `deleteTag` message, no client methods) |
 | B-043 | P3 | server proposals | candidate | The server accepts two proposals with the same name |
+| B-044 | P3 | web sync types | candidate | `RequestResult` success type rejects a plain `{ ok: true }`; callers cast |
