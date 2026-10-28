@@ -71,12 +71,13 @@ scripts/verify.sh    The single quality gate
 
 | ID | Title | Depends on | Scope | Done when |
 |---|---|---|---|---|
-| T-030 | App shell | T-004, T-029 | `apps/web/src/shell/` | Header (brand, board tabs, search slot, presence, account) and status strip per artboard 1; search bar present on every desktop screen |
+| T-030 | App shell | T-004, T-029, T-071 | `apps/web/src/shell/` | Header (brand, board tabs, search slot, presence, account) and status strip per artboard 1; search bar present on every desktop screen |
 | T-031 | Canvas and zoom levels | T-004 (standalone; mounted by T-030/T-032+) | `apps/web/src/features/canvas/` | Pan, wheel/pinch zoom with level thresholds, double-click into an area, zoom-out/Esc up one level, Fit ward, keyboard zoom buttons, single click selects (artboard 17) |
 | T-032 | Level 1: ward overview | T-070 (standalone; mounted by T-030) | `apps/web/src/features/ward-overview/` | Organization tiles with leaders, vacancy and change counts (artboard 1) |
 | T-033 | Level 2: organization | T-070 (standalone; mounted by T-030) | `apps/web/src/features/org-view/` | Leadership cards, group summary rows with counts, "Overseen by" label |
 | T-034 | Level 3: group detail and add position | T-070, T-012 (standalone; mounted by T-030) | `apps/web/src/features/group-view/` | Every position, list vs single, vacancy placeholders, + add position and + Add group (artboards 2, 13) |
 | T-070 | Preview harness | T-003, T-004, T-007 | `apps/web/src/main.tsx` (routing branch), `apps/web/src/preview/` | `/__preview/<feature>` renders any `features/*/preview.tsx` with the fictional fixture ward and a proposal with changes, lazily loaded |
+| T-071 | Session, baseline and shared-data sync | T-024, T-025, T-026, T-029 | `apps/server/src/ws/channel.ts`, `apps/web/src/sync/` | `whoami` and `getBoard` messages; client `me`, baseline fetch, and `ward`/`proposalChanged`/`settings` pushes; prerequisite for T-030 |
 | T-035 | Drag and drop with dialogs | T-034, T-010, T-014, T-015 | `apps/web/src/features/dnd/` | Drag between positions and onto tiles/groups (hover opens); drop dialog; second-calling confirmation; needs-approval dialog (artboards 2–4, 12) |
 | T-036 | Dugout panel | T-030, T-011 | `apps/web/src/features/dugout/` | Dugout list with filters; drop target; explicit inclusions show remaining callings |
 | T-037 | Person inspector and notes | T-030, T-026 | `apps/web/src/features/person/` | Inspector with callings in this proposal, tags, note; double-click a member card opens notes; notes never shown otherwise |
