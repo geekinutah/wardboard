@@ -1,6 +1,6 @@
 # B-038: Concurrent e2e specs mutate the shared fixture proposal `Spring adjustments`
 
-**Priority:** P2  
+**Priority:** P1  
 **Area:** web e2e  
 **State:** candidate  
 **Found:** 2026-10-28 (T-079 implementer)  
@@ -23,3 +23,8 @@ Follow the pattern in `apps/web/e2e/editing.spec.ts`: have each mutating test cr
 - `apps/web/e2e/board-shell.spec.ts` (adds a position on `Spring adjustments`)
 - `apps/web/e2e/board-views.spec.ts` (changes oversight on `Spring adjustments`)
 - `apps/web/e2e/editing.spec.ts` (creates a fresh proposal per test to avoid cross-worker collisions)
+- 2026-10-28, T-080 verifier and controller: alternating `test:e2e:playwright` runs.
+  - `origin/main` 1b5b5d8: 3 of 9 runs failed.
+  - With T-080: 2 of 8 runs failed, and 2 of 2 integrated `./scripts/verify.sh` runs each failed one test.
+  - Failures were `board-shell.spec.ts:71` and `board-views.spec.ts:3`, all on desktop-chromium.
+  - The gate on `main` fails about one run in three, so this was raised to P1. Details: `docs/tasks/evidence/T-080.md`.
