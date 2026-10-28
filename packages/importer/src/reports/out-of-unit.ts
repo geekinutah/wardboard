@@ -3,8 +3,7 @@ import type { PdfDocument, PdfTextItem } from '../pdf/index.ts';
 export type OutOfUnitReportErrorCode =
   | 'WRONG_REPORT'
   | 'COUNT_MISMATCH'
-  | 'UNRECOGNIZED_LAYOUT'
-  | 'UNSUPPORTED_SECTION';
+  | 'UNRECOGNIZED_LAYOUT';
 
 export class OutOfUnitReportError extends Error {
   readonly code: OutOfUnitReportErrorCode;
@@ -18,7 +17,7 @@ export class OutOfUnitReportError extends Error {
   }
 }
 
-export type OutOfUnitSection = 'stake' | 'serving-outside-unit';
+export type OutOfUnitSection = 'stake' | 'serving-outside-unit' | 'living-outside-unit';
 
 export interface ExternalCallingRecord {
   readonly section: OutOfUnitSection;
@@ -26,7 +25,7 @@ export interface ExternalCallingRecord {
   readonly name: string;
   /** Calling title exactly as printed. */
   readonly calling: string;
-  /** 'Serving in Unit' value for 'serving-outside-unit' (e.g. 'Cedar Peak Utah Temple'); null for 'stake'. */
+  /** 'Serving in Unit' value for 'serving-outside-unit' (e.g. 'Cedar Peak Utah Temple'); null for 'stake' and 'living-outside-unit'. */
   readonly servingUnit: string | null;
 }
 
@@ -36,19 +35,17 @@ export interface OutOfUnitReport {
   readonly unitName: string;
   /** Report date from the footer as ISO `YYYY-MM-DD`. */
   readonly reportDate: string;
-  /** Report order: all Stake Callings rows, then Serving outside of assigned unit rows. */
+  /** Report order: Stake Callings rows, then Serving outside of assigned unit rows, then Living outside of Unit rows. */
   readonly externalCallings: readonly ExternalCallingRecord[];
 }
 
-type InternalSectionType = 'stake' | 'serving-outside-unit' | 'living-outside-unit';
-
-const SECTION_HEADERS: Record<string, InternalSectionType> = {
+const SECTION_HEADERS: Record<string, OutOfUnitSection> = {
   'Stake Callings': 'stake',
   'Serving outside of assigned unit': 'serving-outside-unit',
   'Living outside of Unit': 'living-outside-unit',
 };
 
-const EXPECTED_COLUMNS: Record<InternalSectionType, readonly string[]> = {
+const EXPECTED_COLUMNS: Record<OutOfUnitSection, readonly string[]> = {
   stake: ['Calling', 'Name', 'Sustained'],
   'serving-outside-unit': ['Serving in Unit', 'Calling', 'Name', 'Sustained'],
   'living-outside-unit': ['Calling', 'Name', 'Sustained'],
@@ -147,13 +144,14 @@ export function parseOutOfUnitReport(doc: PdfDocument): OutOfUnitReport {
     throw new OutOfUnitReportError('UNRECOGNIZED_LAYOUT', 1, 'Missing report date in footer');
   }
 
-  let currentSection: InternalSectionType | null = null;
+  let currentSection: OutOfUnitSection | null = null;
   let currentSectionTitle: string | null = null;
-  let awaitingHeaderFor: InternalSectionType | null = null;
+  let awaitingHeaderFor: OutOfUnitSection | null = null;
   let boundaries: number[] = [];
-  const seenSections = new Set<InternalSectionType>();
+  const seenSections = new Set<OutOfUnitSection>();
   const stakeRecords: ExternalCallingRecord[] = [];
   const servingRecords: ExternalCallingRecord[] = [];
+  const livingRecords: ExternalCallingRecord[] = [];
   let sectionRowCount = 0;
 
   for (const page of doc.pages) {
@@ -203,16 +201,6 @@ export function parseOutOfUnitReport(doc: PdfDocument): OutOfUnitReport {
         if (countMatch && countMatch[1]) {
           const expectedCount = parseInt(countMatch[1], 10);
 
-          if (currentSection === 'living-outside-unit') {
-            if (expectedCount > 0 || sectionRowCount > 0) {
-              throw new OutOfUnitReportError(
-                'UNSUPPORTED_SECTION',
-                page.pageNumber,
-                'Living outside of Unit section requires a mapping decision',
-              );
-            }
-          }
-
           if (sectionRowCount !== expectedCount) {
             const title = currentSectionTitle ?? '';
             throw new OutOfUnitReportError(
@@ -235,14 +223,6 @@ export function parseOutOfUnitReport(doc: PdfDocument): OutOfUnitReport {
             'UNRECOGNIZED_LAYOUT',
             page.pageNumber,
             `Encountered section header "${rowText}" before closing "${title}" with Count`,
-          );
-        }
-
-        if (currentSection === 'living-outside-unit') {
-          throw new OutOfUnitReportError(
-            'UNSUPPORTED_SECTION',
-            page.pageNumber,
-            'Living outside of Unit section requires a mapping decision',
           );
         }
 
@@ -279,8 +259,7 @@ export function parseOutOfUnitReport(doc: PdfDocument): OutOfUnitReport {
             servingUnit: null,
           });
           sectionRowCount++;
-        } else {
-          // currentSection is 'serving-outside-unit'
+        } else if (currentSection === 'serving-outside-unit') {
           const servingUnit = cells[0]?.trim();
           const calling = cells[1]?.trim();
           const name = cells[2]?.trim();
@@ -296,6 +275,24 @@ export function parseOutOfUnitReport(doc: PdfDocument): OutOfUnitReport {
             name,
             calling,
             servingUnit,
+          });
+          sectionRowCount++;
+        } else {
+          // currentSection is 'living-outside-unit'
+          const calling = cells[0]?.trim();
+          const name = cells[1]?.trim();
+          if (!calling || !name) {
+            throw new OutOfUnitReportError(
+              'UNRECOGNIZED_LAYOUT',
+              page.pageNumber,
+              'Malformed data row in Living outside of Unit',
+            );
+          }
+          livingRecords.push({
+            section: 'living-outside-unit',
+            name,
+            calling,
+            servingUnit: null,
           });
           sectionRowCount++;
         }
@@ -350,6 +347,6 @@ export function parseOutOfUnitReport(doc: PdfDocument): OutOfUnitReport {
     kind: 'out-of-unit',
     unitName,
     reportDate,
-    externalCallings: [...stakeRecords, ...servingRecords],
+    externalCallings: [...stakeRecords, ...servingRecords, ...livingRecords],
   };
 }

@@ -158,7 +158,7 @@ describe('T-055: Out-of-Unit Callings parser', () => {
     assert.equal(report.externalCallings.length, 37);
   });
 
-  it('refuses a non-empty Living outside of Unit section', () => {
+  it('maps a non-empty Living outside of Unit section', () => {
     const docCopy = structuredClone(fixtureDoc);
     const page = docCopy.pages[0];
     assert.ok(page);
@@ -236,25 +236,17 @@ describe('T-055: Out-of-Unit Callings parser', () => {
     ];
     (page as unknown as { rows: typeof newRows }).rows = newRows;
 
-    let caughtError: OutOfUnitReportError | null = null;
-    try {
-      parseOutOfUnitReport(docCopy);
-    } catch (err) {
-      if (err instanceof OutOfUnitReportError) {
-        caughtError = err;
-      }
-    }
-
-    assert.ok(caughtError, 'Expected OutOfUnitReportError to be thrown');
-    assert.equal(caughtError.code, 'UNSUPPORTED_SECTION');
-    assert.ok(
-      caughtError.message.includes('mapping decision'),
-      `Error message must contain "mapping decision", got: ${caughtError.message}`,
-    );
-    assert.ok(
-      !caughtError.message.includes('FictionalPerson'),
-      'Error message must not contain member personal data',
-    );
+    const report = parseOutOfUnitReport(docCopy);
+    assert.equal(report.externalCallings.length, 38);
+    const lastRecord = report.externalCallings[report.externalCallings.length - 1];
+    assert.deepEqual(lastRecord, {
+      section: 'living-outside-unit',
+      name: 'Nonexistent, FictionalPerson',
+      calling: 'Fictional Calling Title',
+      servingUnit: null,
+    });
+    const serialized = JSON.stringify(report);
+    assert.ok(!serialized.includes('1 Jan 2026'), 'Sustained value must be absent from output');
   });
 
   it('rejects another report as WRONG_REPORT', () => {
@@ -495,39 +487,6 @@ describe('T-055: Out-of-Unit Callings parser', () => {
     );
   });
 
-  it('throws UNSUPPORTED_SECTION when Living outside of Unit has Count > 0 without data rows', () => {
-    const docCopy = structuredClone(fixtureDoc);
-    const page = docCopy.pages[0];
-    assert.ok(page);
-
-    const countIdx = page.rows.findIndex((r) => r.items.some((it) => it.text === 'Count: 0'));
-    assert.ok(countIdx !== -1);
-    const countRow = page.rows[countIdx];
-    assert.ok(countRow);
-
-    const modifiedCount = {
-      ...countRow,
-      items: countRow.items.map((it) =>
-        it.text === 'Count: 0' ? { ...it, text: 'Count: 2' } : it,
-      ),
-    };
-
-    (page as unknown as { rows: unknown }).rows = [
-      ...page.rows.slice(0, countIdx),
-      modifiedCount,
-      ...page.rows.slice(countIdx + 1),
-    ];
-
-    assert.throws(
-      () => parseOutOfUnitReport(docCopy),
-      (err: unknown) => {
-        assert.ok(err instanceof OutOfUnitReportError);
-        assert.equal(err.code, 'UNSUPPORTED_SECTION');
-        assert.ok(err.message.includes('mapping decision'));
-        return true;
-      },
-    );
-  });
 
   it('is deterministic', () => {
     const report1 = parseOutOfUnitReport(fixtureDoc);
