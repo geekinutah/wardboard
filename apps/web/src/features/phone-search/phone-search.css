@@ -1,0 +1,325 @@
+@import '../../design/tokens.css';
+
+.wb-phone-search {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  color: var(--wb-ink, #18212b);
+  font-family: var(--wb-font-sans, 'IBM Plex Sans', system-ui, sans-serif);
+}
+
+.wb-phone-search-header {
+  background: var(--wb-surface, #ffffff);
+  border-bottom: 1px solid var(--wb-line, #d9ddd8);
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-sizing: border-box;
+}
+
+.wb-phone-search-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 48px;
+  min-height: 48px;
+  padding: 0 12px;
+  border: 2px solid var(--wb-accent, #1d5c68);
+  border-radius: 10px;
+  background: var(--wb-surface, #ffffff);
+  box-sizing: border-box;
+}
+
+.wb-phone-search-input-wrap:focus-within {
+  outline: 2px solid var(--wb-accent, #1d5c68);
+  outline-offset: 1px;
+}
+
+.wb-phone-search-icon {
+  flex: none;
+  color: var(--wb-ink, #18212b);
+}
+
+.wb-phone-search-input {
+  border: none;
+  outline: none;
+  font: inherit;
+  font-size: 16px;
+  flex: 1;
+  min-width: 0;
+  color: var(--wb-ink, #18212b);
+  background: transparent;
+}
+
+.wb-phone-search-filters {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 2px;
+  box-sizing: border-box;
+}
+
+.wb-phone-filter-chip {
+  flex: none;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--wb-line, #d9ddd8);
+  background: var(--wb-surface, #ffffff);
+  color: var(--wb-muted-strong, #3a444f);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  text-decoration: none;
+}
+
+.wb-phone-filter-chip.wb-pressed {
+  border: 1px solid var(--wb-ink, #18212b);
+  background: var(--wb-ink, #18212b);
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.wb-phone-filter-chip:focus-visible {
+  outline: 2px solid var(--wb-accent, #1d5c68);
+  outline-offset: 2px;
+}
+
+.wb-phone-search-results {
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-sizing: border-box;
+}
+
+.wb-phone-search-helper,
+.wb-phone-search-empty {
+  margin: 0;
+  padding: 24px 8px;
+  font-size: 14px;
+  color: var(--wb-muted, #55606b);
+  text-align: center;
+}
+
+.wb-phone-search-heading {
+  margin: 4px 0 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--wb-muted, #55606b);
+}
+
+.wb-phone-search-card {
+  background: var(--wb-surface, #ffffff);
+  border: 1px solid var(--wb-line, #d9ddd8);
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.wb-phone-search-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 64px;
+  padding: 8px 12px;
+  border-top: 1px solid var(--wb-line-subtle, #eceeea);
+  box-sizing: border-box;
+}
+
+.wb-phone-search-row:first-child {
+  border-top: none;
+}
+
+.wb-phone-search-row-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  padding: 4px 0;
+  background: transparent;
+  border: none;
+  font: inherit;
+  color: var(--wb-ink, #18212b);
+  text-align: left;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.wb-phone-search-row-main:focus-visible {
+  outline: 2px solid var(--wb-accent, #1d5c68);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.wb-phone-search-avatar {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wb-phone-search-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 2px;
+}
+
+.wb-phone-search-name {
+  font-size: 14px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.wb-phone-search-sub {
+  font-size: 12px;
+  color: var(--wb-muted, #55606b);
+  overflow-wrap: anywhere;
+}
+
+.wb-phone-search-add-dugout-btn {
+  flex: none;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--wb-line, #d9ddd8);
+  background: var(--wb-surface, #ffffff);
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--wb-ink, #18212b);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.wb-phone-search-add-dugout-btn:focus-visible {
+  outline: 2px solid var(--wb-accent, #1d5c68);
+  outline-offset: 2px;
+}
+
+.wb-phone-search-in-dugout {
+  flex: none;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--wb-muted-strong, #3a444f);
+  background: var(--wb-line-subtle, #eceeea);
+  border-radius: 6px;
+  padding: 6px 8px;
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.wb-phone-search-row-calling,
+.wb-phone-search-row-tag,
+.wb-phone-search-row-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 56px;
+  padding: 8px 12px;
+  border-top: 1px solid var(--wb-line-subtle, #eceeea);
+  background: transparent;
+  border-left: none;
+  border-right: none;
+  border-bottom: none;
+  font: inherit;
+  color: var(--wb-ink, #18212b);
+  text-align: left;
+  cursor: pointer;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.wb-phone-search-row-calling:first-child,
+.wb-phone-search-row-tag:first-child,
+.wb-phone-search-row-group:first-child {
+  border-top: none;
+}
+
+.wb-phone-search-row-calling:focus-visible,
+.wb-phone-search-row-tag:focus-visible,
+.wb-phone-search-row-group:focus-visible {
+  outline: 2px solid var(--wb-accent, #1d5c68);
+  outline-offset: -2px;
+}
+
+.wb-phone-search-calling-text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  gap: 2px;
+}
+
+.wb-phone-search-calling-title {
+  font-size: 14px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.wb-phone-search-calling-group {
+  font-size: 12px;
+  color: var(--wb-muted, #55606b);
+  overflow-wrap: anywhere;
+}
+
+.wb-phone-search-calling-state {
+  font-size: 12px;
+  font-weight: 600;
+  flex: none;
+}
+
+.wb-phone-search-calling-state.wb-state-vacant {
+  color: var(--wb-danger, #8a4209);
+}
+
+.wb-phone-search-calling-state.wb-state-filled {
+  color: var(--wb-muted-strong, #3a444f);
+}
+
+.wb-phone-search-tag-badge {
+  font-size: 13px;
+  background: var(--wb-line-subtle, #eceeea);
+  border-radius: 4px;
+  padding: 4px 8px;
+  color: var(--wb-ink, #18212b);
+  font-weight: 500;
+}
+
+.wb-phone-search-tag-count {
+  font-size: 12px;
+  color: var(--wb-muted, #55606b);
+}
+
+.wb-phone-search-footer-note {
+  margin: 4px 0 12px;
+  font-size: 12px;
+  color: var(--wb-muted, #55606b);
+  text-align: center;
+}
