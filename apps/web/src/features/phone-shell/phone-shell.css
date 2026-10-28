@@ -1,0 +1,338 @@
+.wb-phone-shell {
+  min-height: 100vh;
+  background-color: var(--wb-ground, #F3F4F1);
+  color: var(--wb-ink, #18212B);
+  font-family: var(--wb-font-sans, 'IBM Plex Sans', system-ui, sans-serif);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.wb-phone-shell-header {
+  background-color: var(--wb-surface, #FFFFFF);
+  border-bottom: 1px solid var(--wb-line, #D9DDD8);
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-sizing: border-box;
+}
+
+.wb-phone-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.wb-phone-board-switcher-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--wb-accent, #1D5C68);
+  background-color: var(--wb-accent-soft, #E3EEEF);
+  border-radius: 8px;
+  color: var(--wb-accent-dark, #123E47);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-sizing: border-box;
+  text-align: left;
+}
+
+.wb-phone-board-switcher-btn:focus-visible {
+  outline: 2px solid var(--wb-accent, #1D5C68);
+  outline-offset: 2px;
+}
+
+.wb-phone-status-badge {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  padding: 2px 5px;
+  border-radius: 3px;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.wb-phone-status-badge.wb-status-proposed {
+  background-color: var(--wb-accent, #1D5C68);
+  color: #FFFFFF;
+}
+
+.wb-phone-status-badge.wb-status-accepted {
+  background-color: var(--wb-accepted, #2E5B3A);
+  color: #FFFFFF;
+}
+
+.wb-phone-status-badge.wb-status-current {
+  background-color: var(--wb-muted, #55606B);
+  color: #FFFFFF;
+}
+
+.wb-phone-board-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: inherit;
+  display: inline;
+}
+
+.wb-phone-chevron-icon {
+  flex-shrink: 0;
+}
+
+.wb-phone-header-summary {
+  margin: 0;
+  font-size: 12px;
+  color: var(--wb-muted, #55606B);
+  line-height: 1.4;
+}
+
+.wb-phone-shell-main {
+  flex: 1;
+  padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+  box-sizing: border-box;
+}
+
+/* Bottom navigation */
+.wb-phone-shell-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: var(--wb-surface, #FFFFFF);
+  border-top: 1px solid var(--wb-line, #D9DDD8);
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  box-sizing: border-box;
+  z-index: 10;
+}
+
+.wb-phone-nav-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-height: 54px;
+  padding: 6px 2px;
+  border: none;
+  border-top: 3px solid transparent;
+  background: transparent;
+  font-family: inherit;
+  font-size: 11px;
+  color: var(--wb-muted, #55606B);
+  font-weight: 400;
+  cursor: pointer;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.wb-phone-nav-tab:focus-visible {
+  outline: 2px solid var(--wb-accent, #1D5C68);
+  outline-offset: -2px;
+}
+
+.wb-phone-nav-tab.wb-active {
+  color: var(--wb-accent, #1D5C68);
+  font-weight: 600;
+  border-top-color: var(--wb-accent, #1D5C68);
+}
+
+.wb-phone-tab-icon {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
+.wb-phone-tab-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* Switcher Sheet */
+.wb-phone-switcher-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(24, 33, 43, 0.4);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.wb-phone-switcher-dialog {
+  background: var(--wb-surface, #FFFFFF);
+  border-radius: 18px 18px 0 0;
+  padding: 10px 16px calc(24px + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.15);
+  max-height: 85vh;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.wb-phone-switcher-drag-handle {
+  align-self: center;
+  width: 40px;
+  height: 4px;
+  border-radius: 2px;
+  background: #C8CDC7;
+  flex-shrink: 0;
+}
+
+.wb-phone-switcher-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.wb-phone-switcher-title {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--wb-ink, #18212B);
+}
+
+.wb-phone-switcher-close-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--wb-line, #D9DDD8);
+  background: transparent;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--wb-ink-2, #3A444F);
+  cursor: pointer;
+}
+
+.wb-phone-switcher-close-btn:focus-visible {
+  outline: 2px solid var(--wb-accent, #1D5C68);
+  outline-offset: 2px;
+}
+
+.wb-phone-board-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 60px;
+  padding: 8px 12px;
+  border: 1px solid var(--wb-line, #D9DDD8);
+  background: #FFFFFF;
+  border-radius: 12px;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  color: var(--wb-ink, #18212B);
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.wb-phone-board-option:focus-visible {
+  outline: 2px solid var(--wb-accent, #1D5C68);
+  outline-offset: 2px;
+}
+
+.wb-phone-board-option.wb-active {
+  border: 2px solid var(--wb-accent, #1D5C68);
+  background-color: var(--wb-accent-soft, #E3EEEF);
+}
+
+.wb-phone-board-option-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.wb-phone-board-option-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--wb-ink, #18212B);
+}
+
+.wb-phone-board-option-sub {
+  font-size: 12px;
+  color: var(--wb-ink-2, #3A444F);
+}
+
+.wb-phone-switcher-viewing-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background-color: var(--wb-accent, #1D5C68);
+  color: #FFFFFF;
+  flex-shrink: 0;
+}
+
+.wb-phone-switcher-section-title {
+  margin: 4px 0 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--wb-muted, #55606B);
+}
+
+.wb-phone-switcher-empty {
+  margin: 4px 0;
+  font-size: 14px;
+  color: var(--wb-muted, #55606B);
+}
+
+.wb-phone-switcher-proposals-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wb-phone-start-proposal-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 52px;
+  min-height: 44px;
+  margin-top: 4px;
+  border: none;
+  background-color: var(--wb-accent, #1D5C68);
+  color: #FFFFFF;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.wb-phone-start-proposal-btn:focus-visible {
+  outline: 2px solid var(--wb-ink, #18212B);
+  outline-offset: 2px;
+}
+
+.wb-phone-switcher-footnote {
+  margin: 0;
+  font-size: 12px;
+  color: var(--wb-muted, #55606B);
+  text-align: center;
+  line-height: 1.4;
+}
