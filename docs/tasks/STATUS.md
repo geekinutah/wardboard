@@ -48,5 +48,5 @@ Candidate and discovered work that has not yet been promoted into a task contrac
 | T-071 | Session, baseline and shared-data sync for the shell | 4 — Desktop board | done | 1 | none |
 | T-040 | Removed markers and divergence summary | 4 — Desktop board | in progress | 1 | none |
 | T-044 | Aaronic Priesthood view and oversight changes | 4 — Desktop board | done | 2 | none |
-| T-045 | Presentation mode (TV layout) | 4 — Desktop board | in progress | 2 | office TV readability from the meeting table |
+| T-045 | Presentation mode (TV layout) | 4 — Desktop board | done | 2 | office TV: /__preview/presentation readable from the meeting table; proposed ring + "Proposed" on Ari Sample visible |
 | T-030 | App shell | 4 — Desktop board | in progress | 1 | desktop: add a position from another window, confirm zoom/pan unchanged |
