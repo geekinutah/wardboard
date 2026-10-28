@@ -2,7 +2,7 @@
 
 Read `AGENTS.md` first. The shared [protocol](protocol.md) defines handoffs, capabilities, and reports; [controller](controller.md), [implementer](implementer.md), and [verifier](verifier.md) define the roles. `SPEC.md`, task contracts, and STATUS.md remain the durable product/work state. Backlog intake follows AGENTS.md.
 
-Only adapters are harness-specific. Model settings remain unset in committed adapters, except OpenCode, which pins `lmstudio/qwen3.8-27b-splash` (see Model choice (OpenCode)); harness guidance below describes selection at invocation or handoff. Choose providers and models through your installed harness's supported settings; role behavior and quality gates remain the same. Different models can implement and verify when each supports the required capabilities.
+Only adapters are harness-specific. Model settings remain unset in committed adapters, except OpenCode, which pins `arch-llama/qwen3.8-27b` (see Model choice (OpenCode)); harness guidance below describes selection at invocation or handoff. Choose providers and models through your installed harness's supported settings; role behavior and quality gates remain the same. Different models can implement and verify when each supports the required capabilities.
 
 ## Claude Code
 
@@ -108,7 +108,7 @@ If your OpenCode session is sandboxed, the Playwright browser download block in 
 
 ### Model choice (OpenCode)
 
-Every OpenCode role (controller, implementer, verifier) runs on `lmstudio/qwen3.8-27b-splash`, pinned in the frontmatter of the committed adapters in `.opencode/agents/`. This is Mike's standing decision; only Mike changes it, by editing these docs.
+Every OpenCode role (controller, implementer, verifier) runs on `arch-llama/qwen3.8-27b` (Arch Qwen3.8-27B, llama.cpp — faster decode and token generation than the LM Studio instance), pinned in the frontmatter of the committed adapters in `.opencode/agents/`. This is Mike's standing decision; only Mike changes it, by editing these docs.
 
 - Do not pass a `model` override on the subagent tool, and do not switch model or provider for any handoff, including correction rounds and security-sensitive tasks.
 - Do not apply another harness's model guidance in OpenCode.
