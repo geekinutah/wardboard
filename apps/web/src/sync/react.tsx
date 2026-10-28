@@ -1,3 +1,4 @@
+import type { Board } from '@wardboard/core';
 import type { OpKind } from '@wardboard/server';
 import { useCallback, useContext, useEffect, useState, useSyncExternalStore, createContext } from 'react';
 import type { ReactElement, ReactNode } from 'react';
@@ -9,6 +10,7 @@ import {
   type SyncState,
   type WebSocketLike,
 } from './client.ts';
+import type { Me, Settings } from './protocol.ts';
 
 const SyncContext = createContext<SyncClient | null>(null);
 
@@ -183,4 +185,54 @@ export function SyncBanner(): ReactElement | null {
       ) : null}
     </div>
   );
+}
+
+function useOnLive(load: (client: SyncClient) => void): void {
+  const client = useContext(SyncContext);
+  const { status } = useSync();
+  useEffect(() => {
+    if (client === null || status !== 'live') return;
+    load(client);
+  }, [client, status, load]);
+}
+
+export function useMe(): Me | null {
+  const { me } = useSync();
+  useOnLive(requestMe);
+  return me;
+}
+
+export function useBaseline(): Board | null {
+  const client = useContext(SyncContext);
+  const { proposal } = useSync();
+  const baselineId = proposal === null ? null : proposal.baselineBoardId;
+  const [loaded, setLoaded] = useState<{ id: string; board: Board | null } | null>(null);
+
+  useEffect(() => {
+    if (client === null || baselineId === null) return;
+    let cancelled = false;
+    void client.fetchBoard(baselineId).then((board) => {
+      if (!cancelled) setLoaded({ id: baselineId, board });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [client, baselineId]);
+
+  if (baselineId === null || loaded === null || loaded.id !== baselineId) return null;
+  return loaded.board;
+}
+
+export function useSettings(): Settings | null {
+  const { settings } = useSync();
+  useOnLive(requestSettings);
+  return settings;
+}
+
+function requestMe(client: SyncClient): void {
+  void client.whoami();
+}
+
+function requestSettings(client: SyncClient): void {
+  void client.loadSettings();
 }

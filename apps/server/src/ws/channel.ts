@@ -671,6 +671,43 @@ export function createOperationChannel(deps: {
     }
   }
 
+  function whoami(connection: Connection, message: Record<string, unknown>, actor: User): void {
+    if (!exact(message, ['type', 'requestId'])) {
+      refuse(connection, message, 'bad_request', 'whoami must have requestId');
+      return;
+    }
+    if (!boundedRequestId(message.requestId)) {
+      refuse(connection, message, 'bad_request', 'requestId must be a string of 1 to 64 characters');
+      return;
+    }
+    sendJson(connection.ws, {
+      type: 'me',
+      requestId: message.requestId,
+      user: { login: actor.login, displayName: actor.displayName, role: actor.role },
+    });
+  }
+
+  function getBoard(connection: Connection, message: Record<string, unknown>): void {
+    if (!exact(message, ['type', 'requestId', 'boardId'])) {
+      refuse(connection, message, 'bad_request', 'getBoard must have requestId and boardId');
+      return;
+    }
+    if (!boundedRequestId(message.requestId)) {
+      refuse(connection, message, 'bad_request', 'requestId must be a string of 1 to 64 characters');
+      return;
+    }
+    if (!nonEmpty(message.boardId)) {
+      refuse(connection, message, 'bad_request', 'boardId must be a non-empty string');
+      return;
+    }
+    const board = store.loadBoard(boardId(message.boardId));
+    if (board === null) {
+      refuse(connection, message, 'not_found', `board ${message.boardId} does not exist`);
+      return;
+    }
+    sendJson(connection.ws, { type: 'board', requestId: message.requestId, board });
+  }
+
   function getSettings(connection: Connection, message: Record<string, unknown>): void {
     if (!exact(message, ['type', 'requestId'])) {
       refuse(connection, message, 'bad_request', 'getSettings must have requestId');
@@ -753,6 +790,14 @@ export function createOperationChannel(deps: {
     }
     if (parsed.type === 'setNeedsApproval') {
       setNeedsApproval(connection, parsed, actor);
+      return;
+    }
+    if (parsed.type === 'whoami') {
+      whoami(connection, parsed, actor);
+      return;
+    }
+    if (parsed.type === 'getBoard') {
+      getBoard(connection, parsed);
       return;
     }
     if (parsed.type === 'getSettings') {

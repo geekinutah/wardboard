@@ -1,6 +1,6 @@
 import type { Board, Ward } from '@wardboard/core';
 import type { OpKind, ProposalSummary } from '@wardboard/server';
-import type { CurrentInfo, ProposalView } from './protocol.ts';
+import type { CurrentInfo, Me, ProposalView, Settings } from './protocol.ts';
 
 export type ConnectionStatus = 'connecting' | 'live' | 'offline' | 'forbidden';
 
@@ -17,6 +17,8 @@ export type SyncState = {
   ward: Ward | null;
   proposal: ProposalView | null;
   notice: SyncNotice | null;
+  me: Me | null;
+  settings: Settings | null;
 };
 
 export type OpOutcome = { ok: true; version: number } | { ok: false; code: string; message: string };
@@ -44,7 +46,7 @@ export type SyncDeps = {
 
 const BACKOFF_MS = [1000, 2000, 4000, 8000, 16_000, 30_000] as const;
 const IDLE_MS = 25_000;
-const REPLY_MS = 10_000;
+export const REPLY_MS = 10_000;
 const FORBIDDEN_CLOSE = 4403;
 const OFFLINE: OpOutcome = { ok: false, code: 'offline', message: 'offline' };
 
@@ -160,6 +162,13 @@ function readCommitted(value: Record<string, unknown>): CommittedMessage | null 
   };
 }
 
+function readMe(value: unknown): Me | null {
+  if (!isRecord(value)) return null;
+  if (!isNonEmpty(value.login) || !isNonEmpty(value.displayName)) return null;
+  if (value.role !== 'editor' && value.role !== 'admin') return null;
+  return { login: value.login, displayName: value.displayName, role: value.role };
+}
+
 function readRejected(value: Record<string, unknown>): RejectedMessage | null {
   if (typeof value.requestId !== 'string' || typeof value.code !== 'string' || typeof value.message !== 'string') {
     return null;
@@ -171,6 +180,8 @@ export class SyncClient {
   private readonly deps: SyncDeps;
   private readonly listeners = new Set<(state: SyncState) => void>();
   private readonly pending = new Map<string, (outcome: OpOutcome) => void>();
+  private readonly reads = new Map<string, { resolve: (value: Me | Board | Settings | null) => void; timer: unknown }>();
+  private readonly baselines = new Map<string, Board>();
   private state: SyncState = {
     status: 'connecting',
     boards: null,
@@ -179,6 +190,8 @@ export class SyncClient {
     ward: null,
     proposal: null,
     notice: null,
+    me: null,
+    settings: null,
   };
   private version: number | null = null;
   private socket: WebSocketLike | null = null;
@@ -276,6 +289,17 @@ export class SyncClient {
     this.patch({ notice: null });
   };
 
+  whoami = (): Promise<Me | null> => this.request<Me>((requestId) => ({ type: 'whoami', requestId }));
+
+  fetchBoard = (boardId: string): Promise<Board | null> => {
+    const cached = this.baselines.get(boardId);
+    if (cached !== undefined) return Promise.resolve(cached);
+    return this.request<Board>((requestId) => ({ type: 'getBoard', requestId, boardId }));
+  };
+
+  loadSettings = (): Promise<Settings | null> =>
+    this.request<Settings>((requestId) => ({ type: 'getSettings', requestId }));
+
   private connect(): void {
     const generation = this.generation + 1;
     this.generation = generation;
@@ -340,9 +364,16 @@ export class SyncClient {
     } else if (parsed.type === 'committed') {
       const message = readCommitted(parsed);
       if (message !== null) this.applyCommitted(message);
-    } else if (parsed.type === 'rejected') {
+    } else if (parsed.type === 'ward') this.applyWard(parsed);
+    else if (parsed.type === 'proposalChanged') this.applyProposalChanged(parsed);
+    else if (parsed.type === 'settings') this.applySettings(parsed);
+    else if (parsed.type === 'me') this.applyMe(parsed);
+    else if (parsed.type === 'board') this.applyFetchedBoard(parsed);
+    else if (parsed.type === 'rejected') {
       const message = readRejected(parsed);
-      if (message !== null) this.applyRejected(message);
+      if (message === null) return;
+      if (this.reads.has(message.requestId)) this.finishRead(message.requestId, null);
+      else this.applyRejected(message);
     }
   }
 
@@ -505,10 +536,92 @@ export class SyncClient {
     socket.send(JSON.stringify(message));
   }
 
+  private request<T>(build: (requestId: string) => object): Promise<T | null> {
+    if (this.state.status !== 'live') return Promise.resolve(null);
+    const socket = this.socket;
+    if (socket === null || socket.readyState !== 1) return Promise.resolve(null);
+    const requestId = this.deps.requestIds();
+    return new Promise((resolve) => {
+      const timer = this.deps.timers.setTimeout(() => {
+        this.finishRead(requestId, null);
+      }, REPLY_MS);
+      this.reads.set(requestId, {
+        resolve: (value) => {
+          resolve(value as T | null);
+        },
+        timer,
+      });
+      socket.send(JSON.stringify(build(requestId)));
+    });
+  }
+
+  private finishRead(requestId: unknown, value: Me | Board | Settings | null): void {
+    if (typeof requestId !== 'string') return;
+    const waiter = this.reads.get(requestId);
+    if (waiter === undefined) return;
+    this.reads.delete(requestId);
+    this.deps.timers.clearTimeout(waiter.timer);
+    waiter.resolve(value);
+  }
+
+  private applyWard(message: Record<string, unknown>): void {
+    if (!isRecord(message.ward)) return;
+    this.patch({ ward: message.ward as unknown as Ward });
+  }
+
+  private applyProposalChanged(message: Record<string, unknown>): void {
+    if (!isNonEmpty(message.boardId) || message.boardId !== this.state.subscribedBoardId) return;
+    const current = this.state.proposal;
+    if (current === null || !isRecord(message.proposal)) return;
+    const { name, status, rationale } = message.proposal;
+    if (typeof name !== 'string') return;
+    if (status !== 'draft' && status !== 'accepted') return;
+    if (!(typeof rationale === 'string' || rationale === null)) return;
+    this.patch({ proposal: { ...current, name, status, rationale } });
+  }
+
+  private applySettings(message: Record<string, unknown>): void {
+    if (typeof message.showNeedsApproval !== 'boolean') {
+      this.finishRead(message.requestId, null);
+      return;
+    }
+    const settings: Settings = { showNeedsApproval: message.showNeedsApproval };
+    this.patch({ settings });
+    this.finishRead(message.requestId, settings);
+  }
+
+  private applyMe(message: Record<string, unknown>): void {
+    const user = readMe(message.user);
+    if (user === null || !this.reads.has(typeof message.requestId === 'string' ? message.requestId : '')) {
+      this.finishRead(message.requestId, null);
+      return;
+    }
+    this.patch({ me: user });
+    this.finishRead(message.requestId, user);
+  }
+
+  private applyFetchedBoard(message: Record<string, unknown>): void {
+    const requestId = typeof message.requestId === 'string' ? message.requestId : '';
+    if (!this.reads.has(requestId)) return;
+    if (!isRecord(message.board)) {
+      this.finishRead(requestId, null);
+      return;
+    }
+    const fetched = message.board as unknown as Board;
+    if (fetched.kind === 'baseline' && isNonEmpty(fetched.id)) this.baselines.set(fetched.id, fetched);
+    this.finishRead(requestId, fetched);
+  }
+
   private rejectPending(): void {
     const waiters = [...this.pending.values()];
     this.pending.clear();
     for (const resolve of waiters) resolve(OFFLINE);
+    const reads = [...this.reads.entries()];
+    this.reads.clear();
+    for (const [, waiter] of reads) {
+      this.deps.timers.clearTimeout(waiter.timer);
+      waiter.resolve(null);
+    }
   }
 
   private detachSocket(): void {

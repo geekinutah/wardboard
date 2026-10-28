@@ -16,3 +16,15 @@ export type ProposalView = {
   rationale: string | null;
   baselineBoardId: Board['id'];
 };
+
+/** Identity returned by `whoami`. The client never asserts it. */
+export type Me = {
+  login: string;
+  displayName: string;
+  role: 'editor' | 'admin';
+};
+
+/** `showNeedsApproval` from `getSettings` and `settings` pushes. */
+export type Settings = {
+  showNeedsApproval: boolean;
+};
