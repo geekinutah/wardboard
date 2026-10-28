@@ -9,15 +9,17 @@ import {
 import type { ProposalSummary } from '@wardboard/server';
 import { Canvas, useCamera, type SelectTarget } from '../features/canvas/Canvas.tsx';
 import { cameraReducer, type Camera, type ZoomTarget } from '../features/canvas/camera.ts';
+import type { PresentationStatus } from '../features/presentation/Presentation.tsx';
 import { Button } from '../design/Button.tsx';
 import { RemovedSummary } from '../features/removed/RemovedSummary.tsx';
 import { checkHealth, type HealthClient, type HealthState } from '../health.ts';
 import type { Me, ProposalView } from '../sync/protocol.ts';
-import { ConnectionIndicator, SyncBanner, useBaseline, useMe, useSync } from '../sync/react.tsx';
+import { ConnectionIndicator, SyncBanner, useBaseline, useMe, useSettings, useSync } from '../sync/react.tsx';
 import { EditingLayer, ShellSearch } from './EditingLayer.tsx';
 import { SummaryMode } from './SummaryMode.tsx';
 import { StartProposal, StartProposalTabButton } from './StartProposal.tsx';
 import { renderBoardLevel, useCurrentBoard, useRemovedState } from './board-levels.tsx';
+import { PresentMode } from './PresentMode.tsx';
 import { SettingsLink } from './SettingsRoute.tsx';
 import { PersonPanel } from './PersonPanel.tsx';
 
@@ -91,9 +93,11 @@ export function BoardShell({ healthClient }: { healthClient: HealthClient }): Re
   const currentBoard = useCurrentBoard();
   const me = useMe();
   const baseline = useBaseline();
+  const settings = useSettings();
   const { boards, board, ward, proposal, subscribedBoardId, open, send } = useSync();
 
   const [health, setHealth] = useState<HealthState>('pending');
+  const [presenting, setPresenting] = useState(false);
   const [camera, dispatch] = useCamera();
   const [selection, setSelection] = useState<ZoomTarget | null>(null);
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
@@ -164,8 +168,30 @@ export function BoardShell({ healthClient }: { healthClient: HealthClient }): Re
   const readOnly = proposal === null || proposal.status === 'accepted';
   const tabBoardIds = boards === null ? [] : [boards.current?.boardId ?? '', ...proposals.map((item) => item.boardId)];
   const ready = board !== null && ward !== null;
+  const presentTitle = proposal === null ? 'Current' : proposal.name;
+  const presentStatus: PresentationStatus =
+    proposal === null ? 'current' : proposal.status === 'accepted' ? 'accepted' : 'draft';
 
   const { removed, summaryRows } = useRemovedState(proposal, baseline, board, ward, currentBoard);
+
+  if (presenting && ready) {
+    return (
+      <div className="shell">
+        <PresentMode
+          board={board}
+          ward={ward}
+          baseline={baseline}
+          title={presentTitle}
+          status={presentStatus}
+          baselineCapturedAt={null}
+          showNeedsApproval={settings?.showNeedsApproval ?? false}
+          onExit={() => {
+            setPresenting(false);
+          }}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="shell">
@@ -226,6 +252,15 @@ export function BoardShell({ healthClient }: { healthClient: HealthClient }): Re
           </p>
         )}
         {me === null ? null : <SettingsLink />}
+        <Button
+          variant="secondary"
+          disabled={!ready}
+          onClick={() => {
+            setPresenting(true);
+          }}
+        >
+          Present
+        </Button>
         <ConnectionIndicator />
       </header>
       <main className="shell-main">
