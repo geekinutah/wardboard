@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState, type ReactElement, type SyntheticEvent } from 'react';
+import { useEffect, useId, useRef, useState, type ReactElement, type ReactNode, type SyntheticEvent } from 'react';
 import { accessErrorText, restoreErrorText } from './messages.ts';
 import type { AccessData, AccessUser, BackupSummary, Me, Role, SettingsActions } from './types.ts';
 import './settings.css';
@@ -11,6 +11,8 @@ export interface SettingsPageProps {
   actions: SettingsActions;
   onBack: () => void;
   onRestored: () => void;
+  /** Extra content rendered after the last card in the main cards column. */
+  extra?: ReactNode;
 }
 
 function getInitials(name: string): string {
@@ -44,6 +46,7 @@ export function SettingsPage({
   actions,
   onBack,
   onRestored,
+  extra,
 }: SettingsPageProps): ReactElement {
   const isAdmin = me.role === 'admin';
 
@@ -626,6 +629,7 @@ export function SettingsPage({
               </>
             )}
           </section>
+          {extra}
         </div>
       </div>
 

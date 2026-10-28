@@ -201,8 +201,8 @@ export function SettingsRoute(): ReactElement {
         actions={actions}
         onBack={backToBoard}
         onRestored={reloadBoard}
+        extra={<TagLibrarySection />}
       />
-      <TagLibrarySection />
     </div>
   );
 }

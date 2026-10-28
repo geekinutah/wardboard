@@ -10,6 +10,8 @@ export interface TagLibraryProps {
   usageOf: (tagId: TagId) => TagUsage | null;
   /** Called once each time a delete dialog opens, so the caller can fetch the counts. */
   onDeleteRequested?: (tagId: TagId) => void;
+  /** A message when counting the tag's usage failed; shown in the dialog, and Delete stays disabled. */
+  usageErrorOf?: (tagId: TagId) => string | null;
   onCreateTag: (name: string) => Promise<RequestResult<{ tagId: TagId }>>;
   onDeleteTag: (tagId: TagId) => Promise<RequestResult>;
 }
@@ -86,11 +88,13 @@ function NewTagForm({
 function DeleteDialog({
   name,
   usage,
+  usageError,
   onCancel,
   onDelete,
 }: {
   name: string;
   usage: TagUsage | null;
+  usageError: string | null;
   onCancel: () => void;
   onDelete: () => Promise<RequestResult>;
 }): ReactElement {
@@ -139,7 +143,13 @@ function DeleteDialog({
         <h3 id={titleId} className="wb-tags-dialog-title">
           {copy.title}
         </h3>
-        <p className="wb-tags-dialog-body">{copy.body}</p>
+        {usage === null && usageError !== null ? (
+          <p className="wb-tags-error" role="alert">
+            {`Couldn't count where it's used: ${usageError}`}
+          </p>
+        ) : (
+          <p className="wb-tags-dialog-body">{copy.body}</p>
+        )}
         <ErrorLine message={action.error} />
         <div className="wb-tags-dialog-actions">
           <button ref={cancelRef} type="button" className="wb-tags-dialog-button" onClick={onCancel}>
@@ -172,6 +182,7 @@ export function TagLibrary({
   onCreateTag,
   onDeleteTag,
   onDeleteRequested,
+  usageErrorOf,
 }: TagLibraryProps): ReactElement {
   const headingId = useId();
   const [creating, setCreating] = useState(false);
@@ -256,6 +267,7 @@ export function TagLibrary({
         <DeleteDialog
           name={target.name}
           usage={usageOf(target.id)}
+          usageError={usageErrorOf?.(target.id) ?? null}
           onCancel={closeDialog}
           onDelete={() => onDeleteTag(target.id)}
         />

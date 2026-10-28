@@ -278,11 +278,86 @@ describe('Settings Tags section', () => {
     expect(screen.getByRole('dialog')).toHaveTextContent('Removes it from 2 people');
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(parseFrames(socket.sent, 'getTagUsage')).toHaveLength(2);
+    // Round 2: at most one request per tag is outstanding, so answer the second before the push
+    // (async act lets the reply settle first, as separate socket messages do in a browser).
+    await act(async () => {
+      socket.receive({
+        type: 'tagUsage',
+        requestId: lastRequestId(socket.sent, 'getTagUsage'),
+        members: 2,
+        callingPreferences: 1,
+        callingTags: 0,
+      });
+      await Promise.resolve();
+    });
 
     pushWard(socket, { ...s.ward });
     await user.click(screen.getByRole('button', { name: 'Delete Weekday' }));
     expect(screen.getByRole('dialog')).toHaveTextContent("Counting where it's used…");
     expect(parseFrames(socket.sent, 'getTagUsage')).toHaveLength(3);
+  });
+
+  it('a ward push while getTagUsage is in flight still ends with counts and Delete enabled', async () => {
+    const s = tagsScenario();
+    const user = userEvent.setup();
+    const { socket } = await renderRoute(ADMIN, s.ward);
+    await user.click(screen.getByRole('button', { name: 'Delete Weekday' }));
+    const requestId = lastRequestId(socket.sent, 'getTagUsage');
+    const dialog = screen.getByRole('dialog');
+    expect(dialog).toHaveTextContent("Counting where it's used…");
+
+    // Another editor's change lands before the server's tagUsage reply.
+    pushWard(socket, { ...s.ward });
+    // At most one request per tag is outstanding.
+    expect(parseFrames(socket.sent, 'getTagUsage')).toHaveLength(1);
+    act(() => {
+      socket.receive({ type: 'tagUsage', requestId, members: 2, callingPreferences: 1, callingTags: 0 });
+    });
+    await waitFor(() => {
+      expect(dialog).toHaveTextContent('Removes it from 2 people and from the preferences on 1 calling.');
+    });
+    expect(within(dialog).getByRole('button', { name: 'Delete tag' })).toBeEnabled();
+  });
+
+  it('a ward push while the dialog shows counts refetches the open tag', async () => {
+    const s = tagsScenario();
+    const user = userEvent.setup();
+    const { socket } = await renderRoute(ADMIN, s.ward);
+    await user.click(screen.getByRole('button', { name: 'Delete Weekday' }));
+    act(() => {
+      socket.receive({
+        type: 'tagUsage',
+        requestId: lastRequestId(socket.sent, 'getTagUsage'),
+        members: 2,
+        callingPreferences: 1,
+        callingTags: 0,
+      });
+    });
+    const dialog = screen.getByRole('dialog');
+    await waitFor(() => {
+      expect(dialog).toHaveTextContent('Removes it from 2 people');
+    });
+
+    pushWard(socket, { ...s.ward });
+    const frames = parseFrames(socket.sent, 'getTagUsage');
+    expect(frames).toHaveLength(2);
+    expect(frames[1]?.tagId).toBe(s.tags.weekday);
+    // While the refetch is out, the open dialog keeps its last counts and Delete stays usable.
+    expect(dialog).toHaveTextContent('Removes it from 2 people');
+    expect(within(dialog).getByRole('button', { name: 'Delete tag' })).toBeEnabled();
+    act(() => {
+      socket.receive({
+        type: 'tagUsage',
+        requestId: lastRequestId(socket.sent, 'getTagUsage'),
+        members: 3,
+        callingPreferences: 1,
+        callingTags: 0,
+      });
+    });
+    await waitFor(() => {
+      expect(dialog).toHaveTextContent('Removes it from 3 people');
+    });
+    expect(within(dialog).getByRole('button', { name: 'Delete tag' })).toBeEnabled();
   });
 
   it('editor sees and can use the library', async () => {

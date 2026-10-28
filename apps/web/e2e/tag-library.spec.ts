@@ -77,7 +77,9 @@ test('create a tag in Settings, attach it to one person, see the count, delete i
   const row = section.getByRole('row', { name });
   await expect(row).toBeVisible();
 
-  await attachTagToMember(page, name, Math.max(slot, 0));
+  // One member per project and repeat: repeats run in parallel, and each attach is a
+  // read-modify-write of the member's tags, so a shared member would lose updates.
+  await attachTagToMember(page, name, Math.max(slot, 0) + 4 * testInfo.repeatEachIndex);
   await expect(row.getByRole('cell').nth(1)).toHaveText('1');
 
   await row.getByRole('button', { name: `Delete ${name}` }).click();

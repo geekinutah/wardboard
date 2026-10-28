@@ -1,12 +1,9 @@
-/* Tags section below the Settings page (T-089): aligned to the page's 1180px column. */
+/* Tags section in the Settings cards column (T-089): the column supplies width and spacing. */
 .wb-tag-section {
-  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  max-width: 1180px;
-  margin: 0 auto;
-  padding: 0 24px 48px;
+  min-width: 0;
   color: var(--wb-ink, #18212b);
 }
 
@@ -20,24 +17,6 @@
   margin: 0;
   color: var(--wb-muted, #55606b);
   font-size: 14px;
-}
-
-/* The refusal line sits above the delete dialog's scrim so it is seen. */
-.wb-tag-section-alert {
-  position: fixed;
-  right: 16px;
-  bottom: 16px;
-  left: 16px;
-  z-index: 60;
-  margin: 0 auto;
-  max-width: 480px;
-  padding: 10px 14px;
-  border: 1px solid var(--wb-danger, #b3261e);
-  border-radius: 8px;
-  background: var(--wb-surface, #fff);
-  color: var(--wb-danger, #b3261e);
-  font-size: 14px;
-  font-weight: 600;
 }
 
 /* Touch targets: 44px on every viewport inside Settings, not only on phones. */
