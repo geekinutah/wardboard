@@ -57,3 +57,5 @@ observation / review finding
 | B-025 | P2 | server dev tooling | candidate | dev reset-guard test asserts on the checkout root, so it fails if the checkout lives inside the OS temp dir |
 | B-026 | P2 | web e2e harness | candidate | Phone WebKit smoke can crash in browser teardown (`NSInternalInconsistencyException`); rerun passed |
 | B-027 | P2 | web sync | accepted | `useBaseline` stays null after a dropped in-flight fetch until the baseline id changes |
+| B-028 | P2 | design tokens | candidate | removed summary CSS uses raw artboard hex colors without tokens |
+| B-029 | P2 | design tokens | candidate | artboard 9 removed-card date and hint line absent from shipped RemovedCard |

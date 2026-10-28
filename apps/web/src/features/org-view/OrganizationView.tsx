@@ -3,11 +3,15 @@ import {
   organizationView,
   type Board,
   type BoardGroupId,
+  type MemberId,
   type Overseer,
+  type PositionId,
+  type RemovedState,
   type Ward,
 } from '@wardboard/core';
 import { cx } from '../../design/cx.ts';
 import { PersonCard } from '../../design/PersonCard.tsx';
+import { RemovedCard } from '../../design/RemovedCard.tsx';
 import { VacancySlot } from '../../design/VacancySlot.tsx';
 import './org-view.css';
 
@@ -17,6 +21,25 @@ export interface OrganizationViewProps {
   baseline: Board | null;
   boardGroupId: BoardGroupId;
   selectedId?: string | undefined;
+  /**
+   * Derived removal state (SPEC §8). When given, affected leadership cards
+   * render the `RemovedCard` treatment. Without it the view renders exactly
+   * as before.
+   */
+  removed?: RemovedState | undefined;
+}
+
+/** True when `removed` lists `memberId` as removed and names this position. */
+function isRemovedMemberPosition(removed: RemovedState | undefined, memberId: MemberId, positionId: PositionId): boolean {
+  if (removed === undefined) {
+    return false;
+  }
+  return removed.members.some((entry) => entry.memberId === memberId && entry.positionIds.includes(positionId));
+}
+
+/** True when `removed` lists this position's lineage as lost from Current. */
+function isRemovedPosition(removed: RemovedState | undefined, positionId: PositionId): boolean {
+  return removed !== undefined && removed.positions.includes(positionId);
 }
 
 export function overseerLabel(overseer: Overseer): string {
@@ -36,6 +59,7 @@ export function OrganizationView({
   baseline,
   boardGroupId,
   selectedId,
+  removed,
 }: OrganizationViewProps): ReactElement {
   const view = organizationView(board, boardGroupId, baseline);
 
@@ -68,6 +92,10 @@ export function OrganizationView({
               const isOccupied = card.memberId !== null;
               const member = isOccupied ? ward.members[card.memberId] : undefined;
               const memberName = member ? member.name : '';
+              const positionRemoved = isRemovedPosition(removed, card.positionId);
+              const memberRemoved = isOccupied
+                ? isRemovedMemberPosition(removed, card.memberId, card.positionId)
+                : false;
               return (
                 <div
                   key={card.positionId}
@@ -76,11 +104,18 @@ export function OrganizationView({
                   {...(isOccupied ? { 'data-member-id': card.memberId } : {})}
                 >
                   {isOccupied ? (
-                    <PersonCard
-                      name={memberName}
-                      callingTitle={card.title}
-                      proposed={card.proposed}
-                    />
+                    positionRemoved ? (
+                      <RemovedCard name={memberName} kind="position" proposed={card.proposed} />
+                    ) : (
+                      <PersonCard
+                        name={memberName}
+                        callingTitle={card.title}
+                        proposed={card.proposed}
+                        removed={memberRemoved}
+                      />
+                    )
+                  ) : positionRemoved ? (
+                    <RemovedCard name={card.title} kind="position" />
                   ) : (
                     <VacancySlot title={card.title} />
                   )}
