@@ -17,6 +17,7 @@ import type { Me, ProposalView } from '../sync/protocol.ts';
 import { ConnectionIndicator, SyncBanner, useBaseline, useMe, useSync, useSyncClient } from '../sync/react.tsx';
 import { EditingLayer, ShellSearch } from './EditingLayer.tsx';
 import { SummaryMode } from './SummaryMode.tsx';
+import { AcceptedMode } from './AcceptedMode.tsx';
 import { StartProposal, StartProposalTabButton } from './StartProposal.tsx';
 import { OUT_OF_UNIT_ID, renderBoardLevel, useCurrentBoard, useRemovedState } from './board-levels.tsx';
 import { PresentMode } from './PresentMode.tsx';
@@ -103,6 +104,7 @@ export function BoardShell({ healthClient }: { healthClient: HealthClient }): Re
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
   const [notesMemberId, setNotesMemberId] = useState<string | null>(null);
   const [summaryOpen, setSummaryOpen] = useState(false);
+  const [acceptedOpen, setAcceptedOpen] = useState(false);
   const [startProposalOpen, setStartProposalOpen] = useState(false);
   const openedCurrent = useRef(false);
   const fallbackKey = useRef<string | null>(null);
@@ -146,6 +148,7 @@ export function BoardShell({ healthClient }: { healthClient: HealthClient }): Re
   }, [board, camera, shown.level, dispatch]);
 
   function selectBoard(nextBoardId: string): void {
+    setAcceptedOpen(false);
     if (nextBoardId === subscribedBoardId) return;
     setSummaryOpen(false);
     setSelection(null);
@@ -241,6 +244,7 @@ export function BoardShell({ healthClient }: { healthClient: HealthClient }): Re
           <StartProposalTabButton
             onClick={() => {
               setSummaryOpen(false);
+              setAcceptedOpen(false);
               setStartProposalOpen(true);
             }}
           />
@@ -272,7 +276,20 @@ export function BoardShell({ healthClient }: { healthClient: HealthClient }): Re
         <ConnectionIndicator />
       </header>
       <main className="shell-main">
-        {summaryOpen && proposal !== null ? (
+        {acceptedOpen ? (
+          <AcceptedMode
+            key={proposal === null ? 'current' : proposal.id}
+            openedFromProposalId={proposal === null ? null : proposal.id}
+            proposal={proposal}
+            baseline={baseline}
+            board={board}
+            ward={ward}
+            current={currentBoard}
+            onExit={() => {
+              setAcceptedOpen(false);
+            }}
+          />
+        ) : summaryOpen && proposal !== null ? (
           <>
             <StartProposal
               isOpen={startProposalOpen}
@@ -315,6 +332,17 @@ export function BoardShell({ healthClient }: { healthClient: HealthClient }): Re
                     }}
                   >
                     Summary
+                  </Button>
+                ) : null}
+                {proposal !== null || (boards?.proposals.some((item) => item.status === 'accepted' && typeof item.acceptedAt === 'string') ?? false) ? (
+                  <Button
+                    variant="secondary"
+                    className="shell-summary-button"
+                    onClick={() => {
+                      setAcceptedOpen(true);
+                    }}
+                  >
+                    {proposal !== null ? 'Status' : 'Accepted proposals'}
                   </Button>
                 ) : null}
               </section>
