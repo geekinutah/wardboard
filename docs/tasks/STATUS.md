@@ -55,7 +55,7 @@ Candidate and discovered work that has not yet been promoted into a task contrac
 | T-072 | Access management over the operation channel | 4 — Desktop board | done | 1 | after T-046 + T-063: invite a counselor, revoke, confirm their browser disconnects |
 | T-042 | Proposal summary page | 4 — Desktop board | in progress | 1 | none |
 | T-052 | PDF extraction harness | 6 — Import and photos | done | 1 | none |
-| T-037 | Person inspector and notes | 4 — Desktop board | in progress | 1 | none |
+| T-037 | Person inspector and notes | 4 — Desktop board | done | 1 | none |
 | T-041 | Read-only Current and Start proposal | 4 — Desktop board | done | 1 | none |
 | T-053 | Callings by Organization parser | 6 — Import and photos | in progress | 1 | none |
 | T-054 | Members without Callings parser | 6 — Import and photos | in progress | 1 | none |
