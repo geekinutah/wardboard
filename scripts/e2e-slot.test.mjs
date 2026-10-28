@@ -229,15 +229,20 @@ describe('e2e-slot', () => {
   });
 
   it('a waiting run starts when a slot frees', async () => {
-    const first = startWrapper([], { WARDBOARD_E2E_SLOTS: '2' });
-    const other = startWrapper([], { WARDBOARD_E2E_SLOTS: '2' });
-    await Promise.all([ready(first), ready(other)]);
-    const freed = await slotOf(first);
+    const a = startWrapper([], { WARDBOARD_E2E_SLOTS: '2' });
+    const b = startWrapper([], { WARDBOARD_E2E_SLOTS: '2' });
+    await Promise.all([ready(a), ready(b)]);
+    // Always free slot 1 and keep slot 0 busy, so a waiter that blocks on
+    // slot 0 instead of retrying every slot never starts.
+    const [first, other] = (await slotOf(a)) === 1 ? [a, b] : [b, a];
+    assert.equal(await slotOf(first), 1);
+    assert.equal(await slotOf(other), 0);
     const waiting = startWrapper([], { WARDBOARD_E2E_SLOTS: '2' });
     await waitFor(waiting, 'stderr', /e2e-slot: all 2 slots busy, waiting\n/);
     assert.deepEqual(await finish(first), { code: 0, signal: null });
     await ready(waiting);
-    assert.equal(await slotOf(waiting), freed);
+    assert.equal(await slotOf(waiting), 1);
+    assert.equal(canLock(join(slotDir, 'slot-0')), false);
     await Promise.all([finish(other), finish(waiting)]);
   });
 
