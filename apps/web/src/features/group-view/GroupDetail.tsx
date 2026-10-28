@@ -10,11 +10,14 @@ import {
   type DetailPosition,
   type DetailSection,
   type MemberId,
+  type PositionId,
+  type RemovedState,
   type TagId,
   type Ward,
 } from '@wardboard/core';
 import { Button } from '../../design/Button.tsx';
 import { PersonCard } from '../../design/PersonCard.tsx';
+import { RemovedCard } from '../../design/RemovedCard.tsx';
 import { VacancySlot } from '../../design/VacancySlot.tsx';
 import './group-view.css';
 
@@ -39,6 +42,25 @@ export interface GroupDetailProps {
   readOnly: boolean;
   onAddPosition: (request: AddAssignmentRequest) => void;
   onAddGroup: (request: AddCallingGroupRequest) => void;
+  /**
+   * Derived removal state (SPEC §8). When given, affected member and position
+   * cards render the `RemovedCard` treatment. Without it the view renders
+   * exactly as before.
+   */
+  removed?: RemovedState | undefined;
+}
+
+/** True when `removed` lists `memberId` as removed and names this position. */
+function isRemovedMemberPosition(removed: RemovedState | undefined, memberId: MemberId, positionId: PositionId): boolean {
+  if (removed === undefined) {
+    return false;
+  }
+  return removed.members.some((entry) => entry.memberId === memberId && entry.positionIds.includes(positionId));
+}
+
+/** True when `removed` lists this position's lineage as lost from Current. */
+function isRemovedPosition(removed: RemovedState | undefined, positionId: PositionId): boolean {
+  return removed !== undefined && removed.positions.includes(positionId);
 }
 
 function clampCount(value: number): number {
@@ -121,23 +143,35 @@ function PositionCard({
   ward,
   assignment,
   position,
+  removed,
 }: {
   ward: Ward;
   assignment: DetailAssignment;
   position: DetailPosition;
+  removed: RemovedState | undefined;
 }): ReactElement {
   const matches = tagNames(ward, position.preferenceMatches);
   const titled = assignment.type === 'single';
+  const positionRemoved = isRemovedPosition(removed, position.positionId);
+  const memberRemoved =
+    position.memberId === null ? false : isRemovedMemberPosition(removed, position.memberId, position.positionId);
   return (
     <div className="wb-group-card" {...cardAttrs(position)}>
       {position.memberId === null ? (
-        <VacancySlot {...(titled ? { title: assignment.title } : {})} />
+        positionRemoved ? (
+          <RemovedCard name={assignment.title} kind="position" />
+        ) : (
+          <VacancySlot {...(titled ? { title: assignment.title } : {})} />
+        )
+      ) : positionRemoved ? (
+        <RemovedCard name={memberName(ward, position.memberId)} kind="position" proposed={position.proposed} />
       ) : (
         <>
           <PersonCard
             name={memberName(ward, position.memberId)}
             tags={memberTagNames(ward, position.memberId)}
             proposed={position.proposed}
+            removed={memberRemoved}
             {...(titled ? { callingTitle: assignment.title } : {})}
           />
           {matches.length > 0 ? <TagLine lead="Matches preferred:" names={matches} match /> : null}
@@ -147,7 +181,15 @@ function PositionCard({
   );
 }
 
-function AssignmentBlock({ ward, assignment }: { ward: Ward; assignment: DetailAssignment }): ReactElement {
+function AssignmentBlock({
+  ward,
+  assignment,
+  removed,
+}: {
+  ward: Ward;
+  assignment: DetailAssignment;
+  removed: RemovedState | undefined;
+}): ReactElement {
   const prefers = tagNames(ward, assignment.preferredMemberTagIds);
   const prefersLine = prefers.length > 0 ? <TagLine lead="Prefers" names={prefers} /> : null;
 
@@ -166,12 +208,12 @@ function AssignmentBlock({ ward, assignment }: { ward: Ward; assignment: DetailA
         <ul className="wb-group-people" aria-label={assignment.title}>
           {people.map((position) => (
             <li key={position.positionId}>
-              <PositionCard ward={ward} assignment={assignment} position={position} />
+              <PositionCard ward={ward} assignment={assignment} position={position} removed={removed} />
             </li>
           ))}
           {vacancies.map((position) => (
             <li key={position.positionId}>
-              <PositionCard ward={ward} assignment={assignment} position={position} />
+              <PositionCard ward={ward} assignment={assignment} position={position} removed={removed} />
             </li>
           ))}
         </ul>
@@ -183,7 +225,7 @@ function AssignmentBlock({ ward, assignment }: { ward: Ward; assignment: DetailA
     <div className="wb-group-single">
       {prefersLine}
       {assignment.positions.map((position) => (
-        <PositionCard key={position.positionId} ward={ward} assignment={assignment} position={position} />
+        <PositionCard key={position.positionId} ward={ward} assignment={assignment} position={position} removed={removed} />
       ))}
     </div>
   );
@@ -324,11 +366,13 @@ function SectionBlock({
   ward,
   readOnly,
   onAddPosition,
+  removed,
 }: {
   section: DetailSection;
   ward: Ward;
   readOnly: boolean;
   onAddPosition: (request: AddAssignmentRequest) => void;
+  removed: RemovedState | undefined;
 }): ReactElement {
   const [formOpen, setFormOpen] = useState(false);
   const headingId = useId();
@@ -342,7 +386,7 @@ function SectionBlock({
       {section.assignments.length > 0 ? (
         <div className="wb-group-assignments">
           {section.assignments.map((assignment) => (
-            <AssignmentBlock key={assignment.assignmentId} ward={ward} assignment={assignment} />
+            <AssignmentBlock key={assignment.assignmentId} ward={ward} assignment={assignment} removed={removed} />
           ))}
         </div>
       ) : null}
@@ -452,6 +496,7 @@ export function GroupDetail({
   readOnly,
   onAddPosition,
   onAddGroup,
+  removed,
 }: GroupDetailProps): ReactElement {
   const [groupFormOpen, setGroupFormOpen] = useState(false);
   const titleId = useId();
@@ -484,6 +529,7 @@ export function GroupDetail({
           ward={ward}
           readOnly={readOnly}
           onAddPosition={onAddPosition}
+          removed={removed}
         />
       ))}
       {disabledNote}
