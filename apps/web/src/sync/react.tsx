@@ -232,6 +232,20 @@ export function useSettings(): Settings | null {
   return settings;
 }
 
+export function useAccess(): SyncState['access'] {
+  const client = useContext(SyncContext);
+  if (client === null) throw new Error('useAccess must be used within SyncProvider');
+  const subscribe = useCallback(
+    (onStoreChange: () => void) =>
+      client.subscribe(() => {
+        onStoreChange();
+      }),
+    [client],
+  );
+  const getSnapshot = useCallback(() => client.getState().access, [client]);
+  return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+}
+
 function requestMe(client: SyncClient): void {
   void client.whoami();
 }

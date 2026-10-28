@@ -1,6 +1,16 @@
 import type { Board, Ward } from '@wardboard/core';
 import type { OpKind, ProposalSummary } from '@wardboard/server';
-import type { CurrentInfo, Me, ProposalView, Settings } from './protocol.ts';
+import type {
+  AccessDirectory,
+  AccessInvitation,
+  AccessUser,
+  CurrentInfo,
+  Me,
+  MemberPatch,
+  ProposalView,
+  RequestResult,
+  Settings,
+} from './protocol.ts';
 
 export type ConnectionStatus = 'connecting' | 'live' | 'offline' | 'forbidden';
 
@@ -19,6 +29,8 @@ export type SyncState = {
   notice: SyncNotice | null;
   me: Me | null;
   settings: Settings | null;
+  /** Null until the first `access` frame, and again after disconnect. */
+  access: AccessDirectory | null;
 };
 
 export type OpOutcome = { ok: true; version: number } | { ok: false; code: string; message: string };
@@ -49,6 +61,21 @@ const IDLE_MS = 25_000;
 export const REPLY_MS = 10_000;
 const FORBIDDEN_CLOSE = 4403;
 const OFFLINE: OpOutcome = { ok: false, code: 'offline', message: 'offline' };
+const REQUEST_OFFLINE: { ok: false; code: string; message: string } = {
+  ok: false,
+  code: 'offline',
+  message: 'offline',
+};
+
+type ResultReply = 'proposalCreated' | 'memberUpdated' | 'settings' | 'access' | 'accessUpdated';
+
+type StoredResult = RequestResult<Record<string, unknown>>;
+
+type ResultWaiter = {
+  resolve: (result: StoredResult) => void;
+  timer: unknown;
+  reply: ResultReply;
+};
 
 type SnapshotMessage = {
   boardId: string;
@@ -176,11 +203,59 @@ function readRejected(value: Record<string, unknown>): RejectedMessage | null {
   return { requestId: value.requestId, code: value.code, message: value.message };
 }
 
+function readAccessList<T>(value: unknown, readItem: (item: unknown) => T | null): T[] | null {
+  if (!Array.isArray(value)) return null;
+  const items: T[] = [];
+  for (const item of value) {
+    const parsed = readItem(item);
+    if (parsed === null) return null;
+    items.push(parsed);
+  }
+  return items;
+}
+
+function readAccessUser(value: unknown): AccessUser | null {
+  if (!isRecord(value)) return null;
+  if (!isNonEmpty(value.id) || !isNonEmpty(value.login) || !isNonEmpty(value.displayName)) return null;
+  if (value.role !== 'editor' && value.role !== 'admin') return null;
+  if (!isNonEmpty(value.createdAt)) return null;
+  if (value.revokedAt !== null && typeof value.revokedAt !== 'string') return null;
+  return {
+    id: value.id,
+    login: value.login,
+    displayName: value.displayName,
+    role: value.role,
+    createdAt: value.createdAt,
+    revokedAt: value.revokedAt,
+  };
+}
+
+function readAccessInvitation(value: unknown): AccessInvitation | null {
+  if (!isRecord(value)) return null;
+  if (!isNonEmpty(value.id) || !isNonEmpty(value.login) || !isNonEmpty(value.createdAt)) return null;
+  if (value.invitedBy !== null && typeof value.invitedBy !== 'string') return null;
+  return {
+    id: value.id,
+    login: value.login,
+    invitedBy: value.invitedBy,
+    createdAt: value.createdAt,
+  };
+}
+
+function readAccess(message: Record<string, unknown>): AccessDirectory | null {
+  const users = readAccessList(message.users, readAccessUser);
+  const invitations = readAccessList(message.invitations, readAccessInvitation);
+  if (users === null || invitations === null) return null;
+  return { users, invitations };
+}
+
 export class SyncClient {
   private readonly deps: SyncDeps;
   private readonly listeners = new Set<(state: SyncState) => void>();
   private readonly pending = new Map<string, (outcome: OpOutcome) => void>();
   private readonly reads = new Map<string, { resolve: (value: Me | Board | Settings | null) => void; timer: unknown }>();
+  /** Separate from `reads` so a refusal cannot null an in-flight read or raise an op notice. */
+  private readonly results = new Map<string, ResultWaiter>();
   private readonly baselines = new Map<string, Board>();
   private state: SyncState = {
     status: 'connecting',
@@ -192,6 +267,7 @@ export class SyncClient {
     notice: null,
     me: null,
     settings: null,
+    access: null,
   };
   private version: number | null = null;
   private socket: WebSocketLike | null = null;
@@ -229,7 +305,9 @@ export class SyncClient {
     this.rejectPending();
     this.detachSocket();
     if (this.state.status !== 'forbidden' && this.state.status !== 'offline') {
-      this.patch({ status: 'offline' });
+      this.patch({ status: 'offline', access: null });
+    } else if (this.state.access !== null) {
+      this.patch({ access: null });
     }
   };
 
@@ -300,6 +378,67 @@ export class SyncClient {
   loadSettings = (): Promise<Settings | null> =>
     this.request<Settings>((requestId) => ({ type: 'getSettings', requestId }));
 
+  createProposal = (input: {
+    name: string;
+    rationale: string | null;
+    source: { kind: 'current' } | { kind: 'proposal'; proposalId: string };
+  }): Promise<RequestResult<{ proposalId: string; boardId: string }>> =>
+    this.requestResult<{ proposalId: string; boardId: string }>(
+      (requestId) => ({
+        type: 'createProposal',
+        requestId,
+        name: input.name,
+        rationale: input.rationale,
+        source: input.source,
+      }),
+      'proposalCreated',
+    );
+
+  updateMember = (memberId: string, patch: MemberPatch): Promise<RequestResult> =>
+    this.requestResult(
+      (requestId) => ({
+        type: 'updateMember',
+        requestId,
+        memberId,
+        patch,
+      }),
+      'memberUpdated',
+    );
+
+  setShowNeedsApproval = (value: boolean): Promise<RequestResult> =>
+    this.requestResult(
+      (requestId) => ({
+        type: 'setShowNeedsApproval',
+        requestId,
+        value,
+      }),
+      'settings',
+    );
+
+  listAccess = (): Promise<RequestResult<{ users: AccessUser[]; invitations: AccessInvitation[] }>> =>
+    this.requestResult<{ users: AccessUser[]; invitations: AccessInvitation[] }>(
+      (requestId) => ({ type: 'listAccess', requestId }),
+      'access',
+    );
+
+  invite = (login: string): Promise<RequestResult> =>
+    this.requestResult((requestId) => ({ type: 'invite', requestId, login }), 'accessUpdated');
+
+  revokeInvitation = (invitationId: string): Promise<RequestResult> =>
+    this.requestResult(
+      (requestId) => ({ type: 'revokeInvitation', requestId, invitationId }),
+      'accessUpdated',
+    );
+
+  revokeUser = (userId: string): Promise<RequestResult> =>
+    this.requestResult((requestId) => ({ type: 'revokeUser', requestId, userId }), 'accessUpdated');
+
+  setRole = (userId: string, role: 'editor' | 'admin'): Promise<RequestResult> =>
+    this.requestResult((requestId) => ({ type: 'setRole', requestId, userId, role }), 'accessUpdated');
+
+  transferAdmin = (toUserId: string): Promise<RequestResult> =>
+    this.requestResult((requestId) => ({ type: 'transferAdmin', requestId, toUserId }), 'accessUpdated');
+
   private connect(): void {
     const generation = this.generation + 1;
     this.generation = generation;
@@ -369,9 +508,21 @@ export class SyncClient {
     else if (parsed.type === 'settings') this.applySettings(parsed);
     else if (parsed.type === 'me') this.applyMe(parsed);
     else if (parsed.type === 'board') this.applyFetchedBoard(parsed);
+    else if (parsed.type === 'proposalCreated') this.applyProposalCreated(parsed);
+    else if (parsed.type === 'memberUpdated') this.applyMemberUpdated(parsed);
+    else if (parsed.type === 'accessUpdated') this.applyAccessUpdated(parsed);
+    else if (parsed.type === 'access') this.applyAccess(parsed);
     else if (parsed.type === 'rejected') {
       const message = readRejected(parsed);
       if (message === null) return;
+      if (this.results.has(message.requestId)) {
+        this.finishResult(message.requestId, {
+          ok: false,
+          code: message.code,
+          message: message.message,
+        });
+        return;
+      }
       if (this.reads.has(message.requestId)) this.finishRead(message.requestId, null);
       else this.applyRejected(message);
     }
@@ -464,17 +615,19 @@ export class SyncClient {
     this.rejectPending();
     if (this.stopped) {
       if (this.state.status !== 'forbidden' && this.state.status !== 'offline') {
-        this.patch({ status: 'offline' });
+        this.patch({ status: 'offline', access: null });
+      } else if (this.state.access !== null) {
+        this.patch({ access: null });
       }
       return;
     }
     if (this.forbidden || code === FORBIDDEN_CLOSE) {
       this.forbidden = true;
       this.clearReconnect();
-      this.patch({ status: 'forbidden' });
+      this.patch({ status: 'forbidden', access: null });
       return;
     }
-    this.patch({ status: 'offline' });
+    this.patch({ status: 'offline', access: null });
     this.scheduleReconnect();
   }
 
@@ -484,7 +637,7 @@ export class SyncClient {
     this.settledGeneration = generation;
     this.clearTimers();
     this.rejectPending();
-    this.patch({ status: 'forbidden' });
+    this.patch({ status: 'forbidden', access: null });
     this.detachSocket();
   }
 
@@ -555,6 +708,45 @@ export class SyncClient {
     });
   }
 
+  private requestResult<T = Record<string, never>>(
+    build: (requestId: string) => object,
+    reply: ResultReply,
+  ): Promise<RequestResult<T>> {
+    if (this.state.status !== 'live') return Promise.resolve(REQUEST_OFFLINE);
+    const socket = this.socket;
+    if (socket === null || socket.readyState !== 1) return Promise.resolve(REQUEST_OFFLINE);
+    const requestId = this.deps.requestIds();
+    return new Promise((resolve) => {
+      const timer = this.deps.timers.setTimeout(() => {
+        this.finishResult(requestId, REQUEST_OFFLINE);
+      }, REPLY_MS);
+      this.results.set(requestId, {
+        resolve: (result) => {
+          resolve(result);
+        },
+        timer,
+        reply,
+      });
+      socket.send(JSON.stringify(build(requestId)));
+    });
+  }
+
+  private finishResult(requestId: string, result: StoredResult): void {
+    const waiter = this.results.get(requestId);
+    if (waiter === undefined) return;
+    this.results.delete(requestId);
+    this.deps.timers.clearTimeout(waiter.timer);
+    waiter.resolve(result);
+  }
+
+  private settleReply(reply: ResultReply, result: StoredResult): void {
+    const requestIds: string[] = [];
+    for (const [requestId, waiter] of this.results) {
+      if (waiter.reply === reply) requestIds.push(requestId);
+    }
+    for (const requestId of requestIds) this.finishResult(requestId, result);
+  }
+
   private finishRead(requestId: unknown, value: Me | Board | Settings | null): void {
     if (typeof requestId !== 'string') return;
     const waiter = this.reads.get(requestId);
@@ -588,6 +780,8 @@ export class SyncClient {
     const settings: Settings = { showNeedsApproval: message.showNeedsApproval };
     this.patch({ settings });
     this.finishRead(message.requestId, settings);
+    // setShowNeedsApproval is answered by a broadcast whose requestId is empty.
+    if (message.requestId === '') this.settleReply('settings', { ok: true });
   }
 
   private applyMe(message: Record<string, unknown>): void {
@@ -612,6 +806,46 @@ export class SyncClient {
     this.finishRead(requestId, fetched);
   }
 
+  private applyProposalCreated(message: Record<string, unknown>): void {
+    const requestId = typeof message.requestId === 'string' ? message.requestId : '';
+    const waiter = this.results.get(requestId);
+    if (waiter === undefined || waiter.reply !== 'proposalCreated') return;
+    if (!isNonEmpty(message.proposalId) || !isNonEmpty(message.boardId)) return;
+    this.finishResult(requestId, {
+      ok: true,
+      proposalId: message.proposalId,
+      boardId: message.boardId,
+    });
+  }
+
+  private applyMemberUpdated(message: Record<string, unknown>): void {
+    const requestId = typeof message.requestId === 'string' ? message.requestId : '';
+    const waiter = this.results.get(requestId);
+    if (waiter === undefined || waiter.reply !== 'memberUpdated') return;
+    this.finishResult(requestId, { ok: true });
+  }
+
+  private applyAccessUpdated(message: Record<string, unknown>): void {
+    const requestId = typeof message.requestId === 'string' ? message.requestId : '';
+    const waiter = this.results.get(requestId);
+    if (waiter === undefined || waiter.reply !== 'accessUpdated') return;
+    this.finishResult(requestId, { ok: true });
+  }
+
+  private applyAccess(message: Record<string, unknown>): void {
+    const access = readAccess(message);
+    if (access === null) return;
+    this.patch({ access });
+    const requestId = typeof message.requestId === 'string' ? message.requestId : '';
+    const waiter = this.results.get(requestId);
+    if (waiter === undefined || waiter.reply !== 'access') return;
+    this.finishResult(requestId, {
+      ok: true,
+      users: access.users,
+      invitations: access.invitations,
+    });
+  }
+
   private rejectPending(): void {
     const waiters = [...this.pending.values()];
     this.pending.clear();
@@ -621,6 +855,12 @@ export class SyncClient {
     for (const [, waiter] of reads) {
       this.deps.timers.clearTimeout(waiter.timer);
       waiter.resolve(null);
+    }
+    const results = [...this.results.values()];
+    this.results.clear();
+    for (const waiter of results) {
+      this.deps.timers.clearTimeout(waiter.timer);
+      waiter.resolve(REQUEST_OFFLINE);
     }
   }
 

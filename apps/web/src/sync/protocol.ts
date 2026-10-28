@@ -28,3 +28,38 @@ export type Me = {
 export type Settings = {
   showNeedsApproval: boolean;
 };
+
+/** Success value or a refusal. These requests never reject and never resolve `null`. */
+export type RequestResult<T = Record<string, never>> =
+  | ({ ok: true } & T)
+  | { ok: false; code: string; message: string };
+
+/** Fields the server's `parseMemberPatch` accepts. */
+export type MemberPatch = {
+  name?: string;
+  note?: string | null;
+  tagIds?: readonly string[];
+};
+
+/** Mirrors server access `User`. The web app does not import that module. */
+export type AccessUser = {
+  id: string;
+  login: string;
+  displayName: string;
+  role: 'editor' | 'admin';
+  createdAt: string;
+  revokedAt: string | null;
+};
+
+/** Mirrors server access `Invitation`. */
+export type AccessInvitation = {
+  id: string;
+  login: string;
+  invitedBy: string | null;
+  createdAt: string;
+};
+
+export type AccessDirectory = {
+  users: AccessUser[];
+  invitations: AccessInvitation[];
+};
