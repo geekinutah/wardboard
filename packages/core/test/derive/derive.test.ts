@@ -300,7 +300,7 @@ describe('dugout', () => {
     expect(unplaced).toEqual([...names].sort());
 
     const entries = dugout(current, ward);
-    expect(entries.map((entry) => ward.members[entry.memberId]?.name)).toEqual(names);
+    expect(entries.map((entry) => ward.members[entry.memberId]?.name)).toEqual(['Ivy Notreal', 'Jay Storybook', 'Tai Demo']);
     for (const entry of entries) {
       expect(entry.explicit).toBe(false);
       expect(entry.callings).toEqual([]);

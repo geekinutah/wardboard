@@ -1,5 +1,5 @@
 import { positionId, type AssignmentId, type CallingGroupId, type MemberId, type PositionId } from '../model/ids.ts';
-import type { Board, CallingGroup } from '../model/types.ts';
+import type { Board, CallingGroup, ExternalCalling, Ward } from '../model/types.ts';
 
 /** A calling the member already held and still holds after the operation. */
 export interface ExistingCalling {
@@ -184,6 +184,52 @@ export function secondCallingNotices(before: Board, after: Board): readonly Seco
       .sort((left, right) => compareSlots(left.key, right.key))
       .map((slot) => slot.calling);
     notices.push({ memberId, countBefore, countAfter, existing });
+  }
+  return notices;
+}
+
+export interface OutsideAwareNotice extends SecondCallingNotice {
+  /** The member's outside callings, which count toward countBefore/countAfter. */
+  readonly outside: readonly ExternalCalling[];
+}
+
+function outsideCallings(ward: Ward, id: MemberId): readonly ExternalCalling[] {
+  const member = ward.members[id];
+  if (member === undefined) {
+    return [];
+  }
+  return member.externalCallings;
+}
+
+/**
+ * Like `secondCallingNotices`, but each member's outside callings count toward
+ * both totals and are listed on the notice. An unknown member id counts as
+ * zero outside callings. `before` and `after` must be the same board id.
+ */
+export function secondCallingNoticesWithOutside(before: Board, after: Board, ward: Ward): readonly OutsideAwareNotice[] {
+  if (before.id !== after.id) {
+    throw new TypeError(`before and after are different boards (${before.id} and ${after.id})`);
+  }
+  const beforeHeld = positionsHeld(before);
+  const afterHeld = positionsHeld(after);
+  const memberIds = [...new Set<MemberId>([...beforeHeld.keys(), ...afterHeld.keys()])].sort(compareIds);
+  const notices: OutsideAwareNotice[] = [];
+  for (const memberId of memberIds) {
+    const beforePositions = beforeHeld.get(memberId) ?? [];
+    const afterPositions = afterHeld.get(memberId) ?? [];
+    const outside = outsideCallings(ward, memberId);
+    const countBefore = beforePositions.length + outside.length;
+    const countAfter = afterPositions.length + outside.length;
+    if (countAfter <= countBefore || countAfter <= 1) {
+      continue;
+    }
+    const kept = new Set<PositionId>(beforePositions);
+    const existing = afterPositions
+      .filter((id) => kept.has(id))
+      .map((id) => slotKey(after, id))
+      .sort((left, right) => compareSlots(left.key, right.key))
+      .map((slot) => slot.calling);
+    notices.push({ memberId, countBefore, countAfter, existing, outside });
   }
   return notices;
 }

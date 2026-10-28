@@ -180,7 +180,7 @@ export function callingCounts(board: Board): ReadonlyMap<MemberId, number> {
   return counts;
 }
 
-function compareMembers(left: Member, right: Member): number {
+export function compareMembers(left: Member, right: Member): number {
   const byName = left.name.localeCompare(right.name, 'en', { sensitivity: 'base' });
   if (byName !== 0) {
     return byName;
@@ -190,8 +190,10 @@ function compareMembers(left: Member, right: Member): number {
 
 /**
  * Automatic dugout membership is current ward members with no position on this
- * board. Removed members join only through `dugoutInclusions`. A member in both
- * sets appears once, with `explicit: true`, and keeps any remaining callings.
+ * board and no outside callings. An outside calling counts as a calling, so
+ * those members stay out of the automatic dugout (SPEC §5). Removed members
+ * join only through `dugoutInclusions`. A member in both sets appears once,
+ * with `explicit: true`, and keeps any remaining callings.
  */
 export function dugout(board: Board, ward: Ward): readonly DugoutEntry[] {
   const holders = new Set<MemberId>(Object.values(board.placements));
@@ -199,7 +201,8 @@ export function dugout(board: Board, ward: Ward): readonly DugoutEntry[] {
   const selected: Member[] = [];
   for (const person of Object.values(ward.members)) {
     const included = explicit.has(person.id);
-    const automatic = person.removedDate === null && !holders.has(person.id);
+    const automatic =
+      person.removedDate === null && !holders.has(person.id) && person.externalCallings.length === 0;
     if (included || automatic) {
       selected.push(person);
     }

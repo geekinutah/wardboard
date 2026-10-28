@@ -244,6 +244,9 @@ function passesPeopleFilters(member: Member, filter: PeopleFilter, boards: reado
     }
   }
   if (filter.noCalling) {
+    if (member.externalCallings.length > 0) {
+      return false;
+    }
     for (const board of boards) {
       if (holdsPosition(board, member.id)) {
         return false;
