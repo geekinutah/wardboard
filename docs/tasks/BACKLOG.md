@@ -76,3 +76,4 @@ observation / review finding
 | B-044 | P3 | web sync types | candidate | `RequestResult` success type rejects a plain `{ ok: true }`; callers cast |
 | B-045 | P2 | web e2e / gate | candidate | e2e drag tests fail when two worktrees run Playwright at once |
 | B-046 | P3 | web e2e gui | candidate | GUI captures share one checkout server, so later shots show proposals created by earlier scenarios |
+| B-047 | P2 | web canvas | candidate | Canvas pointerdown focus closes transient pickers inside the canvas |

@@ -16,6 +16,7 @@ The integration conventions of T-083 apply unchanged: minimal shared-file edits,
 ## Design decisions (binding)
 - New `apps/web/src/shell/TagsWiring.tsx`, which exports `MemberTagsSection` and `CallingTagsPanel`.
 - **`MemberTagsSection({ ward, memberId })`**, rendered by `PersonPanel.tsx` directly below `<PersonInspector>`. The PersonPanel edit is one import and one element.
+  - It passes `showName={false}`, because the inspector already has the member-name `h2`. Two identical headings in one panel break `person-panel.test.tsx` and confuse screen readers. (Amended in round 2.)
   - `isAdmin` = `useMe()?.role === 'admin'`, the same source as `SettingsRoute.tsx`.
   - `onSetTags` → `client.updateMember(memberId, { tagIds })`.
   - `onCreateTag` → `client.createTag(name)`.
@@ -40,10 +41,12 @@ May change:
 - `apps/web/src/shell/tags-wiring.test.tsx` (new)
 - `apps/web/src/shell/PersonPanel.tsx`: one import and one element
 - `apps/web/src/shell/board-levels.tsx`: one import and one element
+- `apps/web/src/features/tags/MemberTagsEditor.tsx`: **only** to add an optional prop `showName?: boolean` (default `true`, so T-039 behavior and its existing tests are unchanged). When `false`, the editor renders no `h2` with the member name, and its root is labelled `Member tags` (`aria-label`). The `MEMBER TAGS · WARD-WIDE` eyebrow stays. (Amended in round 2.)
+- `apps/web/src/features/tags/MemberTagsEditor.embedded.test.tsx` (new): tests for `showName={false}`. (Amended in round 2.)
 - `apps/web/e2e/tags-in-app.spec.ts` (new)
 - `apps/web/e2e/gui/tags-in-app.capture.ts` (new)
 
-Must not change: `BoardShell.tsx`, `SettingsRoute.tsx`, `features/**`, `sync/**`, server, packages, and existing tests.
+Must not change: `BoardShell.tsx`, `SettingsRoute.tsx`, `features/**` (except the `MemberTagsEditor.tsx` prop above), `sync/**`, server, packages, and existing tests.
 
 ## Acceptance criteria
 | # | Check | Command | Expected result |
@@ -61,6 +64,8 @@ Must not change: `BoardShell.tsx`, `SettingsRoute.tsx`, `features/**`, `sync/**`
 | `Create tag sends createTag then updateMember with the new id` | create flow | the tag is created but not attached |
 | `admin sees the Needs approval switch and it sends setNeedsApproval; editor sees read-only text` | authorization in the UI | an Editor can toggle |
 | `member tags are editable on Current` | shared data | wrongly read-only |
+| `the person panel has exactly one heading with the member name` | no duplicate heading | `showName` not passed |
+| `MemberTagsEditor.embedded.test.tsx` › `showName={false}: no name heading, region labelled Member tags, chips still work` | the prop | the prop ignored |
 | `level 3 shows Calling tags with the group's callings; changing the select switches the editor` | panel | the wrong assignment |
 | `adding a preference sends setCallingPreferences for the selected assignment` | op wiring | `setCallingTags` sent instead |
 | `rejected op shows the editor's alert` | error path | swallowed |
