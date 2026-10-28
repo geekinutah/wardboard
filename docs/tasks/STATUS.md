@@ -73,7 +73,7 @@ Candidate and discovered work that has not yet been promoted into a task contrac
 | T-080 | Settings page in the app | 4 — Desktop board | done | 1 | Mac Studio: download a backup from Settings and restore it (T-063 drill); phone: open Settings and confirm user-row actions are reachable |
 | T-081 | Presentation mode in the app | 4 — Desktop board | done | 2 | office TV: present from the laptop; readable; Exit by keyboard |
 | T-082 | Proposal summary page in the app | 4 — Desktop board | done | 1 | none |
-| T-083 | Out-of-Unit tile, view and drags on the board | 4 — Desktop board | in progress | 0 | office TV: Out-of-Unit tile reads as separate |
+| T-083 | Out-of-Unit tile, view and drags on the board | 4 — Desktop board | done | 2 | office TV: Out-of-Unit tile reads as separate; desktop: drag feel, hover the tile while dragging opens it |
 | T-084 | e2e specs edit their own proposals, not the shared fixture | 4 — Desktop board | done | 2 | none |
 | T-085 | Update OpenCode model test pin to arch-llama/qwen3.8-27b | — (agent infra, off-roadmap) | done | 1 | none |
 | T-039 | Tags and affinities editor | 4 — Desktop board | done | 1 | none |

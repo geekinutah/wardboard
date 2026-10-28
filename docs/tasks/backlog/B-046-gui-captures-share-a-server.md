@@ -22,3 +22,4 @@ Give each capture scenario its own server, or reset the fixture between scenario
 
 - T-081 verifier, `docs/tasks/evidence/T-081.md`: the extra tabs are present in the after-exit captures. `present-mode.capture.ts` does not create proposals.
 - `apps/web/e2e/gui/start-proposal.capture.ts` creates `Primary <project>`.
+- Seen again in T-083 round 2 (out-of-unit-board captures: piled-up "Outside capture … r0 t0" tabs); docs/tasks/evidence/T-083.md
