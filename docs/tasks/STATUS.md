@@ -44,3 +44,4 @@ Candidate and discovered work that has not yet been promoted into a task contrac
 | T-025 | Proposal lifecycle | 3 — Server and collaboration | done | 1 | none |
 | T-027 | Photo storage | 3 — Server and collaboration | done | 2 | none |
 | T-026 | Member profile service | 3 — Server and collaboration | done | 1 | none |
+| T-028 | Backup and restore | 3 — Server and collaboration | in progress | 1 | none |
