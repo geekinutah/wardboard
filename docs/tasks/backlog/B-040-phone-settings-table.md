@@ -21,3 +21,4 @@ At phone widths, stack each user's actions under the name, either in the phone-l
 ## Evidence
 
 - `apps/web/gui-artifacts/settings-route/admin-page-phone-*.png`, `gui-artifacts/settings/admin-phone-webkit.png`; `docs/tasks/evidence/T-080.md`
+- Seen again in the T-089 captures: on phone the People & access role badge is clipped to "Adm" (apps/web/gui-artifacts/tag-library/tags-section-phone-webkit.png in the T-089 worktree; docs/tasks/evidence/T-089.md).

@@ -71,10 +71,12 @@ observation / review finding
 | B-039 | P3 | web presentation / core model | candidate | Presentation footer lacks ward name and baseline date (Board model has no capture time) |
 | B-040 | P2 | web settings / phone layout | candidate | Settings user-row actions overflow on phones with no scroll cue |
 | B-041 | P3 | web shell | candidate | Returning from Settings resets board tab, zoom and camera |
-| B-042 | P1 | server / web sync / shell | accepted | Tags editor and Accepted view have no server/sync path in the app (no `deleteTag` message, no client methods) |
+| B-042 | P1 | server / web sync / shell | resolved | Tags editor and Accepted view have no server/sync path in the app (no `deleteTag` message, no client methods) |
 | B-043 | P3 | server proposals | candidate | The server accepts two proposals with the same name |
 | B-044 | P3 | web sync types | candidate | `RequestResult` success type rejects a plain `{ ok: true }`; callers cast |
 | B-045 | P2 | web e2e / gate | candidate | e2e drag tests fail when two worktrees run Playwright at once |
 | B-046 | P3 | web e2e gui | candidate | GUI captures share one checkout server, so later shots show proposals created by earlier scenarios |
 | B-047 | P2 | web canvas | candidate | Canvas pointerdown focus closes transient pickers inside the canvas |
 | B-048 | P3 | web shell tests | candidate | No test covers AcceptedMode's stale getProposal reply guard |
+| B-049 | P2 | server members / web sync | candidate | Concurrent member tag edits can lose one editor's change |
+| B-050 | P3 | web shell | candidate | Tag library keeps refetching usage for a cancelled dialog's tag |

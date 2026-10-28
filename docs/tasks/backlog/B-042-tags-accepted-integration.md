@@ -2,7 +2,7 @@
 
 **Priority:** P1  
 **Area:** server channel / web sync / shell integration  
-**State:** accepted  
+**State:** resolved  
 **Found:** 2026-10-28, controller while writing T-039 and T-043  
 **Promoted to:** T-086, T-087, T-088, T-089, T-090
 
