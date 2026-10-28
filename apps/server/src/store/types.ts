@@ -8,6 +8,7 @@ import type {
   ProposalId,
   ProposalStatus,
   TagId,
+  TagUsage,
   Ward,
 } from '@wardboard/core';
 
@@ -23,6 +24,12 @@ export type ProposalSummary = {
   boardId: BoardId;
   version: number;
   updatedAt: string;
+  /**
+   * When the proposal was accepted, or null for a Draft. The store always sets
+   * it; it is optional in this type only so existing web test fixtures that
+   * build summaries by hand still typecheck until the web client adopts it.
+   */
+  acceptedAt?: string | null;
 };
 
 export type StoreError =
@@ -77,6 +84,15 @@ export interface Store {
    * working boards only, and returns those boards at `version + 1`.
    */
   setNeedsApproval(id: MemberId, value: boolean): StoreResult<{ ward: Ward; boards: readonly Board[] }>;
+  /**
+   * Deletes a tag through core `deleteTag` across the ward and every stored board
+   * (Current, each working board, each baseline), in one transaction. Changed
+   * Current and working boards are written at `version + 1` and returned; changed
+   * baselines are rewritten in place with no version change. Unknown tag is `not_found`.
+   */
+  deleteTag(id: TagId): StoreResult<{ ward: Ward; boards: readonly Board[] }>;
+  /** Core `tagUsage` over the ward, Current, and every proposal working board (not baselines). */
+  tagUsage(id: TagId): StoreResult<TagUsage>;
   /** `showNeedsApproval` from the settings row, or false when the row is absent. */
   loadSettings(): { showNeedsApproval: boolean };
   /** Writes the `showNeedsApproval` settings row as a JSON boolean. */

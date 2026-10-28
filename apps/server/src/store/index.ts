@@ -5,21 +5,25 @@ import {
   createProposal,
   createTag as createTagRecord,
   createWard,
+  deleteTag as deleteTagRecord,
   dropAllApprovals,
   dropMemberApprovals,
   proposalId,
   renameTag as renameTagRecord,
   setMemberTags,
+  tagUsage as tagUsageOf,
   type Board,
   type BoardKind,
   type IdGenerator,
   type MemberId,
   type ProposalId,
   type TagId,
+  type TagUsage,
   type Ward,
 } from '@wardboard/core';
 import {
   AlreadyInitializedError,
+  deleteStoredTag,
   errorMessage,
   findCurrentId,
   insertTag,
@@ -32,6 +36,7 @@ import {
   readShowNeedsApproval,
   readWard,
   renameStoredTag,
+  replaceBoardContents,
   replaceProposalBoard,
   withImmediateTransaction,
   writeInitialization,
@@ -438,6 +443,59 @@ export function openStore(db: DatabaseSync, clock: StoreClock): Store {
       return ok({ ward: stored, boards });
     },
 
+    deleteTag(id) {
+      const stamp = stampOf(clock);
+      const changedIds: string[] = [];
+      try {
+        withImmediateTransaction(db, () => {
+          const ward = readWard(db);
+          if (ward.tags[id] === undefined) {
+            throw new Refusal({ code: 'not_found', message: `tag ${id} does not exist` });
+          }
+          const boards = readAllBoards(db);
+          const deleted = deleteTagRecord(ward, boards, id);
+          if (!deleted.ok) throw new Refusal(tagStoreError(deleted.error));
+          for (let index = 0; index < boards.length; index += 1) {
+            const before = boards[index];
+            const after = deleted.value.boards[index];
+            if (before === undefined || after === undefined) {
+              throw new Error('deleteTag returned a different number of boards');
+            }
+            if (!usesTag(before, id)) continue;
+            if (before.kind === 'baseline') {
+              replaceBoardContents(db, after);
+              continue;
+            }
+            replaceProposalBoard(db, { ...after, version: before.version + 1 }, before.version, stamp);
+            changedIds.push(before.id);
+          }
+          deleteStoredTag(db, id);
+        });
+      } catch (error: unknown) {
+        if (error instanceof Refusal) return fail(error.failure);
+        return invalid(errorMessage(error));
+      }
+      const stored = readWard(db);
+      const boards: Board[] = [];
+      for (const changedId of changedIds) {
+        const board = readBoard(db, changedId, stored);
+        if (board === null) throw new Error(`board ${changedId} missing after tag delete`);
+        boards.push(board);
+      }
+      return ok({ ward: stored, boards });
+    },
+
+    tagUsage(id) {
+      return withImmediateTransaction(db, (): StoreResult<TagUsage> => {
+        const ward = readWard(db);
+        if (ward.tags[id] === undefined) {
+          return fail({ code: 'not_found', message: `tag ${id} does not exist` });
+        }
+        const boards = readAllBoards(db).filter((board) => board.kind !== 'baseline');
+        return ok(tagUsageOf(ward, boards, id));
+      });
+    },
+
     loadSettings() {
       return withImmediateTransaction(db, () => ({ showNeedsApproval: readShowNeedsApproval(db) }));
     },
@@ -489,6 +547,25 @@ function applyMemberProfile(
     next = tagged.value;
   }
   return ok(next);
+}
+
+/** Current, then each proposal's working board and baseline, in tab order. */
+function readAllBoards(db: DatabaseSync): Board[] {
+  const boards: Board[] = [];
+  const current = readCurrentRecord(db);
+  if (current !== null) boards.push(current.board);
+  for (const summary of listProposalSummaries(db)) {
+    const proposal = readProposal(db, summary.id);
+    if (proposal === null) throw new Error(`proposal ${summary.id} missing`);
+    boards.push(proposal.board, proposal.baseline);
+  }
+  return boards;
+}
+
+function usesTag(board: Board, id: TagId): boolean {
+  return Object.values(board.assignments).some(
+    (calling) => calling.callingTagIds.includes(id) || calling.preferredMemberTagIds.includes(id),
+  );
 }
 
 function tagStoreError(error: { code: string; message: string }): StoreError {

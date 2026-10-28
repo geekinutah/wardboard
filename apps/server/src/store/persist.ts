@@ -238,7 +238,7 @@ export function readCurrentRecord(
 export function listProposalSummaries(db: DatabaseSync): ProposalSummary[] {
   const rows = db
     .prepare(
-      `SELECT proposal_id, name, status, tab_order, id, version, updated_at
+      `SELECT proposal_id, name, status, tab_order, id, version, updated_at, accepted_at
        FROM boards
        WHERE proposal_id IS NOT NULL
        ORDER BY tab_order, proposal_id`,
@@ -257,6 +257,7 @@ export function listProposalSummaries(db: DatabaseSync): ProposalSummary[] {
       boardId: boardId(text(row, 'id')),
       version: integer(row, 'version'),
       updatedAt: text(row, 'updated_at'),
+      acceptedAt: textOrNull(row, 'accepted_at'),
     };
   });
 }
@@ -357,6 +358,21 @@ export function replaceProposalBoard(
     .run(board.version, updatedAt, board.id, previousVersion);
   if (changesOf(result) !== 1) {
     throw new Error(`board ${board.id} changed before it could be committed`);
+  }
+}
+
+/** Rewrites a board's contents in place. Version and updated_at are unchanged (baselines). */
+export function replaceBoardContents(db: DatabaseSync, board: Board): void {
+  deleteBoardContents(db, board.id);
+  insertBoardContents(db, board);
+}
+
+/** Removes a tag row and every member link to it. Board links are rewritten by the caller. */
+export function deleteStoredTag(db: DatabaseSync, id: string): void {
+  db.prepare('DELETE FROM member_tags WHERE tag_id = ?').run(id);
+  const result = db.prepare('DELETE FROM tags WHERE id = ?').run(id);
+  if (changesOf(result) !== 1) {
+    throw new Error(`tag ${id} was not deleted`);
   }
 }
 

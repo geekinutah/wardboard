@@ -635,6 +635,62 @@ export function createOperationChannel(deps: {
     broadcastWard(renamed.value);
   }
 
+  function tagRequest(
+    connection: Connection,
+    message: Record<string, unknown>,
+    type: string,
+  ): { requestId: string; id: TagId } | null {
+    if (!exact(message, ['type', 'requestId', 'tagId'])) {
+      refuse(connection, message, 'bad_request', `${type} must have requestId and tagId`);
+      return null;
+    }
+    if (!boundedRequestId(message.requestId)) {
+      refuse(connection, message, 'bad_request', 'requestId must be a string of 1 to 64 characters');
+      return null;
+    }
+    if (!nonEmpty(message.tagId)) {
+      refuse(connection, message, 'bad_request', 'tagId must be a non-empty string');
+      return null;
+    }
+    return { requestId: message.requestId, id: tagId(message.tagId) };
+  }
+
+  function deleteTag(connection: Connection, message: Record<string, unknown>, actor: User): void {
+    const request = tagRequest(connection, message, 'deleteTag');
+    if (request === null) return;
+    const { requestId, id } = request;
+    const deleted = store.deleteTag(id);
+    if (!deleted.ok) {
+      refuse(connection, message, clientCode(deleted.error.code), deleted.error.message);
+      return;
+    }
+    sendJson(connection.ws, { type: 'tagDeleted', requestId, tagId: id });
+    broadcastWard(deleted.value.ward);
+    for (const board of deleted.value.boards) {
+      broadcast(board, requestId, actor.login);
+    }
+    broadcastBoards();
+  }
+
+  function getTagUsage(connection: Connection, message: Record<string, unknown>): void {
+    const request = tagRequest(connection, message, 'getTagUsage');
+    if (request === null) return;
+    const { requestId, id } = request;
+    const usage = store.tagUsage(id);
+    if (!usage.ok) {
+      refuse(connection, message, clientCode(usage.error.code), usage.error.message);
+      return;
+    }
+    sendJson(connection.ws, {
+      type: 'tagUsage',
+      requestId,
+      tagId: id,
+      members: usage.value.members,
+      callingPreferences: usage.value.callingPreferences,
+      callingTags: usage.value.callingTags,
+    });
+  }
+
   function requireAdmin(connection: Connection, message: Record<string, unknown>, actor: User, action: string): boolean {
     if (actor.role === 'admin') return true;
     refuse(connection, message, 'forbidden', `only an admin can ${action}`);
@@ -980,6 +1036,14 @@ export function createOperationChannel(deps: {
     }
     if (parsed.type === 'renameTag') {
       renameTag(connection, parsed);
+      return;
+    }
+    if (parsed.type === 'deleteTag') {
+      deleteTag(connection, parsed, actor);
+      return;
+    }
+    if (parsed.type === 'getTagUsage') {
+      getTagUsage(connection, parsed);
       return;
     }
     if (parsed.type === 'setNeedsApproval') {
