@@ -84,3 +84,6 @@ Candidate and discovered work that has not yet been promoted into a task contrac
 | T-089 | Tag library on the Settings page | 4 — Desktop board | done | 2 | none |
 | T-090 | Accepted view and Accept in the app | 4 — Desktop board | done | 1 | none |
 | T-048 | Phone board and organization screens | 5 — Phone | done | 1 | iPhone, after the shell is mounted at /: tap Primary and confirm the list and back control are comfortable one-handed |
+| T-049 | Phone person and move sheets | 5 — Phone | in progress | 0 | iPhone, after the shell is mounted at /: tap a member on the Board tab, tap Move…, filter and tap a vacant destination, and confirm both sheets feel natural one-handed |
+| T-050 | Phone search and dugout | 5 — Phone | in progress | 0 | iPhone, after the shell is mounted at /: switch to the Search and Dugout tabs, filter by chip, and confirm scrolling and tap targets feel comfortable one-handed |
+| T-051 | Phone changes screen | 5 — Phone | in progress | 0 | iPhone, after the shell is mounted at /: open the Changes tab on a proposal, expand and collapse the sections, and confirm the Accept bar and bottom nav sit cleanly above the home indicator |
