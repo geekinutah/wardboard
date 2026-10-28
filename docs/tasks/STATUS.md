@@ -63,7 +63,7 @@ Candidate and discovered work that has not yet been promoted into a task contrac
 | T-046 | Settings | 4 — Desktop board | done | 1 | none |
 | T-047 | Phone shell and board switcher | 5 — Phone | done | 1 | iPhone: bottom tabs clear the home indicator; switcher sheet comfortable one-handed (after integration) |
 | T-073 | Out-of-unit rules: dugout, second-calling, search | 2 — Board domain | done | 1 | none |
-| T-074 | Out-of-Unit card and view | 4 — Desktop board | in progress | 0 | office TV: Out-of-Unit tile reads as separate from ward organizations (after integration) |
+| T-074 | Out-of-Unit card and view | 4 — Desktop board | done | 1 | office TV: Out-of-Unit tile reads as separate from ward organizations (after integration) |
 | T-035 | Drag and drop with dialogs | 4 — Desktop board | done | 1 | after integration: desktop Chrome drag feel and obvious drop target; iPhone long-press does not start a drag or scroll |
 | T-075 | Sync client methods: proposals, members, access, settings | 4 — Desktop board | done | 1 | none |
 | T-076 | Board views: Aaronic view and removed markers in the app | 4 — Desktop board | done | 2 | none |
@@ -75,6 +75,6 @@ Candidate and discovered work that has not yet been promoted into a task contrac
 | T-082 | Proposal summary page in the app | 4 — Desktop board | done | 1 | none |
 | T-083 | Out-of-Unit tile, view and drags on the board | 4 — Desktop board | todo | 0 | office TV: Out-of-Unit tile reads as separate |
 | T-084 | e2e specs edit their own proposals, not the shared fixture | 4 — Desktop board | in progress | 1 | none |
-| T-085 | Update OpenCode model test pin to arch-llama/qwen3.8-27b | — (agent infra, off-roadmap) | in progress | 0 | none |
+| T-085 | Update OpenCode model test pin to arch-llama/qwen3.8-27b | — (agent infra, off-roadmap) | done | 1 | none |
 | T-039 | Tags and affinities editor | 4 — Desktop board | in progress | 0 | none |
 | T-043 | Accepted proposal view | 4 — Desktop board | in progress | 0 | none |
