@@ -1,0 +1,479 @@
+@import '../../design/tokens.css';
+
+/* Scrim / Backdrop */
+.wb-phone-sheet-scrim {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(24, 33, 43, 0.4);
+  z-index: 100;
+}
+
+/* Dialog Container */
+.wb-phone-sheet-dialog {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-width: 500px;
+  max-height: 90vh;
+  margin: 0 auto;
+  background-color: var(--wb-surface, #FFFFFF);
+  border-radius: 18px 18px 0 0;
+  padding: 10px 16px calc(24px + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.15);
+  box-sizing: border-box;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  z-index: 101;
+  font-family: var(--wb-font-sans, 'IBM Plex Sans', system-ui, sans-serif);
+  color: var(--wb-ink, #18212B);
+}
+
+.wb-phone-sheet-handle {
+  align-self: center;
+  width: 40px;
+  height: 4px;
+  border-radius: 2px;
+  background-color: #C8CDC7;
+  flex-shrink: 0;
+}
+
+/* Person Sheet Header */
+.wb-phone-person-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.wb-phone-person-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  color: #FFFFFF;
+  font-size: 19px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.wb-phone-person-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.wb-phone-person-name {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--wb-ink, #18212B);
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.wb-phone-person-category {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--wb-muted, #55606B);
+}
+
+.wb-phone-person-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+}
+
+.wb-phone-person-tag {
+  font-size: 12px;
+  background-color: var(--wb-line-inner-soft, #ECEEEA);
+  color: var(--wb-ink, #18212B);
+  border-radius: 4px;
+  padding: 2px 7px;
+  line-height: 1.3;
+}
+
+.wb-phone-person-needs-approval {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--wb-needs-approval-text, #5B2B6E);
+  background-color: var(--wb-needs-approval-fill, #F2EAF5);
+  border-radius: 4px;
+  padding: 2px 7px;
+  line-height: 1.3;
+}
+
+.wb-phone-sheet-close-btn {
+  width: 44px;
+  height: 44px;
+  border: none;
+  background-color: var(--wb-ground, #F3F4F1);
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--wb-ink, #18212B);
+  flex-shrink: 0;
+}
+
+.wb-phone-sheet-close-btn:focus-visible {
+  outline: 2px solid var(--wb-accent, #1D5C68);
+  outline-offset: 2px;
+}
+
+/* Person Section */
+.wb-phone-person-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wb-phone-person-section-title {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--wb-muted, #55606B);
+}
+
+.wb-phone-person-empty {
+  margin: 0;
+  font-size: 14px;
+  color: var(--wb-muted, #55606B);
+}
+
+.wb-phone-person-calling-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--wb-line-inner, #E1E4DF);
+  border-radius: 12px;
+  background-color: var(--wb-surface, #FFFFFF);
+  box-sizing: border-box;
+}
+
+.wb-phone-person-calling-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--wb-ink, #18212B);
+  overflow-wrap: anywhere;
+}
+
+.wb-phone-person-calling-org {
+  font-size: 12px;
+  color: var(--wb-muted, #55606B);
+  overflow-wrap: anywhere;
+}
+
+.wb-phone-person-calling-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.wb-phone-person-btn {
+  flex: 1;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--wb-line, #D9DDD8);
+  border-radius: 10px;
+  background-color: var(--wb-surface, #FFFFFF);
+  color: var(--wb-ink, #18212B);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.wb-phone-person-btn:focus-visible {
+  outline: 2px solid var(--wb-accent, #1D5C68);
+  outline-offset: 2px;
+}
+
+.wb-phone-person-assign-btn {
+  width: 100%;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed var(--wb-accent, #1D5C68);
+  border-radius: 10px;
+  background-color: var(--wb-accent-soft, #E3EEEF);
+  color: var(--wb-accent-dark, #123E47);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.wb-phone-person-assign-btn:focus-visible {
+  outline: 2px solid var(--wb-accent, #1D5C68);
+  outline-offset: 2px;
+}
+
+/* Outside Ward */
+.wb-phone-person-outside-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.wb-phone-person-outside-item {
+  font-size: 13px;
+  color: var(--wb-muted, #55606B);
+  padding: 8px 12px;
+  background-color: var(--wb-ground, #F3F4F1);
+  border-radius: 8px;
+}
+
+/* Dugout Section */
+.wb-phone-person-dugout-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 52px;
+  padding: 0 14px;
+  border: 1px solid var(--wb-line, #D9DDD8);
+  background-color: var(--wb-surface, #FFFFFF);
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--wb-ink, #18212B);
+  text-align: left;
+  box-sizing: border-box;
+}
+
+.wb-phone-person-dugout-btn:focus-visible {
+  outline: 2px solid var(--wb-accent, #1D5C68);
+  outline-offset: 2px;
+}
+
+.wb-phone-person-dugout-sub {
+  font-size: 12px;
+  color: var(--wb-muted, #55606B);
+  font-weight: 400;
+}
+
+.wb-phone-person-in-dugout {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--wb-line-inner, #E1E4DF);
+  background-color: var(--wb-ground, #F3F4F1);
+  border-radius: 12px;
+  font-size: 14px;
+  color: var(--wb-muted, #55606B);
+  font-weight: 500;
+  box-sizing: border-box;
+}
+
+/* Profile link/button */
+.wb-phone-person-profile-btn {
+  min-height: 44px;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--wb-accent, #1D5C68);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  border-radius: 8px;
+  box-sizing: border-box;
+}
+
+.wb-phone-person-profile-btn:focus-visible {
+  outline: 2px solid var(--wb-accent, #1D5C68);
+  outline-offset: 2px;
+}
+
+/* Move Sheet */
+.wb-phone-move-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.wb-phone-move-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--wb-ink, #18212B);
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.wb-phone-move-subtitle {
+  font-size: 13px;
+  color: var(--wb-muted, #55606B);
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.wb-phone-move-search-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--wb-line, #D9DDD8);
+  border-radius: 8px;
+  background-color: var(--wb-surface, #FFFFFF);
+  box-sizing: border-box;
+}
+
+.wb-phone-move-search-label:focus-within {
+  border-color: var(--wb-accent, #1D5C68);
+  outline: 2px solid var(--wb-accent, #1D5C68);
+  outline-offset: -1px;
+}
+
+.wb-phone-move-search-icon {
+  color: var(--wb-muted, #55606B);
+  flex-shrink: 0;
+}
+
+.wb-phone-move-search-input {
+  border: none;
+  outline: none;
+  font-family: inherit;
+  font-size: 15px;
+  color: var(--wb-ink, #18212B);
+  background: transparent;
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+}
+
+.wb-phone-move-destinations {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 40vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.wb-phone-move-dest-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 8px 12px;
+  border: 1px dashed var(--wb-vacancy-border, #C9772E);
+  background-color: var(--wb-vacancy-fill, #FFF8F1);
+  border-radius: 10px;
+  text-align: left;
+  cursor: pointer;
+  color: var(--wb-ink, #18212B);
+  font-family: inherit;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.wb-phone-move-dest-btn:focus-visible {
+  outline: 2px solid var(--wb-accent, #1D5C68);
+  outline-offset: 2px;
+}
+
+.wb-phone-move-dest-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  gap: 2px;
+}
+
+.wb-phone-move-dest-title {
+  font-size: 14px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.wb-phone-move-dest-org {
+  font-size: 12px;
+  color: var(--wb-muted, #55606B);
+  overflow-wrap: anywhere;
+}
+
+.wb-phone-move-dest-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--wb-accent-dark, #123E47);
+  background-color: var(--wb-accent-soft, #E3EEEF);
+  border-radius: 4px;
+  padding: 2px 6px;
+  line-height: 1.3;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.wb-phone-move-empty {
+  margin: 0;
+  padding: 12px 0;
+  font-size: 14px;
+  color: var(--wb-muted, #55606B);
+}
+
+.wb-phone-move-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.wb-phone-move-action-btn {
+  flex: 1;
+  min-height: 48px;
+  border: 1px solid var(--wb-line, #D9DDD8);
+  background-color: var(--wb-surface, #FFFFFF);
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--wb-ink, #18212B);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.wb-phone-move-action-btn:focus-visible {
+  outline: 2px solid var(--wb-accent, #1D5C68);
+  outline-offset: 2px;
+}
+
+/* Visually hidden helper */
+.wb-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
