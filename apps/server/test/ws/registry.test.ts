@@ -20,6 +20,8 @@ const CONTRACT_KINDS = [
   'approvePlacement',
   'setCallingTags',
   'setCallingPreferences',
+  'setOversight',
+  'clearOversight',
 ] as const;
 
 describe('operation registry', () => {

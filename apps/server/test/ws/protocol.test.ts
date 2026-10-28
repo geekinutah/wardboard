@@ -212,7 +212,7 @@ describe('operation channel protocol', () => {
           requestId: 'unknown',
           boardId: summary.boardId,
           baseVersion: 0,
-          op: { kind: 'setOversight', request: {} },
+          op: { kind: 'renameMember', request: {} },
         },
         code: 'unknown_operation',
       },

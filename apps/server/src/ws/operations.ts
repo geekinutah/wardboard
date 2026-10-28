@@ -8,6 +8,7 @@ import {
   assignmentId,
   boardGroupId,
   callingGroupId,
+  clearOversight as applyClearOversight,
   memberId,
   moveGroup,
   moveToDugout,
@@ -19,8 +20,10 @@ import {
   removePosition,
   renameGroup,
   setBoardGroupVisible,
+  OVERSEERS,
   setCallingPreferences,
   setCallingTags,
+  setOversight as applySetOversight,
   swap,
   tagId,
   userId,
@@ -31,12 +34,13 @@ import {
   type IdGenerator,
   type MemberId,
   type OperationContext,
+  type Overseer,
   type PositionId,
   type TagId,
   type Ward,
 } from '@wardboard/core';
 
-/** Client operation kinds. Oversight and ward edits are intentionally absent. */
+/** Client operation kinds. Ward edits are intentionally absent. */
 export type OpKind = keyof typeof operationRegistry;
 
 export type OperationDeps = {
@@ -116,6 +120,14 @@ function parent(value: unknown): CallingGroupParent | undefined {
 
 function assignmentTypeOf(value: unknown): AssignmentType | undefined {
   if (value === 'single' || value === 'list') return value;
+  return undefined;
+}
+
+function overseerValue(value: unknown): Overseer | undefined {
+  if (typeof value !== 'string') return undefined;
+  for (const overseer of OVERSEERS) {
+    if (value === overseer) return overseer;
+  }
   return undefined;
 }
 
@@ -355,6 +367,25 @@ export const operationRegistry = {
   }),
   setCallingTags: entry((request) => tagEdit(request, setCallingTags)),
   setCallingPreferences: entry((request) => tagEdit(request, setCallingPreferences)),
+  setOversight: entry((request) => {
+    const parsed = unwrap(request, ['target', 'overseer']);
+    if (!parsed.matched) return parsed.prepared;
+    const target = parent(parsed.body.target);
+    const overseer = overseerValue(parsed.body.overseer);
+    if (target === undefined || overseer === undefined) {
+      return refuse('setOversight requires a boardGroup or callingGroup target and an overseer');
+    }
+    return coreOp(applySetOversight, { target, overseer });
+  }),
+  clearOversight: entry((request) => {
+    const parsed = unwrap(request, ['target']);
+    if (!parsed.matched) return parsed.prepared;
+    const target = parent(parsed.body.target);
+    if (target === undefined) {
+      return refuse('clearOversight requires a boardGroup or callingGroup target');
+    }
+    return coreOp(applyClearOversight, { target });
+  }),
 } satisfies Record<string, RegistryEntry>;
 
 function tagEdit(
