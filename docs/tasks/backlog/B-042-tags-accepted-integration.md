@@ -4,7 +4,7 @@
 **Area:** server channel / web sync / shell integration  
 **State:** accepted  
 **Found:** 2026-10-28, controller while writing T-039 and T-043  
-**Promoted to:** T-086, T-087 (shell integration tasks follow when T-087 is done)
+**Promoted to:** T-086, T-087, T-088, T-089, T-090
 
 ## Finding
 

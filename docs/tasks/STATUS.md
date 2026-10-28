@@ -79,4 +79,7 @@ Candidate and discovered work that has not yet been promoted into a task contrac
 | T-039 | Tags and affinities editor | 4 — Desktop board | done | 1 | none |
 | T-043 | Accepted proposal view | 4 — Desktop board | done | 1 | none |
 | T-086 | Server: deleteTag, getTagUsage, acceptedAt | 4 — Desktop board | done | 2 | none |
-| T-087 | Sync client methods: tags, needs approval, proposal status | 4 — Desktop board | in progress | 1 | none |
+| T-087 | Sync client methods: tags, needs approval, proposal status | 4 — Desktop board | done | 2 | none |
+| T-088 | Member and calling tags in the app | 4 — Desktop board | in progress | 0 | none |
+| T-089 | Tag library on the Settings page | 4 — Desktop board | in progress | 0 | none |
+| T-090 | Accepted view and Accept in the app | 4 — Desktop board | in progress | 0 | none |
