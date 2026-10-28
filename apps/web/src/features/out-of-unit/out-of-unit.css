@@ -1,0 +1,235 @@
+@import '../../design/tokens.css';
+
+.wb-out-of-unit-tile {
+  background: var(--wb-surface);
+  border: 1px solid var(--wb-line);
+  border-radius: 12px;
+  padding: 16px 14px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 1px 2px rgb(24 33 43 / 4%);
+  box-sizing: border-box;
+  min-width: 0;
+  cursor: default;
+}
+
+.wb-out-of-unit-tile-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.wb-out-of-unit-tile-titles {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.wb-out-of-unit-tile-label {
+  margin: 0;
+  font-size: var(--wb-section-label-size);
+  font-weight: var(--wb-section-label-weight);
+  letter-spacing: var(--wb-section-label-spacing);
+  text-transform: var(--wb-section-label-transform);
+  color: var(--wb-muted);
+}
+
+.wb-out-of-unit-tile-heading {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--wb-ink);
+  overflow-wrap: break-word;
+}
+
+@media (min-width: 1900px) {
+  .wb-out-of-unit-tile-heading {
+    font-size: 22px;
+  }
+}
+
+.wb-out-of-unit-tile-summary {
+  margin: 0;
+  font-size: 13px;
+  color: var(--wb-ink-2);
+  line-height: 1.3;
+}
+
+.wb-out-of-unit-tile-members {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.wb-out-of-unit-tile-member-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--wb-ink);
+  line-height: 1.3;
+  overflow-wrap: break-word;
+}
+
+.wb-out-of-unit-tile-more {
+  font-size: 12px;
+  color: var(--wb-muted);
+  line-height: 1.3;
+}
+
+.wb-out-of-unit-tile-footer {
+  display: flex;
+  align-items: center;
+  border-top: 1px solid var(--wb-line-inner-soft);
+  padding-top: 10px;
+  margin-top: auto;
+  min-width: 0;
+}
+
+.wb-out-of-unit-open-btn {
+  width: 100%;
+}
+
+/* OutOfUnitView */
+.wb-out-of-unit-view {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.wb-out-of-unit-view-header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.wb-out-of-unit-heading {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--wb-ink);
+  line-height: 1.25;
+}
+
+.wb-out-of-unit-heading:focus-visible {
+  outline: 2px solid var(--wb-accent);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+.wb-out-of-unit-description {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--wb-ink-2);
+  max-width: 680px;
+}
+
+.wb-out-of-unit-empty {
+  margin: 16px 0;
+  font-size: 14px;
+  color: var(--wb-muted);
+}
+
+.wb-out-of-unit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.wb-out-of-unit-card {
+  background: var(--wb-surface);
+  border: 1px solid var(--wb-line);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  box-sizing: border-box;
+  box-shadow: 0 1px 2px rgb(24 33 43 / 4%);
+}
+
+.wb-out-of-unit-card-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1 1 240px;
+}
+
+.wb-out-of-unit-card-header {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.wb-out-of-unit-card-name {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--wb-ink);
+  line-height: 1.3;
+}
+
+.wb-out-of-unit-card-category {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--wb-muted);
+}
+
+.wb-out-of-unit-callings-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.wb-out-of-unit-calling-line {
+  font-size: 13px;
+  color: var(--wb-ink-2);
+  line-height: 1.3;
+}
+
+.wb-out-of-unit-ward-callings {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--wb-muted);
+  line-height: 1.3;
+}
+
+.wb-out-of-unit-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+}
+
+.wb-out-of-unit-in-dugout {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--wb-muted);
+  background: var(--wb-line-inner-soft);
+  border: 1px solid var(--wb-line-inner);
+  border-radius: 6px;
+  padding: 6px 10px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
