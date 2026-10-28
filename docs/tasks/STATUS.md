@@ -56,7 +56,7 @@ Candidate and discovered work that has not yet been promoted into a task contrac
 | T-042 | Proposal summary page | 4 — Desktop board | in progress | 1 | none |
 | T-052 | PDF extraction harness | 6 — Import and photos | done | 1 | none |
 | T-037 | Person inspector and notes | 4 — Desktop board | in progress | 1 | none |
-| T-041 | Read-only Current and Start proposal | 4 — Desktop board | in progress | 1 | none |
+| T-041 | Read-only Current and Start proposal | 4 — Desktop board | done | 1 | none |
 | T-053 | Callings by Organization parser | 6 — Import and photos | in progress | 1 | none |
 | T-054 | Members without Callings parser | 6 — Import and photos | in progress | 1 | none |
 | T-055 | Out-of-Unit Callings parser | 6 — Import and photos | in progress | 1 | none |
