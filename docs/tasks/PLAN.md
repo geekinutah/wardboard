@@ -96,11 +96,11 @@ scripts/verify.sh    The single quality gate
 
 | ID | Title | Depends on | Scope | Done when |
 |---|---|---|---|---|
-| T-047 | Phone shell and board switcher | T-030 | `apps/web/src/phone/shell/` | Bottom tabs (Board, Search, Dugout, Changes) at phone widths; board switcher sheet with Start proposal (artboard 25) |
-| T-048 | Phone board and organization screens | T-047 | `apps/web/src/phone/board/` | Organization list and tap-through organization/group screens with + add position (artboards 19–20) |
-| T-049 | Phone person and move sheets | T-048, T-009 | `apps/web/src/phone/person/` | Person sheet with Move / Release per calling and Add to dugout; tap-to-move destination sheet (artboards 5, 22) |
-| T-050 | Phone search and dugout | T-047, T-019 | `apps/web/src/phone/search/`, `apps/web/src/phone/dugout/` | Search with scope and filters, Add to dugout; dugout list with filters (artboards 21, 23) |
-| T-051 | Phone changes screen | T-047, T-016 | `apps/web/src/phone/changes/` | Removed items, collapsible callings/releases/position changes, Accept blocked with reason (artboard 24) |
+| T-047 | Phone shell and board switcher | T-030 | `apps/web/src/features/phone-shell/` (preview harness discovers `features/*` only) | Bottom tabs (Board, Search, Dugout, Changes) at phone widths; board switcher sheet with Start proposal (artboard 25) |
+| T-048 | Phone board and organization screens | T-047 | `apps/web/src/features/phone-board/` | Organization list and tap-through organization/group screens with + add position (artboards 19–20) |
+| T-049 | Phone person and move sheets | T-048, T-009 | `apps/web/src/features/phone-person/` | Person sheet with Move / Release per calling and Add to dugout; tap-to-move destination sheet (artboards 5, 22) |
+| T-050 | Phone search and dugout | T-047, T-019 | `apps/web/src/features/phone-search/`, `apps/web/src/features/phone-dugout/` | Search with scope and filters, Add to dugout; dugout list with filters (artboards 21, 23) |
+| T-051 | Phone changes screen | T-047, T-016 | `apps/web/src/features/phone-changes/` | Removed items, collapsible callings/releases/position changes, Accept blocked with reason (artboard 24) |
 
 ## Milestone 6 — Import and photos
 
