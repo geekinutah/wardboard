@@ -18,6 +18,7 @@ import { EditingLayer, ShellSearch } from './EditingLayer.tsx';
 import { SummaryMode } from './SummaryMode.tsx';
 import { StartProposal, StartProposalTabButton } from './StartProposal.tsx';
 import { renderBoardLevel, useCurrentBoard, useRemovedState } from './board-levels.tsx';
+import { SettingsLink } from './SettingsRoute.tsx';
 
 const STATUS_TEXT: Readonly<Record<HealthState, string>> = {
   pending: 'Checking server…',
@@ -215,6 +216,7 @@ export function BoardShell({ healthClient }: { healthClient: HealthClient }): Re
             <span className="shell-account-role">{roleLabel(me.role)}</span>
           </p>
         )}
+        {me === null ? null : <SettingsLink />}
         <ConnectionIndicator />
       </header>
       <main className="shell-main">

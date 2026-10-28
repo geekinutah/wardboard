@@ -1,0 +1,43 @@
+/* Header Settings link (T-080). A 44px touch target, styled as a quiet header link. */
+.shell-settings-link {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--wb-line, #d9ddd8);
+  border-radius: 8px;
+  background: var(--wb-surface, #fff);
+  color: var(--wb-accent, #1d5c68);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none;
+}
+
+.shell-settings-link:hover {
+  border-color: var(--wb-accent, #1d5c68);
+  color: var(--wb-accent-dark, #123e47);
+}
+
+.shell-settings-link:focus-visible {
+  outline: 2px solid var(--wb-accent-dark, #123e47);
+  outline-offset: 2px;
+}
+
+/* Settings route chrome: the page fills the viewport on the app ground. */
+.settings-route {
+  min-width: 0;
+  min-height: 100vh;
+  background: var(--wb-ground, #f3f4f1);
+  color: var(--wb-ink, #18212b);
+}
+
+.settings-route-loading {
+  margin: 0;
+  padding: 28px 24px;
+  color: var(--wb-muted, #55606b);
+  font-size: 14px;
+}
