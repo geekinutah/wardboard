@@ -546,11 +546,13 @@ export function createOperationChannel(deps: {
     name?: string;
     note?: string | null;
     tagIds?: TagId[];
+    photoRef?: string;
   } {
-    const next: { name?: string; note?: string | null; tagIds?: TagId[] } = {};
+    const next: { name?: string; note?: string | null; tagIds?: TagId[]; photoRef?: string } = {};
     if (patch.name !== undefined) next.name = patch.name;
     if (patch.note !== undefined) next.note = patch.note;
     if (patch.tagIds !== undefined) next.tagIds = patch.tagIds.map((id) => tagId(id));
+    if (patch.photoRef !== undefined) next.photoRef = patch.photoRef;
     return next;
   }
 

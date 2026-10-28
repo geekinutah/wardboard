@@ -7,6 +7,7 @@ export type MemberProfilePatch = {
   readonly name?: string;
   readonly note?: string | null;
   readonly tagIds?: readonly string[];
+  readonly photoRef?: string;
 };
 
 export type ParseResult<T> =
@@ -17,7 +18,10 @@ const NAME_MAX = 100;
 const NOTE_MAX = 280;
 const TAG_NAME_MAX = 40;
 const TAG_IDS_MAX = 20;
-const PATCH_KEYS = new Set(['name', 'note', 'tagIds']);
+const PATCH_KEYS = new Set(['name', 'note', 'tagIds', 'photoRef']);
+const PHOTO_REF_PATTERN = /^[0-9a-f]{64}\.(jpg|png)$/;
+const PHOTO_REF_MESSAGE =
+  'photoRef must be a 64-character lowercase sha256 hex with a jpg or png extension';
 
 function fail(message: string): { readonly ok: false; readonly message: string } {
   return { ok: false, message };
@@ -72,14 +76,19 @@ export function parseTagIds(value: unknown): ParseResult<readonly string[]> {
   return { ok: true, value: ids };
 }
 
+function parsePhotoRef(value: unknown): ParseResult<string> {
+  if (typeof value !== 'string' || !PHOTO_REF_PATTERN.test(value)) return fail(PHOTO_REF_MESSAGE);
+  return { ok: true, value };
+}
+
 export function parseMemberPatch(value: unknown): ParseResult<MemberProfilePatch> {
   if (!isRecord(value)) return fail('patch must be an object');
   const keys = Object.keys(value);
-  if (keys.length === 0) return fail('patch must include name, note, or tagIds');
+  if (keys.length === 0) return fail('patch must include name, note, tagIds, or photoRef');
   for (const key of keys) {
     if (!PATCH_KEYS.has(key)) return fail('patch has an unknown key');
   }
-  const patch: { name?: string; note?: string | null; tagIds?: readonly string[] } = {};
+  const patch: { name?: string; note?: string | null; tagIds?: readonly string[]; photoRef?: string } = {};
   if (Object.hasOwn(value, 'name')) {
     const name = parseMemberName(value.name);
     if (!name.ok) return name;
@@ -94,6 +103,11 @@ export function parseMemberPatch(value: unknown): ParseResult<MemberProfilePatch
     const tagIds = parseTagIds(value.tagIds);
     if (!tagIds.ok) return tagIds;
     patch.tagIds = tagIds.value;
+  }
+  if (Object.hasOwn(value, 'photoRef')) {
+    const photoRef = parsePhotoRef(value.photoRef);
+    if (!photoRef.ok) return photoRef;
+    patch.photoRef = photoRef.value;
   }
   return { ok: true, value: patch };
 }

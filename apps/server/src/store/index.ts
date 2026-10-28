@@ -338,14 +338,12 @@ export function openStore(db: DatabaseSync, clock: StoreClock): Store {
           if (stored === undefined) {
             throw new Refusal({ code: 'not_found', message: `member ${id} does not exist` });
           }
-          writeMemberProfile(
-            db,
-            stored.id,
-            stored.name,
-            stored.note,
-            patch.tagIds === undefined ? null : stored.tagIds,
-            stamp,
-          );
+          const tags = patch.tagIds === undefined ? null : stored.tagIds;
+          if (patch.photoRef === undefined) {
+            writeMemberProfile(db, stored.id, stored.name, stored.note, tags, stamp);
+          } else {
+            writeMemberProfile(db, stored.id, stored.name, stored.note, tags, stamp, patch.photoRef);
+          }
         });
       } catch (error: unknown) {
         if (error instanceof Refusal) return fail(error.failure);
@@ -511,13 +509,13 @@ export function openStore(db: DatabaseSync, clock: StoreClock): Store {
 function applyMemberProfile(
   ward: Ward,
   id: MemberId,
-  patch: { name?: string; note?: string | null; tagIds?: readonly TagId[] },
+  patch: { name?: string; note?: string | null; tagIds?: readonly TagId[]; photoRef?: string },
 ): StoreResult<Ward> {
   if (ward.members[id] === undefined) {
     return fail({ code: 'not_found', message: `member ${id} does not exist` });
   }
   let next = ward;
-  if (patch.name !== undefined || patch.note !== undefined) {
+  if (patch.name !== undefined || patch.note !== undefined || patch.photoRef !== undefined) {
     const current = next.members[id];
     if (current === undefined) {
       return fail({ code: 'not_found', message: `member ${id} does not exist` });
@@ -530,6 +528,7 @@ function applyMemberProfile(
           ...current,
           ...(patch.name !== undefined ? { name: patch.name } : {}),
           ...(patch.note !== undefined ? { note: patch.note } : {}),
+          ...(patch.photoRef !== undefined ? { photoRef: patch.photoRef } : {}),
         },
       },
     });

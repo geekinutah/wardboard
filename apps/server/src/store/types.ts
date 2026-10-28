@@ -70,10 +70,10 @@ export interface Store {
   ): StoreResult<Proposal>;
   /** Writes acceptance, or clears it when `accepted` is null. Does not change the board version. */
   setProposalAcceptance(id: ProposalId, accepted: ProposalAcceptance | null): StoreResult<Proposal>;
-  /** Replaces name, note, and/or tags for one member. Unknown member is `not_found`; other failures are `invalid`. */
+  /** Replaces name, note, tags, and/or photoRef for one member. Unknown member is `not_found`; other failures are `invalid`. */
   updateMemberProfile(
     id: MemberId,
-    patch: { name?: string; note?: string | null; tagIds?: readonly TagId[] },
+    patch: { name?: string; note?: string | null; tagIds?: readonly TagId[]; photoRef?: string },
   ): StoreResult<Ward>;
   /** Adds a tag through core `createTag`. Duplicate names are `invalid`. */
   createTag(name: string, ids: IdGenerator): StoreResult<{ ward: Ward; tagId: TagId }>;

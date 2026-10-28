@@ -39,6 +39,7 @@ export type MemberPatch = {
   name?: string;
   note?: string | null;
   tagIds?: readonly string[];
+  photoRef?: string;
 };
 
 /** Mirrors server access `User`. The web app does not import that module. */

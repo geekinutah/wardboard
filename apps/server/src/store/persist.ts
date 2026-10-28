@@ -398,10 +398,15 @@ export function writeMemberProfile(
   note: string | null,
   tagIds: readonly string[] | null,
   updatedAt: string,
+  photoRef?: string,
 ): void {
-  const result = db
-    .prepare('UPDATE members SET name = ?, note = ?, updated_at = ? WHERE id = ?')
-    .run(name, note, updatedAt, id);
+  // Omit photo_ref unless this patch sets it. A note-only update must not null the column.
+  const result =
+    photoRef === undefined
+      ? db.prepare('UPDATE members SET name = ?, note = ?, updated_at = ? WHERE id = ?').run(name, note, updatedAt, id)
+      : db
+          .prepare('UPDATE members SET name = ?, note = ?, photo_ref = ?, updated_at = ? WHERE id = ?')
+          .run(name, note, photoRef, updatedAt, id);
   // SQLite may report zero changes when every assigned value is already stored.
   if (changesOf(result) !== 1 && db.prepare('SELECT id FROM members WHERE id = ?').get(id) === undefined) {
     throw new Error(`member ${id} was not updated`);

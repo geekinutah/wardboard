@@ -1,0 +1,238 @@
+@import '../../design/tokens.css';
+
+.wb-photos-preview {
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  padding: 16px;
+  color: var(--wb-ink);
+  font-family: var(--wb-font-sans);
+}
+
+.wb-photos-preview:has(.wb-photo-compare-backdrop) .wb-photos-status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.wb-photos-status,
+.wb-photo-batch-result,
+.wb-photo-upload-alert,
+.wb-photo-upload-success {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.wb-photo-upload-alert {
+  color: var(--wb-vacancy-text);
+}
+
+.wb-photo-upload {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  max-width: 28rem;
+}
+
+.wb-photo-upload-label {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.wb-photo-upload-input {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  color: var(--wb-ink);
+  font: inherit;
+}
+
+.wb-photo-compare-backdrop {
+  position: fixed;
+  z-index: 40;
+  inset: 0;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  overflow: auto;
+  background: rgb(24 33 43 / 55%);
+}
+
+.wb-photo-compare-dialog {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: min(640px, 100%);
+  min-width: 0;
+  max-width: 100%;
+  margin: 0;
+  padding: 24px;
+  border-radius: 14px;
+  background: var(--wb-surface);
+  box-shadow: 0 24px 60px rgb(0 0 0 / 30%);
+  color: var(--wb-ink);
+  font-family: var(--wb-font-sans);
+}
+
+.wb-photo-compare-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 12px;
+  min-width: 0;
+}
+
+.wb-photo-compare-title {
+  margin: 0;
+  min-width: 0;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.wb-photo-compare-step {
+  margin: 0;
+  color: var(--wb-muted);
+  font-size: 13px;
+  line-height: 1.3;
+}
+
+.wb-photo-compare-progress {
+  height: 4px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: var(--wb-line-inner-soft);
+}
+
+.wb-photo-compare-progress-fill {
+  display: block;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--wb-accent);
+}
+
+.wb-photo-compare-figures {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 9.5rem), 1fr));
+  gap: 16px;
+  min-width: 0;
+}
+
+.wb-photo-compare-figure {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 14px;
+  border: 1px solid var(--wb-line);
+  border-radius: 12px;
+}
+
+.wb-photo-compare-figure-incoming {
+  border: 2px solid var(--wb-accent);
+}
+
+.wb-photo-compare-kicker {
+  color: var(--wb-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+}
+
+.wb-photo-compare-kicker-incoming {
+  color: var(--wb-accent);
+}
+
+.wb-photo-compare-portrait,
+.wb-photo-compare-placeholder {
+  display: block;
+  width: min(200px, 100%);
+  max-width: 100%;
+  min-width: 0;
+  height: auto;
+  aspect-ratio: 1;
+  margin-inline: auto;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+.wb-photo-compare-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  color: var(--wb-surface);
+  font-size: clamp(32px, 12vw, 48px);
+  font-weight: 600;
+  line-height: 1;
+}
+
+.wb-photo-compare-caption {
+  margin: 0;
+  color: var(--wb-muted);
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+.wb-photo-compare-skipped {
+  margin: 0;
+  color: var(--wb-muted);
+  font-size: 12px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.wb-photo-compare-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.wb-photo-compare-actions-main {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+}
+
+.wb-photo-compare-actions .wb-button {
+  max-width: 100%;
+}
+
+@media (max-width: 420px) {
+  .wb-photo-compare-dialog {
+    gap: 14px;
+    padding: 16px;
+  }
+
+  .wb-photo-compare-figure {
+    padding: 10px;
+  }
+}
