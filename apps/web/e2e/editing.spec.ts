@@ -1,4 +1,5 @@
 import { expect, test, type Locator, type Page, type TestInfo } from '@playwright/test';
+import { createProposal } from './support/proposals.ts';
 
 /*
  * Desktop editing on the real checkout server (fictional fixture ward).
@@ -39,37 +40,6 @@ async function phoneRendersOnly(page: Page, testInfo: TestInfo): Promise<boolean
   await expect(page.getByRole('searchbox', { name: SEARCH })).toBeVisible();
   await expectNoHorizontalOverflow(page);
   return true;
-}
-
-/** Starts a Draft proposal from Current through the same channel the app uses. */
-async function createProposal(page: Page, name: string): Promise<void> {
-  await page.evaluate(async (proposalName) => {
-    const scheme = location.protocol === 'https:' ? 'wss' : 'ws';
-    await new Promise<void>((resolve, reject) => {
-      const socket = new WebSocket(`${scheme}://${location.host}/api/ws`);
-      socket.onopen = () => {
-        socket.send(
-          JSON.stringify({
-            type: 'createProposal',
-            requestId: 'e2e-editing-create',
-            name: proposalName,
-            rationale: null,
-            source: { kind: 'current' },
-          }),
-        );
-      };
-      socket.onmessage = (event) => {
-        const message = JSON.parse(String(event.data)) as { type?: string; requestId?: string };
-        if (message.requestId !== 'e2e-editing-create') return;
-        socket.close();
-        if (message.type === 'proposalCreated') resolve();
-        else reject(new Error(`createProposal failed: ${JSON.stringify(message)}`));
-      };
-      socket.onerror = () => {
-        reject(new Error('createProposal socket error'));
-      };
-    });
-  }, name);
 }
 
 async function openProposalTab(page: Page, name: string): Promise<void> {

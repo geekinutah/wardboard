@@ -1,9 +1,10 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
+import { createProposal, uniqueProposalName } from './support/proposals.ts';
 
 const STALE_NOTICE =
   'Someone else changed this board first. Your change was not applied; the board has been refreshed.';
 
-/** Four projects share one proposal. The client does not retry a stale add. */
+/** The client does not retry a stale add, so the test resubmits only after a rejection. */
 const MAX_ADD_ATTEMPTS = 8;
 
 async function expectNoHorizontalOverflow(page: Page): Promise<void> {
@@ -68,10 +69,12 @@ async function addPositionUntilCommitted(page: Page, title: string): Promise<voi
   }
 }
 
-test('opens Current, switches to the fixture proposal, zooms to a group, adds a position and sees it committed', async ({
+test('opens Current, switches to its own proposal, zooms to a group, adds a position and sees it committed', async ({
   page,
 }, testInfo) => {
-  const title = `Fictional Chorister ${testInfo.project.name}`;
+  const proposalName = uniqueProposalName('Shell', testInfo);
+  // Unique per repeat: addOutcome treats any existing `Vacant, <title>` article as committed.
+  const title = uniqueProposalName('Fictional Chorister', testInfo);
   await page.goto('/');
   await expect(page.getByRole('status').filter({ hasText: 'Live' })).toBeVisible();
   await expect(page.getByRole('main').getByText('Server: ok')).toBeVisible();
@@ -89,8 +92,11 @@ test('opens Current, switches to the fixture proposal, zooms to a group, adds a 
   await expect(page.getByRole('searchbox', { name: 'Search people, callings, tags' })).toBeVisible();
   await expectNoHorizontalOverflow(page);
 
-  await page.getByRole('tab', { name: 'Spring adjustments' }).click();
-  await expect(page.getByRole('tab', { name: 'Spring adjustments' })).toHaveAttribute('aria-selected', 'true');
+  await createProposal(page, proposalName);
+  const proposal = page.getByRole('tab', { name: proposalName, exact: true });
+  await proposal.scrollIntoViewIfNeeded();
+  await proposal.click();
+  await expect(proposal).toHaveAttribute('aria-selected', 'true');
   await expect(page.getByText('PROPOSED', { exact: true })).toBeVisible();
   await expect(page.getByText('Compared with its baseline')).toBeVisible();
   await expect(page.getByText(/\+ \d+ suggested callings/)).toBeVisible();

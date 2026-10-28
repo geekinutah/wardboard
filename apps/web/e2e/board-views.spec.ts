@@ -1,15 +1,23 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
+import { createProposal, uniqueProposalName } from './support/proposals.ts';
+
+async function openProposal(page: Page, name: string): Promise<void> {
+  const tab = page.getByRole('tab', { name, exact: true });
+  await tab.scrollIntoViewIfNeeded();
+  await tab.click();
+  await expect(tab).toHaveAttribute('aria-selected', 'true');
+}
 
 test('zoom into Aaronic Priesthood and change a counselor oversight on the real server; change persists after reload', async ({
   page,
-}) => {
+}, testInfo) => {
+  const proposalName = uniqueProposalName('Views', testInfo);
   await page.goto('/');
   await expect(page.getByRole('status').filter({ hasText: 'Live' })).toBeVisible();
   await expect(page.getByRole('main').getByText('Server: ok')).toBeVisible();
 
-  // Switch to the fixture proposal
-  await page.getByRole('tab', { name: 'Spring adjustments' }).click();
-  await expect(page.getByRole('tab', { name: 'Spring adjustments' })).toHaveAttribute('aria-selected', 'true');
+  await createProposal(page, proposalName);
+  await openProposal(page, proposalName);
 
   // Double click Young Men / Aaronic Priesthood
   await page.getByRole('article', { name: 'Young Men / Aaronic Priesthood' }).dblclick();
@@ -21,6 +29,7 @@ test('zoom into Aaronic Priesthood and change a counselor oversight on the real 
 
   // Find the Change button in Teachers Quorum
   const teachersSection = page.locator('.wb-aaronic-quorum').filter({ hasText: 'Teachers Quorum' });
+  await expect(teachersSection.locator('.wb-aaronic-overseer')).toContainText('Overseen by First Counselor');
   await teachersSection.getByRole('button', { name: 'Change' }).click();
 
   // Select Second Counselor
@@ -35,9 +44,7 @@ test('zoom into Aaronic Priesthood and change a counselor oversight on the real 
   await page.reload();
   await expect(page.getByRole('status').filter({ hasText: 'Live' })).toBeVisible();
 
-  // Switch to proposal again
-  await page.getByRole('tab', { name: 'Spring adjustments' }).click();
-  await expect(page.getByRole('tab', { name: 'Spring adjustments' })).toHaveAttribute('aria-selected', 'true');
+  await openProposal(page, proposalName);
 
   // Zoom back into Aaronic Priesthood
   await page.getByRole('article', { name: 'Young Men / Aaronic Priesthood' }).dblclick();
