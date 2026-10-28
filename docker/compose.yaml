@@ -11,6 +11,7 @@ services:
     environment:
       # Required, no default: the app's URL as the host/tailnet sees it.
       WARDBOARD_BASE_URL: ${WARDBOARD_BASE_URL}
+      WARDBOARD_INITIAL_ADMIN_LOGIN: ${WARDBOARD_INITIAL_ADMIN_LOGIN}
     volumes:
       # Named volume rather than a host bind mount: SQLite WAL locking stays
       # on the Docker engine's filesystem.
