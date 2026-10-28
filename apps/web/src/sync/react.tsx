@@ -204,20 +204,23 @@ export function useMe(): Me | null {
 
 export function useBaseline(): Board | null {
   const client = useContext(SyncContext);
-  const { proposal } = useSync();
+  const { proposal, status } = useSync();
   const baselineId = proposal === null ? null : proposal.baselineBoardId;
-  const [loaded, setLoaded] = useState<{ id: string; board: Board | null } | null>(null);
+  const [loaded, setLoaded] = useState<{ id: string; board: Board } | null>(null);
 
   useEffect(() => {
-    if (client === null || baselineId === null) return;
+    if (client === null || baselineId === null || status !== 'live') return;
     let cancelled = false;
     void client.fetchBoard(baselineId).then((board) => {
-      if (!cancelled) setLoaded({ id: baselineId, board });
+      // A null result means the socket dropped mid-read. Leave the baseline
+      // unloaded so the next live connection with this same id fetches again.
+      if (cancelled || board === null) return;
+      setLoaded({ id: baselineId, board });
     });
     return () => {
       cancelled = true;
     };
-  }, [client, baselineId]);
+  }, [client, baselineId, status]);
 
   if (baselineId === null || loaded === null || loaded.id !== baselineId) return null;
   return loaded.board;
