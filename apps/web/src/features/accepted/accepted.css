@@ -1,0 +1,342 @@
+@import '../../design/tokens.css';
+
+.wb-accepted {
+  box-sizing: border-box;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  align-items: flex-start;
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 28px 24px 48px;
+  color: var(--wb-ink);
+  font-family: var(--wb-font-sans);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.wb-accepted *,
+.wb-accepted *::before,
+.wb-accepted *::after {
+  box-sizing: border-box;
+}
+
+.wb-accepted button,
+.wb-accepted select {
+  font-family: inherit;
+}
+
+.wb-accepted button:focus-visible,
+.wb-accepted select:focus-visible {
+  outline: 2px solid var(--wb-accent);
+  outline-offset: 2px;
+}
+
+/* Sidebar */
+
+.wb-accepted-nav {
+  flex: 1 1 220px;
+  max-width: 260px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.wb-accepted-back {
+  align-self: flex-start;
+  min-height: 44px;
+  min-width: 44px;
+  margin-bottom: 8px;
+  padding: 8px 12px 8px 0;
+  border: none;
+  background: none;
+  color: var(--wb-accent);
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.wb-accepted-back:hover {
+  color: var(--wb-accent-dark);
+  text-decoration: underline;
+}
+
+.wb-accepted-nav-title {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--wb-muted);
+}
+
+.wb-accepted-entry {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  min-height: 52px;
+  padding: 8px 12px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--wb-ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.wb-accepted-entry[aria-current='page'] {
+  background: var(--wb-accent-soft);
+  border-color: var(--wb-accent);
+}
+
+.wb-accepted-entry-name {
+  font-size: 14px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.wb-accepted-entry-date {
+  font-size: 12px;
+  color: var(--wb-muted);
+}
+
+.wb-accepted-muted {
+  margin: 0;
+  font-size: 13px;
+  color: var(--wb-muted);
+}
+
+/* Main */
+
+.wb-accepted-main {
+  flex: 999 1 560px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.wb-accepted-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.wb-accepted-title {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.wb-accepted-title h1 {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.wb-accepted-sub {
+  font-size: 14px;
+  color: var(--wb-muted);
+}
+
+.wb-accepted-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.wb-accepted-badge-accepted {
+  background: var(--wb-accepted);
+  color: #fff;
+}
+
+.wb-accepted-badge-draft {
+  background: var(--wb-surface);
+  color: var(--wb-ink-2);
+  border: 1px solid var(--wb-removed-border);
+}
+
+.wb-accepted-status {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.wb-accepted-status select {
+  min-width: 200px;
+  height: 44px;
+  padding: 0 12px;
+  border: 1px solid #b9bec4;
+  border-radius: 8px;
+  background: var(--wb-surface);
+  color: var(--wb-ink);
+  font-size: 14px;
+}
+
+.wb-accepted-error {
+  margin: 0;
+  padding: 10px 14px;
+  border: 1px solid var(--wb-vacancy-border);
+  border-radius: 8px;
+  background: var(--wb-vacancy-fill);
+  color: var(--wb-vacancy-text);
+}
+
+.wb-accepted-blocked {
+  padding: 14px 18px;
+  border: 1px solid var(--wb-vacancy-border);
+  border-radius: 12px;
+  background: var(--wb-vacancy-fill);
+  color: var(--wb-vacancy-text);
+}
+
+.wb-accepted-blocked h2 {
+  margin: 0 0 8px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.wb-accepted-blocked ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.wb-accepted-body-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.wb-accepted-body-head h2 {
+  margin: 0 0 4px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.wb-accepted-copy-all {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--wb-line);
+  border-radius: 8px;
+  background: var(--wb-surface);
+  color: var(--wb-ink);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.wb-accepted-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid var(--wb-line);
+  border-radius: 12px;
+  background: var(--wb-surface);
+}
+
+.wb-accepted-group-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.wb-accepted-group-head h3 {
+  margin: 0;
+  min-width: 0;
+  font-size: 16px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.wb-accepted-copy {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  gap: 6px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 8px;
+  background: var(--wb-accent);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.wb-accepted-copy:hover {
+  background: var(--wb-accent-dark);
+}
+
+.wb-accepted-group pre {
+  margin: 0;
+  padding: 14px;
+  border-radius: 8px;
+  background: var(--wb-ground);
+  color: var(--wb-ink);
+  font-family: var(--wb-font-mono);
+  font-size: 13px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.wb-accepted-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 600px) {
+  .wb-accepted {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    padding: 16px 16px 40px;
+  }
+
+  .wb-accepted-nav {
+    flex: none;
+    max-width: none;
+  }
+
+  .wb-accepted-main {
+    flex: none;
+  }
+
+  .wb-accepted-title h1 {
+    font-size: 24px;
+  }
+
+  .wb-accepted-status,
+  .wb-accepted-status select {
+    width: 100%;
+  }
+}
