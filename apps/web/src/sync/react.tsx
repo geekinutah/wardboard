@@ -148,6 +148,12 @@ export function useSync(): SyncState & {
   };
 }
 
+export function useSyncClient(): SyncClient {
+  const client = useContext(SyncContext);
+  if (client === null) throw new Error('useSyncClient must be used within SyncProvider');
+  return client;
+}
+
 export function ConnectionIndicator(): ReactElement {
   const { status } = useSync();
   return (

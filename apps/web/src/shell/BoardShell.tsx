@@ -16,6 +16,7 @@ import type { Me, ProposalView } from '../sync/protocol.ts';
 import { ConnectionIndicator, SyncBanner, useBaseline, useMe, useSync } from '../sync/react.tsx';
 import { EditingLayer, ShellSearch } from './EditingLayer.tsx';
 import { SummaryMode } from './SummaryMode.tsx';
+import { StartProposal, StartProposalTabButton } from './StartProposal.tsx';
 import { renderBoardLevel, useCurrentBoard, useRemovedState } from './board-levels.tsx';
 
 const STATUS_TEXT: Readonly<Record<HealthState, string>> = {
@@ -94,6 +95,7 @@ export function BoardShell({ healthClient }: { healthClient: HealthClient }): Re
   const [camera, dispatch] = useCamera();
   const [selection, setSelection] = useState<ZoomTarget | null>(null);
   const [summaryOpen, setSummaryOpen] = useState(false);
+  const [startProposalOpen, setStartProposalOpen] = useState(false);
   const openedCurrent = useRef(false);
   const fallbackKey = useRef<string | null>(null);
 
@@ -192,6 +194,12 @@ export function BoardShell({ healthClient }: { healthClient: HealthClient }): Re
               )}
             </TabButton>
           ))}
+          <StartProposalTabButton
+            onClick={() => {
+              setSummaryOpen(false);
+              setStartProposalOpen(true);
+            }}
+          />
         </div>
         <ShellSearch
           board={board}
@@ -211,17 +219,28 @@ export function BoardShell({ healthClient }: { healthClient: HealthClient }): Re
       </header>
       <main className="shell-main">
         {summaryOpen && proposal !== null ? (
-          <SummaryMode
-            proposal={proposal}
-            baseline={baseline}
-            board={board}
-            ward={ward}
-            current={currentBoard}
-            importedAt={boards?.current?.importedAt ?? null}
-            onExit={() => {
-              setSummaryOpen(false);
-            }}
-          />
+          <>
+            <StartProposal
+              isOpen={startProposalOpen}
+              onOpen={() => {
+                setStartProposalOpen(true);
+              }}
+              onClose={() => {
+                setStartProposalOpen(false);
+              }}
+            />
+            <SummaryMode
+              proposal={proposal}
+              baseline={baseline}
+              board={board}
+              ward={ward}
+              current={currentBoard}
+              importedAt={boards?.current?.importedAt ?? null}
+              onExit={() => {
+                setSummaryOpen(false);
+              }}
+            />
+          </>
         ) : (
           <>
             {ready ? (
@@ -246,6 +265,15 @@ export function BoardShell({ healthClient }: { healthClient: HealthClient }): Re
                 ) : null}
               </section>
             ) : null}
+            <StartProposal
+              isOpen={startProposalOpen}
+              onOpen={() => {
+                setStartProposalOpen(true);
+              }}
+              onClose={() => {
+                setStartProposalOpen(false);
+              }}
+            />
             <div className="shell-body">
               <SyncBanner />
               <p className="shell-status" role="status" data-state={health}>
