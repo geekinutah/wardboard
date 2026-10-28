@@ -65,7 +65,7 @@ Candidate and discovered work that has not yet been promoted into a task contrac
 | T-073 | Out-of-unit rules: dugout, second-calling, search | 2 — Board domain | done | 1 | none |
 | T-074 | Out-of-Unit card and view | 4 — Desktop board | todo | 0 | office TV: Out-of-Unit tile reads as separate from ward organizations (after integration) |
 | T-035 | Drag and drop with dialogs | 4 — Desktop board | done | 1 | after integration: desktop Chrome drag feel and obvious drop target; iPhone long-press does not start a drag or scroll |
-| T-075 | Sync client methods: proposals, members, access, settings | 4 — Desktop board | in progress | 1 | none |
+| T-075 | Sync client methods: proposals, members, access, settings | 4 — Desktop board | done | 1 | none |
 | T-076 | Board views: Aaronic view and removed markers in the app | 4 — Desktop board | in progress | 1 | none |
 | T-077 | Desktop editing: dugout panel, drag and drop, search | 4 — Desktop board | in progress | 1 | desktop Chrome drag feel and obvious drop target |
 | T-078 | Person inspector and notes in the app | 4 — Desktop board | todo | 0 | none |

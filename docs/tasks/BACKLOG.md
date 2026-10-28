@@ -63,3 +63,4 @@ observation / review finding
 | B-031 | P1 | web dnd / integration | accepted | Needs-approval drop onto a full list sends approvePlacement with a client-invented position id |
 | B-032 | P2 | web dnd | candidate | DnD polish: can't-drop hover state, touch-action on phones, null-label lockout, technical alert text |
 | B-033 | P2 | design tokens | candidate | summary page copy grammar: singular forms for collapsed row and divergence heading |
+| B-034 | P2 | web sync | candidate | overlapping setShowNeedsApproval calls can all resolve ok on one empty-requestId settings broadcast |
