@@ -1,0 +1,359 @@
+@import '../../design/tokens.css';
+
+.wb-summary {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 32px 24px 48px;
+  color: var(--wb-ink);
+  font-family: var(--wb-font-sans);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.wb-summary *,
+.wb-summary *::before,
+.wb-summary *::after {
+  box-sizing: border-box;
+}
+
+/* Back to board */
+
+.wb-summary-back {
+  align-self: flex-start;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 8px 12px 8px 0;
+  border: none;
+  background: none;
+  color: var(--wb-accent);
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.wb-summary-back:hover {
+  color: var(--wb-accent-dark);
+  text-decoration: underline;
+}
+
+.wb-summary-back:focus-visible,
+.wb-summary-download:focus-visible {
+  outline: 2px solid var(--wb-accent);
+  outline-offset: 2px;
+}
+
+/* Header */
+
+.wb-summary-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  min-width: 0;
+}
+
+.wb-summary-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.wb-summary-eyebrow {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--wb-accent);
+}
+
+.wb-summary-title {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+  overflow-wrap: break-word;
+}
+
+.wb-summary-subtitle {
+  font-size: 14px;
+  color: var(--wb-muted);
+}
+
+.wb-summary-download {
+  box-sizing: border-box;
+  min-width: 44px;
+  height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--wb-line);
+  border-radius: 8px;
+  background: var(--wb-surface);
+  color: var(--wb-ink);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.wb-summary-download:hover {
+  background: var(--wb-line-inner-soft);
+}
+
+/* Divergence: what Current changed since the baseline */
+
+.wb-summary-divergence {
+  background: var(--wb-surface);
+  border: 1px solid #ebc9a6;
+  border-radius: 12px;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.wb-summary-divergence-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 14px 18px;
+  background: var(--wb-vacancy-fill);
+  border-bottom: 1px solid #ebc9a6;
+}
+
+.wb-summary-divergence-heading {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #5c3209;
+}
+
+.wb-summary-divergence-note {
+  font-size: 13px;
+  color: #6b4a2a;
+}
+
+.wb-summary-divergence-group {
+  border-top: 1px solid var(--wb-line-inner-soft);
+}
+
+.wb-summary-divergence-group:first-of-type {
+  border-top: none;
+}
+
+.wb-summary-divergence-summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 0 18px;
+  font-size: 14px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.wb-summary-divergence-summary::-webkit-details-marker {
+  display: none;
+}
+
+.wb-summary-sign {
+  flex: none;
+  width: 20px;
+  text-align: center;
+  font-family: var(--wb-font-mono);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.wb-summary-sign-add {
+  color: var(--wb-proposed-text);
+}
+
+.wb-summary-sign-remove {
+  color: var(--wb-vacancy-text);
+}
+
+.wb-summary-divergence-headline {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+}
+
+.wb-summary-divergence-count {
+  font-size: 12px;
+  color: var(--wb-muted);
+}
+
+.wb-summary-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0 18px 14px 48px;
+}
+
+.wb-summary-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-family: var(--wb-font-mono);
+  font-size: 13px;
+}
+
+.wb-summary-line-add {
+  background: #eef3fb;
+}
+
+.wb-summary-line-remove {
+  background: #fbf1e8;
+}
+
+.wb-summary-line-add .wb-summary-line-main {
+  color: var(--wb-proposed-text);
+}
+
+.wb-summary-line-remove .wb-summary-line-main {
+  color: var(--wb-vacancy-text);
+}
+
+.wb-summary-line-note {
+  font-family: var(--wb-font-sans);
+  color: var(--wb-muted);
+}
+
+/* Rationale */
+
+.wb-summary-rationale {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  padding: 18px;
+  background: var(--wb-surface);
+  border: 1px solid var(--wb-line);
+  border-radius: 12px;
+}
+
+.wb-summary-rationale-label {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--wb-muted);
+}
+
+.wb-summary-rationale-text {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--wb-ink-2);
+  overflow-wrap: anywhere;
+}
+
+/* Section grid */
+
+.wb-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
+  gap: 18px;
+}
+
+.wb-summary-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  padding: 18px;
+  background: var(--wb-surface);
+  border: 1px solid var(--wb-line);
+  border-radius: 12px;
+}
+
+.wb-summary-card-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.wb-summary-card-callings {
+  color: var(--wb-proposed-text);
+}
+
+.wb-summary-card-releases {
+  color: var(--wb-ink);
+}
+
+.wb-summary-card-changes {
+  color: var(--wb-ink);
+}
+
+.wb-summary-card-vacancies {
+  color: var(--wb-vacancy-text);
+}
+
+.wb-summary-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+  padding: 10px 0;
+  border-top: 1px solid var(--wb-line-inner-soft);
+  font-size: 14px;
+}
+
+/* The value column takes the remaining row width (zero basis, all growth) so
+   a long value never squeezes the name below its own width and tears words
+   mid-word; `overflow-wrap: anywhere` on both stays as the last resort. */
+
+.wb-summary-row-name {
+  min-width: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.wb-summary-row-what {
+  flex: 1 1 0%;
+  min-width: 0;
+  color: var(--wb-ink-2);
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.wb-summary-none {
+  padding: 10px 0;
+  border-top: 1px solid var(--wb-line-inner-soft);
+  font-size: 14px;
+  color: var(--wb-muted);
+}
+
+/* Footer */
+
+.wb-summary-footer {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--wb-muted);
+}
+
+@media (max-width: 480px) {
+  .wb-summary {
+    padding: 24px 16px 32px;
+    gap: 18px;
+  }
+
+  .wb-summary-title {
+    font-size: 26px;
+  }
+
+  .wb-summary-header {
+    align-items: flex-start;
+  }
+}
