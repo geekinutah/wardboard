@@ -51,6 +51,7 @@ scripts/verify.sh    The single quality gate
 | T-018 | Oversight and accepted summary | T-016 | `packages/core/src/summary/` | Fixed bishop → priests quorum; editable counselor oversight; summary text grouped by overseeing bishopric member, with Elders Quorum presidency (stake presidency) and other Elders Quorum callings separated, per SPEC §3 |
 | T-019 | Search and filters | T-008 | `packages/core/src/search/` | Partial, case-insensitive search over people, callings, tags and groups, scoped to a board or all; filters for vacant, no calling, youth/adult, tag; note bodies never searched; removed members never returned |
 | T-020 | Tags and affinities | T-007 | `packages/core/src/tags/` | Ward-wide member tags; deleting a tag removes it from members and calling preferences everywhere; per-board calling tags and preferences; preference match computation |
+| T-073 | Out-of-unit rules (B-030) | T-008, T-014, T-019 | `packages/core/src/derive/`, `packages/core/src/rules/second-calling.ts`, `packages/core/src/search/search.ts` | Outside callings count as callings: out of the automatic dugout and the no-calling filter; `outOfUnitMembers(ward)`; `secondCallingNoticesWithOutside` |
 
 ## Milestone 3 — Server and collaboration
 
@@ -91,6 +92,7 @@ scripts/verify.sh    The single quality gate
 | T-044 | Aaronic Priesthood view | T-033, T-018 | `apps/web/src/features/aaronic/` | Bishop as fixed linked card in the priests quorum; editable "Overseen by" for counselors (artboard 16) |
 | T-045 | Presentation mode | T-032 | `apps/web/src/features/presentation/` | TV layout (artboard 6); Needs approval shown only when the Admin setting is on; notes never shown |
 | T-046 | Settings | T-030, T-022, T-028, T-072 | `apps/web/src/features/settings/` | People & access, the single presentation setting, backup and restore with validation summary (artboard 18) |
+| T-074 | Out-of-Unit card and view (B-030) | T-073, T-032 | `apps/web/src/features/out-of-unit/` | Read-only tile and view listing members serving outside the ward, with Add to dugout (SPEC §4 item 9) |
 
 ## Milestone 5 — Phone (`apps/web`)
 

@@ -59,4 +59,4 @@ observation / review finding
 | B-027 | P2 | web sync | accepted | `useBaseline` stays null after a dropped in-flight fetch until the baseline id changes |
 | B-028 | P2 | design tokens | candidate | removed summary CSS uses raw artboard hex colors without tokens |
 | B-029 | P2 | design tokens | candidate | artboard 9 removed-card date and hint line absent from shipped RemovedCard |
-| B-030 | P1 | core rules / import / UI | candidate | Members with out-of-unit callings are unavailable for ward callings, but nothing shows or enforces it |
+| B-030 | P1 | core rules / import / UI | accepted | Members with out-of-unit callings are unavailable for ward callings, but nothing shows or enforces it |
