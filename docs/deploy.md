@@ -74,9 +74,10 @@ If the app's Settings offer in-app backup/restore, prefer it for routine backups
 
 ## Restore
 
-Validate the archive before touching the live volume. The pre-restore snapshot preserves the previous working state. Set `<stamp>` to the archive you are restoring.
+Validate the archive before touching the live volume. The pre-restore snapshot preserves the previous working state. Set `<stamp>` to the archive you are restoring. `set -e` stops the script on the first failed command, before the live volume is replaced and before the unpack directory is removed.
 
 ```sh
+set -e
 cd docker && docker compose stop
 ARCHIVE=~/wardboard-backups/wardboard-<stamp>.tar.gz
 TMP=$(mktemp -d)
@@ -85,8 +86,8 @@ docker run --rm -v "$TMP:/data" node:26-slim node -e \
   'const { DatabaseSync } = require("node:sqlite");
    const db = new DatabaseSync("/data/wardboard.sqlite");
    console.log(db.prepare("PRAGMA integrity_check").get());'   # 2. expect { integrity_check: 'ok' }
-docker run --rm -v wardboard_wardboard-data:/data -v "$TMP/pre-restore:/backup" alpine:3 \
-  sh -c 'mkdir -p /backup && tar -czf /backup/wardboard-pre-restore-$(date +%Y%m%d-%H%M%S).tar.gz -C /data .'   # 3. snapshot current state
+docker run --rm -v wardboard_wardboard-data:/data -v ~/wardboard-backups:/backup alpine:3 \
+  sh -c 'mkdir -p /backup && tar -czf /backup/wardboard-pre-restore-$(date +%Y%m%d-%H%M%S).tar.gz -C /data .'   # 3. snapshot current state into ~/wardboard-backups
 IMAGE=$(docker compose config --images)          # 4. swap contents via the app image (the wardboard user exists there)
 docker run --rm --user root --entrypoint sh -v wardboard_wardboard-data:/data -v "$TMP:/new" "$IMAGE" \
   -c 'find /data -mindepth 1 -delete && tar -cf - -C /new . | tar -xf - -C /data && chown -R wardboard /data'
@@ -94,7 +95,7 @@ docker compose up -d                             # 5. verify: healthy, then open
 rm -rf "$TMP"
 ```
 
-Stop at step 2 unless the printed result is `{ integrity_check: 'ok' }`. The check opens `wardboard.sqlite` in the unpacked tree. The archive is the whole `/data` tree, so WAL sidecars beside that file are what the check reads. The swap runs as root via the app image (the `wardboard` user exists there) and `chown`s the volume to that user so the non-root server can write.
+Stop at step 2 unless the printed result is `{ integrity_check: 'ok' }`. The check opens `wardboard.sqlite` in the unpacked tree. The archive is the whole `/data` tree, so WAL sidecars beside that file are what the check reads. Step 3 writes `wardboard-pre-restore-<stamp>.tar.gz` into `~/wardboard-backups`, not into `$TMP`, so the swap of `$TMP` cannot copy that snapshot into `/data`. The swap runs as root via the app image (the `wardboard` user exists there) and `chown`s the volume to that user so the non-root server can write. `rm -rf "$TMP"` removes only the unpack directory.
 
 Verify the container is healthy (`docker compose ps`), then open the app from a tailnet device. Never delete the pre-restore snapshot until the restored app has been verified working from a tailnet device.
 

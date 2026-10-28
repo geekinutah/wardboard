@@ -220,6 +220,39 @@ describe('docs/deploy.md', () => {
     assert.match(after.slice(up), /verif/i, 'a verification sentence must appear after docker compose up -d');
   });
 
+  it('the pre-restore snapshot is outside the temp dir and the swap source', () => {
+    const restore = fenced(section(read('docs/deploy.md'), 'Restore'));
+    const snapshotAt = restore.indexOf('tar -czf /backup/wardboard-pre-restore');
+    assert.ok(snapshotAt !== -1, 'Restore commands are missing the pre-restore snapshot tar');
+    const snapshotCmd = commandAt(restore, snapshotAt);
+    const snapMount = /-v\s+"?([^":\s]+):\/backup"?/.exec(snapshotCmd);
+    assert.ok(snapMount, `pre-restore docker run does not mount a host path at /backup:\n${snapshotCmd}`);
+    const snapHost = snapMount[1];
+    assert.ok(
+      snapHost === '~/wardboard-backups' || snapHost === '$HOME/wardboard-backups',
+      `pre-restore snapshot path is ${snapHost}; it must be ~/wardboard-backups (not under $TMP)`,
+    );
+
+    const swapAt = restore.indexOf('mindepth 1 -delete');
+    assert.ok(swapAt !== -1, 'Restore commands are missing the volume swap');
+    const swapCmd = commandAt(restore, swapAt);
+    const swapMount = /-v\s+"?([^":\s]+):\/new"?/.exec(swapCmd);
+    assert.ok(swapMount, `swap does not mount the unpack directory at /new:\n${swapCmd}`);
+    const swapHost = swapMount[1];
+    assert.equal(swapHost, '$TMP', 'swap source must be the unpack directory $TMP only');
+    assert.ok(
+      snapHost !== swapHost && !snapHost.startsWith(`${swapHost}/`) && !snapHost.includes('$TMP'),
+      `pre-restore snapshot ${snapHost} is inside the swap source ${swapHost}`,
+    );
+
+    const setE = restore.search(/(^|\n)set -e(?:\s|$)/);
+    const up = restore.indexOf('docker compose up -d');
+    const rm = restore.indexOf('rm -rf "$TMP"');
+    assert.ok(setE !== -1, 'restore script is missing set -e');
+    assert.ok(up !== -1 && rm !== -1, 'restore script must still start the app and remove only the temp dir');
+    assert.ok(setE < up && setE < rm, 'set -e must precede docker compose up -d and rm -rf "$TMP"');
+  });
+
   it('the runbook re-owns volume contents for the app user', () => {
     const restore = section(read('docs/deploy.md'), 'Restore');
     const swap = restore.indexOf('mindepth 1 -delete');
