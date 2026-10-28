@@ -64,3 +64,4 @@ Candidate and discovered work that has not yet been promoted into a task contrac
 | T-047 | Phone shell and board switcher | 5 — Phone | done | 1 | iPhone: bottom tabs clear the home indicator; switcher sheet comfortable one-handed (after integration) |
 | T-073 | Out-of-unit rules: dugout, second-calling, search | 2 — Board domain | todo | 0 | none |
 | T-074 | Out-of-Unit card and view | 4 — Desktop board | todo | 0 | office TV: Out-of-Unit tile reads as separate from ward organizations (after integration) |
+| T-035 | Drag and drop with dialogs | 4 — Desktop board | todo | 0 | desktop Chrome drag feel (after integration) |
