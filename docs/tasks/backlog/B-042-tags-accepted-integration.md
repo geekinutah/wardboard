@@ -2,9 +2,9 @@
 
 **Priority:** P1  
 **Area:** server channel / web sync / shell integration  
-**State:** candidate  
+**State:** accepted  
 **Found:** 2026-10-28, controller while writing T-039 and T-043  
-**Promoted to:** —
+**Promoted to:** T-086, T-087 (shell integration tasks follow when T-087 is done)
 
 ## Finding
 

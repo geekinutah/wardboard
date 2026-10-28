@@ -1,7 +1,7 @@
 # T-083: Out-of-Unit tile, view and drags on the board
 
 **Milestone:** 4 — Desktop board (integration)
-**Depends on:** **T-074 (todo)** and T-077. Starts only after both are `done`.
+**Depends on:** T-074 and T-077, both `done`.
 
 **Spec refs:** SPEC.md §4 item 9 (Out-of-Unit area: read-only, same on every board, drag to dugout with no warning), §3 (placing them prompts the second-calling confirmation). Decision record B-030.
 
@@ -40,7 +40,7 @@ Must not change: `features/**` (including canvas, ward-overview, out-of-unit), s
 | `dragging Kai into a vacancy asks for a second calling and sends addToList` | | outside callings not counted |
 | `dragging Kai to the dugout sends addToDugout with no dialog` | | warning shown |
 | `Current: no Add to dugout and no drag` | | read-only ignored |
-`e2e/out-of-unit-board.spec.ts` (real server; the dev seed has Hal Testwell and Kai Fictional with outside callings): `open Out-of-Unit and add Kai to the dugout`.
+`e2e/out-of-unit-board.spec.ts` (real server; the dev seed has Hal Testwell and Kai Fictional with outside callings): `open Out-of-Unit and add Kai to the dugout`. Per T-084, the test edits only a Draft proposal it creates itself, named with `uniqueProposalName` from `apps/web/e2e/support/proposals.ts` (import the helper; do not edit it). It never edits `Spring adjustments` or Current.
 
 ## Edge cases (each needs a test)
 Covered above: none serving outside, read-only, both drag targets.
