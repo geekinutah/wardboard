@@ -31,6 +31,7 @@ May change:
 - `apps/web/src/sync/client.ts`, `apps/web/src/sync/protocol.ts`
 - `apps/web/src/sync/tag-status.test.ts` (new; fake `WebSocketLike` pattern from `client.test.ts`)
 - `apps/web/src/sync/tag-status.node.test.ts` (new; real server, pattern from `requests.node.test.ts`)
+- `apps/web/src/sync/session.test.ts`: **only** to add one `acceptedAt: null,` line to the expected `boards.proposals[0]` in `ward push replaces ward; proposalChanged updates only the subscribed board's proposal; settings push stored`. That test's exact `toEqual` breaks because the reader now always sets the field. Keep the assertion an exact `toEqual`. No other edit. (Amended in round 2.)
 
 Must not change:
 - Existing tests, `apps/server/**`, `packages/**`, `features/**`, `shell/**`.
@@ -42,7 +43,7 @@ New dependencies allowed: none.
 |---|---|---|---|
 | 1 | Fake-socket tests | `pnpm --filter web exec vitest run src/sync/tag-status.test.ts` | all pass |
 | 2 | Real-server tests | `pnpm --filter web exec vitest run src/sync/tag-status.node.test.ts` | all pass |
-| 3 | Existing tests untouched | `git diff origin/main --stat -- 'apps/web/src/**/*.test.ts' 'apps/web/src/**/*.test.tsx' ':!apps/web/src/sync/tag-status.test.ts' ':!apps/web/src/sync/tag-status.node.test.ts'` | empty output |
+| 3 | Existing tests untouched except the allowed field | `git diff origin/main -- 'apps/web/src/**/*.test.ts' 'apps/web/src/**/*.test.tsx' ':!apps/web/src/sync/tag-status.test.ts' ':!apps/web/src/sync/tag-status.node.test.ts'` | only `session.test.ts`, one added line `acceptedAt: null,`, and no removed lines |
 | 4 | Scope | `git diff origin/main --name-only` | only the paths under "May change" |
 | 5 | Gate | `./scripts/verify.sh` | exits 0 |
 
