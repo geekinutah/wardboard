@@ -52,7 +52,7 @@ Candidate and discovered work that has not yet been promoted into a task contrac
 | T-030 | App shell | 4 — Desktop board | done | 2 | desktop: add a position from another window, confirm zoom/pan unchanged |
 | T-036 | Dugout panel | 4 — Desktop board | done | 1 | none |
 | T-038 | Search and filters UI | 4 — Desktop board | done | 1 | none |
-| T-072 | Access management over the operation channel | 4 — Desktop board | in progress | 1 | after T-046 + T-063: invite a counselor, revoke, confirm their browser disconnects |
+| T-072 | Access management over the operation channel | 4 — Desktop board | done | 1 | after T-046 + T-063: invite a counselor, revoke, confirm their browser disconnects |
 | T-042 | Proposal summary page | 4 — Desktop board | in progress | 1 | none |
 | T-052 | PDF extraction harness | 6 — Import and photos | in progress | 1 | none |
 | T-037 | Person inspector and notes | 4 — Desktop board | todo | 0 | none |
