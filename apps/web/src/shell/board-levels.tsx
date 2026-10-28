@@ -5,8 +5,10 @@ import {
   removedState,
   type AddAssignmentRequest,
   type AddCallingGroupRequest,
+  outOfUnitMembers,
   type Board,
   type BoardGroupId,
+  type MemberId,
   type Proposal,
   type RemovedState,
   type SetOversightRequest,
@@ -15,11 +17,16 @@ import {
 import type { Camera, CameraAction, ZoomTarget } from '../features/canvas/camera.ts';
 import { AaronicView } from '../features/aaronic/AaronicView.tsx';
 import { GroupDetail } from '../features/group-view/GroupDetail.tsx';
+import { OutOfUnitTile } from '../features/out-of-unit/OutOfUnitTile.tsx';
+import { OutOfUnitView } from '../features/out-of-unit/OutOfUnitView.tsx';
 import { OrganizationView } from '../features/org-view/OrganizationView.tsx';
 import { removedRows, type RemovedRows } from '../features/removed/rows.ts';
 import { WardOverview } from '../features/ward-overview/WardOverview.tsx';
 import type { ProposalView } from '../sync/protocol.ts';
 import { useSync } from '../sync/react.tsx';
+
+/** The zoom-target id of the Out-of-Unit area; it is not a board group. */
+export const OUT_OF_UNIT_ID = 'out-of-unit';
 
 export interface BoardLevelContext {
   readonly board: Board;
@@ -32,6 +39,7 @@ export interface BoardLevelContext {
   readonly onAddGroup: (request: AddCallingGroupRequest) => void;
   readonly onSetOversight: (request: SetOversightRequest) => void;
   readonly onCameraChange: (action: CameraAction) => void;
+  readonly onAddToDugout?: ((memberId: MemberId) => void) | undefined;
   readonly onOpenBishopric?: (() => void) | undefined;
 }
 
@@ -43,11 +51,37 @@ function overviewSelection(selection: ZoomTarget | null): BoardGroupId | undefin
 export function renderBoardLevel(levelCamera: Camera, ctx: BoardLevelContext): ReactNode {
   if (levelCamera.level === 1) {
     return (
-      <WardOverview
+      <>
+        <WardOverview
+          board={ctx.board}
+          ward={ctx.ward}
+          baseline={ctx.baseline}
+          selectedId={overviewSelection(ctx.selection)}
+        />
+        {outOfUnitMembers(ctx.ward).length === 0 ? null : (
+          <div
+            className="shell-out-of-unit"
+            style={{ padding: '24px 0' }}
+            data-zoom-target={`org:${OUT_OF_UNIT_ID}`}
+          >
+            <OutOfUnitTile
+              ward={ctx.ward}
+              onOpen={() => {
+                ctx.onCameraChange({ type: 'enter', target: { kind: 'org', id: OUT_OF_UNIT_ID } });
+              }}
+            />
+          </div>
+        )}
+      </>
+    );
+  }
+  if (levelCamera.level === 2 && levelCamera.orgId === OUT_OF_UNIT_ID) {
+    return (
+      <OutOfUnitView
         board={ctx.board}
         ward={ctx.ward}
-        baseline={ctx.baseline}
-        selectedId={overviewSelection(ctx.selection)}
+        readOnly={ctx.readOnly}
+        onAddToDugout={ctx.onAddToDugout ?? (() => undefined)}
       />
     );
   }

@@ -18,7 +18,7 @@ import { ConnectionIndicator, SyncBanner, useBaseline, useMe, useSync, useSyncCl
 import { EditingLayer, ShellSearch } from './EditingLayer.tsx';
 import { SummaryMode } from './SummaryMode.tsx';
 import { StartProposal, StartProposalTabButton } from './StartProposal.tsx';
-import { renderBoardLevel, useCurrentBoard, useRemovedState } from './board-levels.tsx';
+import { OUT_OF_UNIT_ID, renderBoardLevel, useCurrentBoard, useRemovedState } from './board-levels.tsx';
 import { PresentMode } from './PresentMode.tsx';
 import { SettingsLink } from './SettingsRoute.tsx';
 import { PersonPanel } from './PersonPanel.tsx';
@@ -69,7 +69,7 @@ function safeCamera(board: Board, camera: Camera): Camera {
     }
     if (next.level === 2) {
       const orgId = next.orgId;
-      if (orgId !== null && Object.hasOwn(board.boardGroups, orgId)) return next;
+      if (orgId !== null && (orgId === OUT_OF_UNIT_ID || Object.hasOwn(board.boardGroups, orgId))) return next;
       next = cameraReducer(next, { type: 'up' });
       continue;
     }
@@ -375,6 +375,7 @@ export function BoardShell({ healthClient }: { healthClient: HealthClient }): Re
                             onAddPosition,
                             onAddGroup,
                             onSetOversight: (r) => void send('setOversight', r),
+                            onAddToDugout: (memberId) => void send('addToDugout', { memberId }),
                             onCameraChange: dispatch,
                           })
                         }
