@@ -31,6 +31,7 @@ COPY package.json pnpm-workspace.yaml pnpm-lock.yaml .npmrc ./
 COPY apps/server/package.json ./apps/server/package.json
 COPY apps/web/package.json ./apps/web/package.json
 COPY packages/core/package.json ./packages/core/package.json
+COPY packages/importer/package.json ./packages/importer/package.json
 RUN pnpm install --prod --frozen-lockfile
 
 # The server and core run as TypeScript directly under Node (type stripping),

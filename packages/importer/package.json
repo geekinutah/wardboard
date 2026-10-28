@@ -1,0 +1,17 @@
+{
+  "name": "@wardboard/importer",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json",
+    "lint": "eslint . --max-warnings 0"
+  },
+  "devDependencies": {
+    "vitest": "5.0.5"
+  }
+}
