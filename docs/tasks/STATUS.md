@@ -1,6 +1,6 @@
 # Task status
 
-Candidate and discovered work that has not yet been promoted into a task contract is tracked in [`BACKLOG.md`](./BACKLOG.md). Planned roadmap tasks and their dependencies are in [`PLAN.md`](./PLAN.md); a task appears here once the controller writes its contract.
+Candidate and discovered work that has not yet been promoted into a task contract is tracked in [`BACKLOG.md`](./BACKLOG.md). Planned roadmap tasks and their dependencies are in [`PLAN.md`](./PLAN.md); the shell-integration wave (T-075–T-083) is in [`integration-plan.md`](./integration-plan.md); a task appears here once the controller writes its contract.
 
 | Task | Title | Milestone | State | Rounds | Human checks pending |
 |---|---|---|---|---|---|
@@ -65,3 +65,12 @@ Candidate and discovered work that has not yet been promoted into a task contrac
 | T-073 | Out-of-unit rules: dugout, second-calling, search | 2 — Board domain | done | 1 | none |
 | T-074 | Out-of-Unit card and view | 4 — Desktop board | todo | 0 | office TV: Out-of-Unit tile reads as separate from ward organizations (after integration) |
 | T-035 | Drag and drop with dialogs | 4 — Desktop board | done | 1 | after integration: desktop Chrome drag feel and obvious drop target; iPhone long-press does not start a drag or scroll |
+| T-075 | Sync client methods: proposals, members, access, settings | 4 — Desktop board | todo | 0 | none |
+| T-076 | Board views: Aaronic view and removed markers in the app | 4 — Desktop board | todo | 0 | none |
+| T-077 | Desktop editing: dugout panel, drag and drop, search | 4 — Desktop board | todo | 0 | desktop Chrome drag feel and obvious drop target |
+| T-078 | Person inspector and notes in the app | 4 — Desktop board | todo | 0 | none |
+| T-079 | Read-only Current bar and Start proposal in the app | 4 — Desktop board | todo | 0 | none |
+| T-080 | Settings page in the app | 4 — Desktop board | todo | 0 | Mac Studio: download a backup from Settings and restore it (T-063 drill) |
+| T-081 | Presentation mode in the app | 4 — Desktop board | todo | 0 | office TV: present from the laptop; readable; Exit by keyboard |
+| T-082 | Proposal summary page in the app | 4 — Desktop board | todo | 0 | none |
+| T-083 | Out-of-Unit tile, view and drags on the board | 4 — Desktop board | todo | 0 | office TV: Out-of-Unit tile reads as separate |
