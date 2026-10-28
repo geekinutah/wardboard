@@ -80,3 +80,4 @@ observation / review finding
 | B-048 | P3 | web shell tests | candidate | No test covers AcceptedMode's stale getProposal reply guard |
 | B-049 | P2 | server members / web sync | candidate | Concurrent member tag edits can lose one editor's change |
 | B-050 | P3 | web shell | candidate | Tag library keeps refetching usage for a cancelled dialog's tag |
+| B-051 | P3 | web photos | candidate | A failed replacement upload renders its alert under the open comparison dialog |
