@@ -101,7 +101,7 @@ Existing members who are not chosen:
 - Exact-key member of a `report_conflict`, or a member who only resembles a conflict key: do not change `removedDate`, note, tags, photo, category, or external callings.
 
 ### Placements
-For a report row that is not a `report_conflict` and has an occupant, place the chosen member on the planned position. A vacant report row, a conflict row, and a kept position with no report row are vacant. Remove approvals whose member is not the placement. Leave oversight and dugout inclusions unchanged. Current keeps its id and kind. `version` becomes `expectedVersion + 1`.
+For a report row that is not a `report_conflict` and has an occupant, place the chosen member on the planned position. A vacant report row, a conflict row, and a kept position with no report row are vacant. A member is placed at most once in one list assignment, because `createBoard` rejects `list_duplicate_member`. When a later row of that same list would place a member already placed in it, that later position stays vacant. Do not make a second assignment to hold the repeat, and do not change `packages/core`. The same member may still hold a different assignment. The fictional Ward Missionaries report has two `Ward Missionary` rows for `Wrenford, Una`; the second stays vacant so the fixture replace can commit. Remove approvals whose member is not the placement. Leave oversight and dugout inclusions unchanged. Current keeps its id and kind. `version` becomes `expectedVersion + 1`.
 
 `importVersion` is the three `reportFingerprint` hex strings joined by `.`, organizations, without-callings, out-of-unit. `importedAt` is `clock().toISOString()`. The clock and id generator are the server's injected ones. Do not read `Date.now` or `Math.random`.
 
@@ -166,7 +166,8 @@ Route tests use the real server, the same way `apps/server/test/backup/routes.te
 | `a vacant report row keeps the position and clears the occupant` | existing lineage id remains, placement absent | deleting the position |
 | `a custom position absent from the report is kept and vacated` | origin custom, title not in the report → position remains, placement absent | deleting the custom position |
 | `an unfamiliar title adds one single position` | report title with no assignment → one new single position under the matching calling group; old lineage ids remain | dropping the row; changing an old lineage |
-| `two new rows of one title add a list` | no existing assignment, two rows → one list assignment, two positions, same title | two single assignments |
+| `two new rows of one title add a list` | no existing assignment, two different occupants → one list assignment, two positions, same title, both occupied | two single assignments |
+| `a repeated name fills only the first list row` | two rows of one new title with the same occupant → one list, two positions, only the first occupied | placing that member on both positions; creating a second assignment |
 | `a single assignment is not widened` | one single assignment and two report rows → the single stays one position and a new list holds the extra row | setting the single assignment to two positions |
 | `aaronic report rows use the aaronic board group` | current group key `aaronic_priesthood` named `Young Men / Aaronic Priesthood`, report org `Aaronic Priesthood Quorums` → the new calling group is parented to that key | creating a second board group |
 | `proposals are untouched` | a proposal with its own placement and an accepted summary → `loadProposal` deep-equals after replace | rewriting the baseline or the summary |
@@ -178,7 +179,7 @@ Route tests use the real server, the same way `apps/server/test/backup/routes.te
 | `the log is counts only` | the success line matches the counts and contains no fixture name; `console.*` is not called | logging a decision |
 
 ## Edge cases (each needs a test)
-Covered above: unique match, namesakes, returning member, declined return, earlier removed date, report conflict, missing category, youth category, vacancy, custom position, unfamiliar title, list rows, single assignment, board-group key, proposals, stale version, duplicate report, inconsistent dates, editor, revoked session, anonymous, origin, preview leakage, websocket publish, log leakage.
+Covered above: unique match, namesakes, returning member, declined return, earlier removed date, report conflict, missing category, youth category, vacancy, custom position, unfamiliar title, list rows, a repeated list occupant, single assignment, board-group key, proposals, stale version, duplicate report, inconsistent dates, editor, revoked session, anonymous, origin, preview leakage, websocket publish, log leakage.
 
 ## Human checks
 none
