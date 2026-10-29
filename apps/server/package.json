@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@wardboard/core": "workspace:*",
+    "@wardboard/importer": "workspace:*",
     "ws": "8.22.0"
   },
   "devDependencies": {

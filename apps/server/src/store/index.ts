@@ -28,6 +28,7 @@ import {
   findCurrentId,
   insertTag,
   listProposalSummaries,
+  MissingCurrentError,
   nextTabOrder,
   readBoard,
   readBoardMeta,
@@ -35,10 +36,12 @@ import {
   readProposal,
   readShowNeedsApproval,
   readWard,
+  StaleCurrentError,
   renameStoredTag,
   replaceBoardContents,
   replaceProposalBoard,
   withImmediateTransaction,
+  writeCurrentReplacement,
   writeInitialization,
   writeMemberProfile,
   writeNeedsApproval,
@@ -502,6 +505,37 @@ export function openStore(db: DatabaseSync, clock: StoreClock): Store {
       withImmediateTransaction(db, () => {
         writeShowNeedsApproval(db, value);
       });
+    },
+
+    replaceCurrent(input) {
+      const ward = createWard(input.ward);
+      if (!ward.ok) return invalidResult(ward.errors);
+      if (input.current.kind !== 'current') return invalid('current.kind must be current');
+      const current = createBoard(input.current, ward.value);
+      if (!current.ok) return invalidResult(current.errors);
+      try {
+        withImmediateTransaction(db, () => {
+          writeCurrentReplacement(
+            db,
+            ward.value,
+            current.value,
+            input.expectedVersion,
+            input.importVersion,
+            input.importedAt,
+          );
+        });
+      } catch (error: unknown) {
+        if (error instanceof StaleCurrentError) {
+          return fail({ code: 'stale', message: error.message, currentVersion: error.currentVersion });
+        }
+        if (error instanceof MissingCurrentError) {
+          return fail({ code: 'no_current', message: error.message });
+        }
+        return invalid(errorMessage(error));
+      }
+      const stored = readCurrentRecord(db);
+      if (stored === null) return fail({ code: 'no_current', message: 'a current board does not exist' });
+      return ok({ ward: readWard(db), current: stored });
     },
   };
 }

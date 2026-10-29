@@ -11,6 +11,7 @@ import {
   tailscaleIdentityProvider,
   type IdentityProvider,
 } from './identity/index.ts';
+import { handleImportRequest } from './import/index.ts';
 import { createPhotoStore, handlePhotoRequest, type PhotoStore } from './photos/index.ts';
 import { openStore } from './store/index.ts';
 import { createOperationChannel, type OperationChannel } from './ws/channel.ts';
@@ -20,6 +21,7 @@ export type StartServerOptions = {
   clock?: () => Date;
   ids?: () => string;
   maxBackupBytes?: number;
+  log?: (line: string) => void;
 };
 
 function parseIpv6(host: string): number[] | null {
@@ -265,6 +267,13 @@ async function handleRequest(
     maxBackupBytes: number;
     onRestored: () => void;
   },
+  imports: {
+    store: ReturnType<typeof openStore>;
+    channel: OperationChannel;
+    clock: () => Date;
+    ids: () => string;
+    log?: (line: string) => void;
+  },
 ): Promise<void> {
   const method = req.method ?? 'GET';
   if (req.url === undefined) {
@@ -323,6 +332,24 @@ async function handleRequest(
       appOrigin: new URL(config.baseUrl).origin,
       listenOrigin,
       onRestored: backup.onRestored,
+    });
+    return;
+  }
+
+  if (pathname === '/api/import/preview' || pathname === '/api/import/replace') {
+    await handleImportRequest({
+      req,
+      res,
+      method,
+      pathname,
+      role: resolved.user.role,
+      appOrigin: new URL(config.baseUrl).origin,
+      listenOrigin,
+      store: imports.store,
+      channel: imports.channel,
+      clock: imports.clock,
+      ids: imports.ids,
+      ...(imports.log === undefined ? {} : { log: imports.log }),
     });
     return;
   }
@@ -391,19 +418,36 @@ export async function startServer(
     const photos = createPhotoStore(config.dataDir);
     const appOrigin = new URL(config.baseUrl).origin;
     const maxBackupBytes = options?.maxBackupBytes ?? MAX_BACKUP_BYTES;
+    const log = options?.log;
     let listenOrigin = '';
     channel = createOperationChannel({ store, access, clock, ids });
     const operationChannel = channel;
 
     server = createServer((req, res) => {
-      void handleRequest(req, res, config, provider, access, listenOrigin, photos, {
-        db,
-        clock,
-        maxBackupBytes,
-        onRestored: () => {
-          operationChannel.closeAll(4000);
+      void handleRequest(
+        req,
+        res,
+        config,
+        provider,
+        access,
+        listenOrigin,
+        photos,
+        {
+          db,
+          clock,
+          maxBackupBytes,
+          onRestored: () => {
+            operationChannel.closeAll(4000);
+          },
         },
-      }).catch(() => {
+        {
+          store,
+          channel: operationChannel,
+          clock,
+          ids,
+          ...(log === undefined ? {} : { log }),
+        },
+      ).catch(() => {
         if (res.headersSent || res.writableEnded) {
           res.destroy();
           return;

@@ -47,6 +47,8 @@ export type OperationChannel = {
   ): void;
   /** Close every open socket. The server keeps accepting new connections. */
   closeAll(code: number): void;
+  /** Announces the replaced ward and current board to open sockets. */
+  publishImport(): void;
   terminate(): void;
 };
 
@@ -205,6 +207,14 @@ export function createOperationChannel(deps: {
 
   function broadcastWard(ward: Ward): void {
     broadcastOpen(JSON.stringify({ type: 'ward', ward }));
+  }
+
+  function publishImport(): void {
+    const current = store.loadCurrent();
+    if (current === null) return;
+    broadcastWard(store.loadWard());
+    broadcastBoards();
+    broadcast(current.board, '', '');
   }
 
   function broadcastSettings(showNeedsApproval: boolean): void {
@@ -1149,6 +1159,7 @@ export function createOperationChannel(deps: {
         }
       }
     },
+    publishImport,
     terminate() {
       for (const socket of [...wss.clients]) {
         socket.terminate();

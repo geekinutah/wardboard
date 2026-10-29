@@ -59,6 +59,23 @@ export class AlreadyInitializedError extends Error {
   }
 }
 
+export class StaleCurrentError extends Error {
+  readonly currentVersion: number;
+
+  constructor(currentVersion: number) {
+    super(`current board version is ${String(currentVersion)}`);
+    this.name = 'StaleCurrentError';
+    this.currentVersion = currentVersion;
+  }
+}
+
+export class MissingCurrentError extends Error {
+  constructor() {
+    super('a current board does not exist');
+    this.name = 'MissingCurrentError';
+  }
+}
+
 export type BoardMeta = {
   id: string;
   kind: BoardKind;
@@ -301,6 +318,99 @@ export function writeInitialization(
     updatedAt: stamp,
   });
   insertBoardContents(db, current);
+}
+
+/**
+ * Replaces members and the current board inside the caller's transaction.
+ * `created_at` stores importedAt because readCurrentRecord maps that column to it.
+ */
+export function writeCurrentReplacement(
+  db: DatabaseSync,
+  ward: Ward,
+  current: Board,
+  expectedVersion: number,
+  importVersion: string,
+  importedAt: string,
+): void {
+  const row = db.prepare("SELECT id, version FROM boards WHERE kind = 'current'").get();
+  if (row === undefined) throw new MissingCurrentError();
+  const id = text(row, 'id');
+  const version = integer(row, 'version');
+  if (version !== expectedVersion) throw new StaleCurrentError(version);
+  if (id !== current.id) throw new Error(`current board id is ${id}`);
+
+  const existing = new Set<string>();
+  for (const member of db.prepare('SELECT id FROM members').all()) existing.add(text(member, 'id'));
+  const updateMember = db.prepare(
+    `UPDATE members
+     SET name = ?, photo_ref = ?, category = ?, note = ?, needs_approval = ?, removed_date = ?, updated_at = ?
+     WHERE id = ?`,
+  );
+  const insertMember = db.prepare(
+    `INSERT INTO members (
+       id, name, photo_ref, category, note, needs_approval, removed_date, created_at, updated_at
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+  );
+  const deleteTags = db.prepare('DELETE FROM member_tags WHERE member_id = ?');
+  const insertTagLink = db.prepare(
+    'INSERT INTO member_tags (member_id, tag_id, sort_order) VALUES (?, ?, ?)',
+  );
+  const deleteExternal = db.prepare('DELETE FROM external_callings WHERE member_id = ?');
+  const insertExternal = db.prepare(
+    'INSERT INTO external_callings (id, member_id, unit, title, sort_order) VALUES (?, ?, ?, ?, ?)',
+  );
+  for (const member of Object.values(ward.members)) {
+    if (existing.has(member.id)) {
+      const result = updateMember.run(
+        member.name,
+        member.photoRef,
+        member.category,
+        member.note,
+        bit(member.needsApproval),
+        member.removedDate,
+        importedAt,
+        member.id,
+      );
+      if (changesOf(result) !== 1 && db.prepare('SELECT id FROM members WHERE id = ?').get(member.id) === undefined) {
+        throw new Error(`member ${member.id} was not updated`);
+      }
+    } else {
+      insertMember.run(
+        member.id,
+        member.name,
+        member.photoRef,
+        member.category,
+        member.note,
+        bit(member.needsApproval),
+        member.removedDate,
+        importedAt,
+        importedAt,
+      );
+    }
+    deleteTags.run(member.id);
+    for (let index = 0; index < member.tagIds.length; index += 1) {
+      const tag = member.tagIds[index];
+      if (tag === undefined) continue;
+      insertTagLink.run(member.id, tag, index);
+    }
+    deleteExternal.run(member.id);
+    for (let index = 0; index < member.externalCallings.length; index += 1) {
+      const calling = member.externalCallings[index];
+      if (calling === undefined) continue;
+      insertExternal.run(`${member.id}:external:${String(index)}`, member.id, calling.unit, calling.title, index);
+    }
+  }
+
+  deleteBoardContents(db, current.id);
+  insertBoardContents(db, current);
+  const replaced = db
+    .prepare(
+      `UPDATE boards
+       SET version = ?, import_version = ?, created_at = ?, updated_at = ?
+       WHERE id = ? AND kind = 'current' AND version = ?`,
+    )
+    .run(current.version, importVersion, importedAt, importedAt, current.id, expectedVersion);
+  if (changesOf(replaced) !== 1) throw new Error(`current board ${current.id} was not replaced`);
 }
 
 export function writeProposal(db: DatabaseSync, proposal: Proposal): void {

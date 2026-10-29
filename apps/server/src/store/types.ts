@@ -97,4 +97,15 @@ export interface Store {
   loadSettings(): { showNeedsApproval: boolean };
   /** Writes the `showNeedsApproval` settings row as a JSON boolean. */
   setShowNeedsApproval(value: boolean): void;
+  /**
+   * Replaces ward members and the current board after createWard and createBoard
+   * succeed. Rechecks expectedVersion inside the transaction before any write.
+   */
+  replaceCurrent(input: {
+    ward: Ward;
+    current: Board;
+    expectedVersion: number;
+    importVersion: string;
+    importedAt: string;
+  }): StoreResult<{ ward: Ward; current: CurrentRecord }>;
 }

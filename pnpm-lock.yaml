@@ -193,6 +193,9 @@ importers:
       '@wardboard/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@wardboard/importer':
+        specifier: workspace:*
+        version: link:../../packages/importer
       ws:
         specifier: 8.22.0
         version: 8.22.0
