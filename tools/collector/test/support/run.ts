@@ -4,6 +4,7 @@ import { join, relative } from 'node:path';
 import { collect, type CollectOptions, type CollectResult } from '../../src/collect.ts';
 import { parseConfig, type DirectoryConfig } from '../../src/config.ts';
 import type { DirectoryServer } from './directory-server.ts';
+import { observeRequests } from './observe.ts';
 
 export const FIXTURE_CONFIG_PATH = new URL('../fixtures/directory.json', import.meta.url);
 
@@ -35,7 +36,8 @@ export type Run = {
   result: CollectResult;
   logs: string[];
   signInMessages: string[];
-  requestedUrls: string[];
+  /** Every request of the run, recorded independently of the collector (see observe.ts). */
+  requests: { node: string[]; browser: string[] };
 };
 
 export async function runCollector(
@@ -46,7 +48,7 @@ export async function runCollector(
 ): Promise<Run> {
   const logs: string[] = [];
   const signInMessages: string[] = [];
-  const requestedUrls: string[] = [];
+  const observer = observeRequests();
   const result = await collect({
     stagingDir,
     config,
@@ -61,10 +63,9 @@ export async function runCollector(
       logs.push(line);
       hooks.onLog?.(line);
     },
-    onRequest: (url) => requestedUrls.push(url),
     ...overrides,
-  });
-  return { result, logs, signInMessages, requestedUrls };
+  }).finally(observer.stop);
+  return { result, logs, signInMessages, requests: { node: observer.node, browser: observer.browser } };
 }
 
 /** Every file below `dir`, as sorted paths relative to it. */

@@ -28,8 +28,8 @@ export const CANARIES = [
   'canary-email@',
 ] as const;
 
-type Member = { name: string; photo?: string };
-type Household = { name: string; image?: string; members: Member[] };
+export type Member = { name: string; photo?: string };
+export type Household = { name: string; image?: string; members: Member[] };
 
 export const HOUSEHOLDS: readonly Household[] = [
   {
@@ -125,8 +125,8 @@ function page(body: string): string {
   return `<!doctype html><html><head><meta charset="utf-8"><title>Fictional directory</title></head><body>${body}${CANARY_BLOCK}</body></html>`;
 }
 
-function householdList(): string {
-  const items = HOUSEHOLDS.map(
+function householdList(households: readonly Household[]): string {
+  const items = households.map(
     (h, index) =>
       `<li class="household-row" data-record="CANARY-MRN-0002"><a class="household-link" href="/households/${String(index)}">${h.name}</a> <span>CANARY-PHONE-555-0100</span></li>`,
   ).join('\n');
@@ -152,7 +152,19 @@ function householdPage(household: Household): string {
 
 const SIGNED_OUT = page('<div class="signed-out">Your session has ended. Sign in again.</div>');
 
-export async function startDirectoryServer(): Promise<DirectoryServer> {
+/** A response the server sends for `/photos/<file>` in place of a fixture image. */
+export type PhotoResponse = { type: string; body: Buffer };
+
+export type DirectoryServerOptions = {
+  /** Households to serve instead of `HOUSEHOLDS`. */
+  households?: readonly Household[];
+  /** Extra `/photos/<file>` responses, served with status 200. */
+  photos?: Readonly<Record<string, PhotoResponse>>;
+};
+
+export async function startDirectoryServer(options: DirectoryServerOptions = {}): Promise<DirectoryServer> {
+  const households = options.households ?? HOUSEHOLDS;
+  const extraPhotos = options.photos ?? {};
   const requests: RecordedRequest[] = [];
   const photoCounts = new Map<string, number>();
   let expireNext = false;
@@ -190,7 +202,10 @@ export async function startDirectoryServer(): Promise<DirectoryServer> {
       const count = (photoCounts.get(file) ?? 0) + 1;
       photoCounts.set(file, count);
       const bytes = IMAGES[file];
-      if (bytes === undefined) {
+      const extra = extraPhotos[file];
+      if (extra !== undefined) {
+        send(res, req, 200, extra.type, extra.body);
+      } else if (bytes === undefined) {
         send(res, req, 404, 'text/plain', 'Not found');
       } else if (file === ALWAYS_FAILING || (file === FAILS_ONCE && count === 1)) {
         send(res, req, 500, 'text/plain', 'CANARY-ERROR-BODY server failure');
@@ -206,11 +221,11 @@ export async function startDirectoryServer(): Promise<DirectoryServer> {
       return;
     }
     if (url.pathname === '/households') {
-      send(res, req, 200, 'text/html', householdList());
+      send(res, req, 200, 'text/html', householdList(households));
       return;
     }
     const match = /^\/households\/(\d+)$/.exec(url.pathname);
-    const household = match === null ? undefined : HOUSEHOLDS[Number(match[1])];
+    const household = match === null ? undefined : households[Number(match[1])];
     if (household !== undefined) {
       send(res, req, 200, 'text/html', householdPage(household));
       return;

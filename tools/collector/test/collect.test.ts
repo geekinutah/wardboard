@@ -156,10 +156,85 @@ describe('a full run over the fictional directory', () => {
   });
 
   it('only the fixture host is contacted', () => {
-    expect(run.requestedUrls.length).toBeGreaterThan(5);
-    for (const url of run.requestedUrls) expect(new URL(url).host).toBe(new URL(server.origin).host);
-    // The collector's own image fetches are among the recorded requests.
-    expect(run.requestedUrls.some((url) => url.includes('/photos/ada.png'))).toBe(true);
+    // Recorded by the test itself (support/observe.ts), not reported by the collector.
+    const { node, browser } = run.requests;
+    const fixtureHost = new URL(server.origin).host;
+    for (const url of [...node, ...browser]) expect(new URL(url).host, url).toBe(fixtureHost);
+    // Both observers really saw this run: page navigations in the browser, and
+    // the collector's portrait fetches through context.request in this process.
+    expect(browser.some((url) => new URL(url).pathname === '/households')).toBe(true);
+    expect(browser.some((url) => new URL(url).pathname === '/households/0')).toBe(true);
+    expect(node.some((url) => new URL(url).pathname === '/photos/ada.png')).toBe(true);
+    // Every request the fixture server answered was seen by an observer.
+    const seenPaths = new Set([...node, ...browser].map((url) => `${new URL(url).pathname}${new URL(url).search}`));
+    expect(server.requests.length).toBeGreaterThan(5);
+    for (const request of server.requests) expect(seenPaths, request.path).toContain(request.path);
+  });
+});
+
+describe('portrait validation', () => {
+  it('a sign-in page or an oversized image at a portrait URL is missing, never written', async () => {
+    const MiB = 1024 * 1024;
+    const pngSignature = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+    const padded = (size: number): Buffer => Buffer.concat([pngSignature, Buffer.alloc(size - pngSignature.length, 7)]);
+    const signInPage = Buffer.from(
+      '<!doctype html><html><body><form action="/signin"><input name="user"><p>CANARY-SIGNIN-PAGE</p></form></body></html>',
+      'utf8',
+    );
+    const oversize = padded(6 * MiB);
+    const atLimit = padded(5 * MiB);
+    const server = await startDirectoryServer({
+      households: [
+        {
+          name: 'Fictional Household Zeta',
+          members: [
+            { name: 'Ada Fictional', photo: 'ada.png' },
+            { name: 'Kit Signin', photo: 'signin-page.jpg' },
+            { name: 'Joy Oversize', photo: 'oversize.png' },
+            { name: 'Lou Limit', photo: 'at-limit.png' },
+          ],
+        },
+      ],
+      photos: {
+        'signin-page.jpg': { type: 'text/html', body: signInPage },
+        'oversize.png': { type: 'image/png', body: oversize },
+        'at-limit.png': { type: 'image/png', body: atLimit },
+      },
+    });
+    const staging = await tempStaging();
+    try {
+      const run = await runCollector(staging, await fixtureConfig(server));
+      expect(run.result).toMatchObject({ status: 'done', exitCode: 0 });
+      const { manifest } = await readManifest(staging);
+      expect(manifest.missing).toEqual([
+        { name: 'Joy Oversize', reason: 'failed' },
+        { name: 'Kit Signin', reason: 'failed' },
+      ]);
+      expect(manifest.portraits).toEqual([
+        { name: 'Ada Fictional', file: file('ada.png'), duplicateName: false },
+        { name: 'Lou Limit', file: `${sha256(atLimit)}.png`, duplicateName: false },
+      ]);
+      // They were fetched (with bounded retries) and rejected, not skipped.
+      expect(server.photoRequests('signin-page.jpg')).toBe(3);
+      expect(server.photoRequests('oversize.png')).toBe(3);
+      expect(run.logs.at(-1)).toBe(
+        `Done. 2 portraits, 2 missing, 2 failed, 0 household images skipped. Bundle: ${bundleDir(staging)}`,
+      );
+
+      expect(await listFiles(bundleDir(staging))).toEqual(
+        [file('ada.png'), `${sha256(atLimit)}.png`, 'manifest.json'].sort(),
+      );
+      for (const name of await listFiles(staging)) {
+        const bytes = await readFile(join(staging, name));
+        expect(sha256(bytes), name).not.toBe(sha256(signInPage));
+        expect(sha256(bytes), name).not.toBe(sha256(oversize));
+        expect(bytes.length, name).toBeLessThanOrEqual(5 * MiB);
+        expect(bytes.toString('latin1'), name).not.toContain('CANARY-SIGNIN-PAGE');
+      }
+    } finally {
+      await server.close();
+      await removeTemp(staging);
+    }
   });
 });
 

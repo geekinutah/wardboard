@@ -34,8 +34,6 @@ export type CollectOptions = {
   signal?: AbortSignal;
   /** Clock for the resume retention check. */
   now?: () => Date;
-  /** Test hook: every URL the browser context or the collector requests. */
-  onRequest?: (url: string) => void;
 };
 
 export type CollectResult = {
@@ -183,7 +181,6 @@ export async function collect(options: CollectOptions): Promise<CollectResult> {
     browser = await chromium.launch({ headless: options.browser.headless, handleSIGINT: false });
     checkAbort();
     const context = await browser.newContext();
-    context.on('request', (request) => options.onRequest?.(request.url()));
     const page = await context.newPage();
     page.setDefaultTimeout(config.timeouts.elementMs);
     page.setDefaultNavigationTimeout(config.timeouts.navigationMs);
@@ -260,7 +257,6 @@ export async function collect(options: CollectOptions): Promise<CollectResult> {
     ): Promise<{ bytes: Buffer; extension: 'jpg' | 'png' } | undefined> => {
       for (let attempt = 0; attempt <= config.retries.image; attempt += 1) {
         checkAbort();
-        options.onRequest?.(url);
         try {
           const response = await abortable(
             context.request.get(url, { timeout: config.timeouts.navigationMs, failOnStatusCode: false }),
