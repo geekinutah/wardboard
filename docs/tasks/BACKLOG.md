@@ -86,3 +86,4 @@ observation / review finding
 | B-054 | P2 | import | candidate | LCR calling titles do not match the seeded handbook labels, so the first import can add parallel positions |
 | B-055 | P3 | import | candidate | A custom marker on a report row is stored as a standard assignment |
 | B-056 | P3 | import | candidate | Import preview JSON omits the current board version, so replace learns it from a stale refusal |
+| B-057 | P3 | web photos | candidate | Photo upload uses the browser's unstyled file input |

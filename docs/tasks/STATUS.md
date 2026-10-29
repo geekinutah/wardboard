@@ -96,4 +96,4 @@ Candidate and discovered work that has not yet been promoted into a task contrac
 | T-062 | Import guide and AI-operator prompt | 6 — Import and photos | done | 1 | none |
 | T-061 | Directory photo collector | 6 — Import and photos | in progress | 0 | first real run against the directory (after done) |
 | T-092 | Phone layout at the app root, with the Board tab | 5 — Phone | in progress | 0 | iPhone layout checks (after done) |
-| T-093 | Portrait and photo upload in the desktop person inspector | 6 — Import and photos | in progress | 0 | desktop portrait crop (after done) |
+| T-093 | Portrait and photo upload in the desktop person inspector | 6 — Import and photos | done | 1 | desktop Chrome: upload a few-MB fictional image and confirm the inspector portrait is crisp and cropped; two windows: portrait appears in the second without reload |
