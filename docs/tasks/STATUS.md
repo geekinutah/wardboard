@@ -98,5 +98,5 @@ Candidate and discovered work that has not yet been promoted into a task contrac
 | T-092 | Phone layout at the app root, with the Board tab | 5 — Phone | done | 2 | iPhone Safari: open `/`, confirm the phone layout, tabs clear the home indicator, one-thumb switcher sheet, rotate and back; open `/?layout=desktop` (address shows `/`), then `/?layout=auto` returns the phone layout. The earlier T-047–T-051 iPhone checks can now be done at `/` for the Board tab |
 | T-093 | Portrait and photo upload in the desktop person inspector | 6 — Import and photos | done | 1 | desktop Chrome: upload a few-MB fictional image and confirm the inspector portrait is crisp and cropped; two windows: portrait appears in the second without reload |
 | T-094 | Phone person, move and fill sheets on the live board | 5 — Phone | in progress | 0 | none |
-| T-097 | Import screen in Settings | 6 — Import and photos | in progress | 0 | none |
+| T-097 | Import screen in Settings | 6 — Import and photos | done | 1 | desktop Chrome on a disposable data directory: import the three PDFs from `fixtures/lcr-reports/`, resolve the identities, replace Current, confirm the flow reads clearly and the board shows the new import date |
 | T-100 | Portraits on cards, dugout and presentation | 6 — Import and photos | in progress | 0 | none |
