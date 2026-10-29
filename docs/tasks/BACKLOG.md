@@ -85,3 +85,4 @@ observation / review finding
 | B-053 | P3 | tooling / gate | candidate | No test pins the e2e slot pool's default lock directory |
 | B-054 | P2 | import | candidate | LCR calling titles do not match the seeded handbook labels, so the first import can add parallel positions |
 | B-055 | P3 | import | candidate | A custom marker on a report row is stored as a standard assignment |
+| B-056 | P3 | import | candidate | Import preview JSON omits the current board version, so replace learns it from a stale refusal |
