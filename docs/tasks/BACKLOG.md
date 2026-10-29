@@ -89,3 +89,4 @@ observation / review finding
 | B-057 | P3 | web photos | candidate | Photo upload uses the browser's unstyled file input |
 | B-058 | P3 | core fixtures / e2e | candidate | The seeded fixture proposal has no edits, so browser tests never show a non-zero diff |
 | B-059 | P3 | web phone shell | candidate | Phone shell lacks the artboard's Live indicator, proposal options and switcher footnote |
+| B-060 | P2 | tools/collector | candidate | Collector follow-ups: .js not scanned by source rules, sign-out during fetches, stale-collection retention, CDN portrait host |
