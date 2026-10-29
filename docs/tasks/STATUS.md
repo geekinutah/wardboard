@@ -92,5 +92,5 @@ Candidate and discovered work that has not yet been promoted into a task contrac
 | T-091 | Machine-wide Playwright slot pool | — (test infrastructure, off-roadmap) | done | 2 | none |
 | T-057 | Identity reconciliation | 6 — Import and photos | done | 1 | none |
 | T-058 | Import replace on the server | 6 — Import and photos | done | 2 | none |
-| T-059 | Import preview UI | 6 — Import and photos | in progress | 0 | iPhone: open /__preview/import, match one name and treat the other as new, and confirm one-handed use without sideways scrolling |
+| T-059 | Import preview UI | 6 — Import and photos | done | 1 | iPhone: open /__preview/import, match one name and treat the other as new, and confirm one-handed use without sideways scrolling |
 | T-062 | Import guide and AI-operator prompt | 6 — Import and photos | done | 1 | none |
