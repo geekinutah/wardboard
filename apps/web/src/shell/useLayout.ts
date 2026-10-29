@@ -19,6 +19,15 @@ function applyPersist(persist: Layout | 'clear' | 'keep'): void {
   }
 }
 
+// Drops the `layout` parameter from the address once it has been read, so the
+// override lives only in sessionStorage. replaceState keeps the history length.
+function stripLayoutParam(): void {
+  const url = new URL(window.location.href);
+  if (!url.searchParams.has('layout')) return;
+  url.searchParams.delete('layout');
+  window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`);
+}
+
 function mediaList(): MediaQueryList | null {
   // jsdom has no matchMedia.
   if (typeof window.matchMedia !== 'function') return null;
@@ -32,6 +41,10 @@ export function useLayout(): Layout {
     return result.override;
   });
   const [narrow, setNarrow] = useState<boolean>(() => mediaList()?.matches ?? false);
+
+  useEffect(() => {
+    stripLayoutParam();
+  }, []);
 
   useEffect(() => {
     const list = mediaList();

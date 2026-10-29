@@ -199,6 +199,8 @@ describe('PhoneApp', () => {
 
     const diff = diffBoards(data.proposal.baseline, data.proposal.board);
     const expected = diff.callings.length + diff.releases.length + diff.addedPositions.length + diff.removedPositions.length;
+    // The preview proposal has real edits, so a diff against the wrong board would show 0.
+    expect(expected).toBeGreaterThan(0);
     await user.click(screen.getByRole('button', { name: /Switch board/ }));
     const sheet = screen.getByRole('dialog', { name: 'Boards' });
     const spring = within(sheet).getByRole('button', { name: new RegExp(data.proposal.name) });
@@ -221,6 +223,8 @@ describe('PhoneApp', () => {
     showSnapshot(socket, data.proposal.board, springView());
     await receiveBaseline(socket, harness.sockets);
     const diff = diffBoards(data.proposal.baseline, data.proposal.board);
+    expect(diff.callings.length).toBeGreaterThan(0);
+    expect(diff.releases.length).toBeGreaterThan(0);
     expect(
       screen.getByText(
         headerSummary({

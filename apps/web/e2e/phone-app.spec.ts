@@ -55,8 +55,10 @@ test('layout=desktop keeps the desktop shell after reload', async ({ page }, tes
   const nav = page.getByRole('navigation', SECTIONS);
   await page.goto('/?layout=desktop');
   await expect(tablist).toBeVisible();
+  await expect(page).toHaveURL(/\/$/);
   await page.reload();
   await expect(tablist).toBeVisible();
+  await expect(page).toHaveURL(/\/$/);
   await page.goto('/');
   await expect(tablist).toBeVisible();
   await expect(nav).toHaveCount(0);
