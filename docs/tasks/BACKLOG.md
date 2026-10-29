@@ -97,3 +97,5 @@ observation / review finding
 | B-065 | P3 | web phone / e2e | candidate | Small wording and capture follow-ups from the T-094/T-097/T-100 wave |
 | B-066 | P3 | server import tests | candidate | Harden the first-import server tests |
 | B-067 | P2 | e2e / web canvas | candidate | board-shell e2e can miss the group double-click on phone-webkit under load |
+| B-068 | P1 | data model / import / rules | candidate | WardBoard doesn't store gender, but some callings are limited by it |
+| B-069 | P2 | import | candidate | Members who hold callings arrive without youth/adult |
