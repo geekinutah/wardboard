@@ -34,11 +34,12 @@ COPY packages/core/package.json ./packages/core/package.json
 COPY packages/importer/package.json ./packages/importer/package.json
 RUN pnpm install --prod --frozen-lockfile
 
-# The server and core run as TypeScript directly under Node (type stripping),
-# so only their sources are needed, plus the built web client from the build stage.
+# The server, core, and importer run as TypeScript directly under Node (type
+# stripping), so only their sources are needed, plus the built web client.
 COPY --from=build /app/apps/web/dist ./apps/web/dist
 COPY apps/server/src ./apps/server/src
 COPY packages/core/src ./packages/core/src
+COPY packages/importer/src ./packages/importer/src
 
 # Non-root runtime user. /data is created (and owned) before the USER switch so
 # a fresh named volume is seeded writable by the server: SQLite and photos live there.
