@@ -2,7 +2,7 @@
 
 **Priority:** P1  
 **Area:** import  
-**State:** accepted  
+**State:** resolved  
 **Found:** 2026-10-29, T-107 implementer and verifier  
 **Promoted to:** T-109 (Mike, 2026-10-29: "linking is the correct approach")
 
@@ -22,3 +22,4 @@ In `apps/server/src/import/plan.ts`, map these rows onto the existing Bishopric 
 
 - `docs/tasks/evidence/T-107.md` (verifier probe of the fixture import; Aaronic tile 10 leaders)
 - SPEC.md §4 (lines ~121–123), §12
+- Resolved by T-109, verified round 1 PASS (`docs/tasks/evidence/T-109.md`). The import no longer creates those seats.
