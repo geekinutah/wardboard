@@ -21,7 +21,7 @@ export interface PhoneBoardProps {
   readonly baseline: Board | null;
   readonly ward: Ward;
   readonly editable: boolean;
-  readonly onAddPosition: (callingGroupId: string) => void;
+  readonly onAddPosition?: ((callingGroupId: string) => void) | undefined;
   readonly onOpenPerson: (memberId: string, positionId: string) => void;
   readonly onOpenVacancy: (positionId: string) => void;
   readonly initialScreen?: PhoneBoardScreen;
@@ -31,7 +31,7 @@ export interface PhoneOrganizationScreenProps {
   readonly organization: PhoneOrganization;
   readonly editable: boolean;
   readonly onBack: () => void;
-  readonly onAddPosition: (callingGroupId: string) => void;
+  readonly onAddPosition?: ((callingGroupId: string) => void) | undefined;
   readonly onOpenPerson: (memberId: string, positionId: string) => void;
   readonly onOpenVacancy: (positionId: string) => void;
 }
@@ -226,7 +226,7 @@ function OrgSection({
 }: {
   readonly section: PhoneOrgSection;
   readonly editable: boolean;
-  readonly onAddPosition: (callingGroupId: string) => void;
+  readonly onAddPosition?: ((callingGroupId: string) => void) | undefined;
   readonly onOpenPerson: (memberId: string, positionId: string) => void;
   readonly onOpenVacancy: (positionId: string) => void;
 }): ReactElement {
@@ -236,7 +236,7 @@ function OrgSection({
     <section className="wb-phone-org-section" aria-labelledby={headingId}>
       <div className="wb-phone-org-section-head">
         <h2 id={headingId}>{section.heading}</h2>
-        {editable ? (
+        {editable && onAddPosition !== undefined ? (
           <button
             type="button"
             className="wb-phone-org-add"

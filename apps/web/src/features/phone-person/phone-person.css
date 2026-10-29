@@ -465,6 +465,43 @@
   outline-offset: 2px;
 }
 
+/* Fill Sheet: dugout people for a tapped vacancy */
+.wb-phone-fill-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 56px;
+  padding: 8px 12px;
+  border: 1px solid var(--wb-line-inner, #E1E4DF);
+  background-color: var(--wb-surface, #FFFFFF);
+  border-radius: 10px;
+  text-align: left;
+  cursor: pointer;
+  color: var(--wb-ink, #18212B);
+  font-family: inherit;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.wb-phone-fill-row:focus-visible {
+  outline: 2px solid var(--wb-accent, #1D5C68);
+  outline-offset: 2px;
+}
+
+.wb-phone-fill-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  color: #FFFFFF;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  user-select: none;
+}
+
 /* Visually hidden helper */
 .wb-sr-only {
   position: absolute;

@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState, type ReactElement } from 'react';
 import { diffBoards, dugout, vacancies } from '@wardboard/core';
 import type { ProposalSummary } from '@wardboard/server';
-import { PhoneBoard } from '../features/phone-board/PhoneBoard.tsx';
 import { PhoneShell, type PhoneTab } from '../features/phone-shell/PhoneShell.tsx';
 import { changeCount, headerSummary, type BoardEntry } from '../features/phone-shell/summary.ts';
 import { SyncBanner, useBaseline, useMe, useSync } from '../sync/react.tsx';
+import { PhoneBoardEditing } from './PhoneEditing.tsx';
 import { StartProposal } from './StartProposal.tsx';
 import { useCurrentBoard, useRemovedState } from './board-levels.tsx';
 import './phone-app.css';
@@ -18,10 +18,6 @@ const TAB_TITLES: Readonly<Record<Exclude<PhoneTab, 'board'>, string>> = {
 function byTabOrder(a: ProposalSummary, b: ProposalSummary): number {
   if (a.tabOrder !== b.tabOrder) return a.tabOrder - b.tabOrder;
   return a.id.localeCompare(b.id, 'en');
-}
-
-function noop(): void {
-  // Editing from the phone Board tab arrives with T-094.
 }
 
 function Placeholder({ tab }: { tab: Exclude<PhoneTab, 'board'> }): ReactElement {
@@ -121,15 +117,14 @@ export function PhoneApp(): ReactElement {
         />
         {activeTab === 'board' ? (
           board !== null && ward !== null ? (
-            <PhoneBoard
+            <PhoneBoardEditing
               key={`${subscribedBoardId ?? ''}:${String(listResetKey)}`}
               board={board}
               baseline={baseline}
               ward={ward}
-              editable={false}
-              onAddPosition={noop}
-              onOpenPerson={noop}
-              onOpenVacancy={noop}
+              proposal={proposal}
+              me={me}
+              boardName={proposal?.name ?? 'Current'}
             />
           ) : (
             <p className="wb-phone-app-loading">Loading board…</p>
