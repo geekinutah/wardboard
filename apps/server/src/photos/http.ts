@@ -1,5 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
+import { handleBundleUpload } from './bundle.ts';
 import { MAX_PHOTO_BYTES } from './limit.ts';
+
 import { sanitizePhoto } from './sanitize.ts';
 import type { PhotoStore } from './store.ts';
 
@@ -18,7 +20,7 @@ export type PhotoRequest = {
 
 type UploadResult = { ok: true; bytes: Buffer } | { ok: false; code: 'too_large' };
 
-function sendJson(
+export function sendJson(
   res: ServerResponse,
   status: number,
   body: string,
@@ -58,7 +60,7 @@ function sendBytes(
   res.end(body);
 }
 
-function sendTooLarge(req: IncomingMessage, res: ServerResponse): void {
+export function sendTooLarge(req: IncomingMessage, res: ServerResponse): void {
   const payload = Buffer.from('{"error":"too_large"}');
   res.writeHead(413, {
     'content-type': 'application/json',
@@ -72,7 +74,7 @@ function sendTooLarge(req: IncomingMessage, res: ServerResponse): void {
   });
 }
 
-function originAllowed(header: string | string[] | undefined, appOrigin: string, listenOrigin: string): boolean {
+export function originAllowed(header: string | string[] | undefined, appOrigin: string, listenOrigin: string): boolean {
   if (typeof header !== 'string' || header.length === 0) return false;
   return header === appOrigin || header === listenOrigin;
 }
@@ -94,7 +96,7 @@ function asBuffer(chunk: unknown): Buffer {
   throw new TypeError('unexpected upload chunk');
 }
 
-function readUpload(req: IncomingMessage, max: number): Promise<UploadResult> {
+export function readUpload(req: IncomingMessage, max: number): Promise<UploadResult> {
   if (overDeclaredLength(req.headers['content-length'], max)) {
     return Promise.resolve({ ok: false, code: 'too_large' });
   }
@@ -180,6 +182,15 @@ async function handleUpload(
 
 export async function handlePhotoRequest(input: PhotoRequest): Promise<void> {
   const { req, res, method, pathname, photos, appOrigin, listenOrigin } = input;
+
+  if (pathname === '/api/photos/bundle') {
+    if (method !== 'POST') {
+      sendJson(res, 405, '{"error":"method_not_allowed"}', method, { allow: 'POST' });
+      return;
+    }
+    await handleBundleUpload(req, res, method, photos, appOrigin, listenOrigin);
+    return;
+  }
 
   if (pathname === COLLECTION) {
     if (method !== 'POST') {
