@@ -91,4 +91,4 @@ Candidate and discovered work that has not yet been promoted into a task contrac
 | T-060 | Photo upload and comparison | 6 — Import and photos | done | 1 | iPhone: open /__preview/photos and confirm the comparison can be used one-handed without sideways scrolling |
 | T-091 | Machine-wide Playwright slot pool | — (test infrastructure, off-roadmap) | done | 2 | none |
 | T-057 | Identity reconciliation | 6 — Import and photos | done | 1 | none |
-| T-058 | Import replace on the server | 6 — Import and photos | in progress | 1 | none |
+| T-058 | Import replace on the server | 6 — Import and photos | done | 2 | none |
