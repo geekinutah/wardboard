@@ -21,6 +21,7 @@ import {
   type Ward,
 } from '@wardboard/core';
 import type { ExternalCallingRef, PersonDecision } from '@wardboard/importer';
+import { classifyAssignment, classifyCallingGroup } from './roles.ts';
 import type { ApplyImportInput, ApplyImportResult, ImportResolution, StructureRef } from './types.ts';
 
 type Choice =
@@ -228,11 +229,12 @@ export function applyImport(input: ApplyImportInput): ApplyImportResult {
         name: creation.name,
         order: creation.order,
         parent: { kind: 'boardGroup', id: boardGroupId(resolveRef(creation.parent, realIds)) },
-        kind: 'other',
+        kind: classifyCallingGroup(creation.name),
         key: null,
       };
     } else if (creation.kind === 'assignment') {
       const calling = assignmentId(id);
+      const { leadershipRole, prominent } = classifyAssignment(creation.title);
       assignments[calling] = {
         id: calling,
         groupId: callingGroupId(resolveRef(creation.group, realIds)),
@@ -240,9 +242,9 @@ export function applyImport(input: ApplyImportInput): ApplyImportResult {
         type: creation.type,
         order: creation.order,
         enabled: true,
-        prominent: false,
+        prominent,
         origin: 'standard',
-        leadershipRole: null,
+        leadershipRole,
         callingTagIds: [],
         preferredMemberTagIds: [],
       };
