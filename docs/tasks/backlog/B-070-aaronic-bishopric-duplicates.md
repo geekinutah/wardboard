@@ -2,9 +2,9 @@
 
 **Priority:** P1  
 **Area:** import  
-**State:** candidate  
+**State:** accepted  
 **Found:** 2026-10-29, T-107 implementer and verifier  
-**Promoted to:** —
+**Promoted to:** T-109 (Mike, 2026-10-29: "linking is the correct approach")
 
 ## Finding
 

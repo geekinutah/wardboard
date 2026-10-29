@@ -108,3 +108,7 @@ Candidate and discovered work that has not yet been promoted into a task contrac
 | T-106 | The import review is clearer on a first import and points to unresolved rows | 6 — Import and photos | done | 1 | `pnpm dev -- --empty --reset`: resolve all but one row, press Go to next, confirm the row is easy to find; check focus and scroll on a real phone |
 | T-107 | Imported callings get their leadership roles and presidency groups | 6 — Import and photos | done | 1 | `pnpm dev -- --empty --reset` and import: the Bishopric and each presidency show leader circles; in a proposal, release the Elders Quorum President and confirm the counselors and secretary are released too |
 | T-108 | The "Reconnected" notice hides itself | 3 — Server and collaboration | done | 1 | in `pnpm dev`, go back and forward in the browser or restart the server: "Reconnected" disappears after about 5 seconds; Dismiss still hides it sooner |
+| T-109 | The import links the Aaronic bishopric rows to the Bishopric instead of creating seats | 6 — Import and photos | todo | 0 | none |
+| T-110 | Ward tiles show only the presidency's three leaders, on the organizations that have one | 4 — Desktop board | todo | 0 | none |
+| T-111 | Parse the LCR Member List report for youth/adult | 6 — Import and photos | todo (waits for Mike's refreshed fixtures) | 0 | none |
+| T-112 | The import takes an optional Member List to set youth/adult | 6 — Import and photos | todo (after T-111) | 0 | none |

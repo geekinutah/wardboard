@@ -2,9 +2,9 @@
 
 **Priority:** P2  
 **Area:** import  
-**State:** candidate  
+**State:** accepted  
 **Found:** 2026-10-29, Mike, first-import walkthrough ("I didn't have birthdate or age data for 146 of the 260 people")  
-**Promoted to:** —
+**Promoted to:** T-111, T-112 (Mike, 2026-10-29: option (a), the Member List report)
 
 ## Finding
 

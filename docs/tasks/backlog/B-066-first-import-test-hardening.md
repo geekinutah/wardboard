@@ -16,6 +16,10 @@
 
 A later change to the planner or the fixtures could quietly stop exercising the namesake path on a first import.
 
+## Note (2026-10-29)
+
+The fixture's in-report conflict (one person in both Callings by Organization and Members without Callings) is an artifact Mike says can't happen in real reports. Refreshed fixtures will remove it. Once they land, the conflict path has to be tested with built inputs, not the fixture.
+
 ## Direction
 
 Assert `conflicts > 0` in the preview test, and add an `unresolved` first-replace test. Drop the redundant check only with a test that pins the response.

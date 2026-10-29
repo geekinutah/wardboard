@@ -2,9 +2,9 @@
 
 **Priority:** P2  
 **Area:** import  
-**State:** candidate  
+**State:** declined  
 **Found:** 2026-10-29, T-107 verifier  
-**Promoted to:** —
+**Promoted to:** — (Mike, 2026-10-29: the scenario is impossible in real reports; if it happens, keep the current vacant-seat approach. The fixture overlap is fixed through the refreshed fixtures in HUMAN_BACKLOG.md.)
 
 ## Finding
 
