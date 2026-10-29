@@ -172,8 +172,17 @@ function noticeText(notice: SyncNotice): string {
   return `Your change was not applied: ${notice.message}`;
 }
 
+export const RESYNCED_NOTICE_MS = 5000;
+
 export function SyncBanner(): ReactElement | null {
   const { status, notice, dismissNotice } = useSync();
+  useEffect(() => {
+    if (notice === null || notice.kind !== 'resynced') return;
+    const handle = setTimeout(dismissNotice, RESYNCED_NOTICE_MS);
+    return () => {
+      clearTimeout(handle);
+    };
+  }, [notice, dismissNotice]);
   if (status !== 'offline' && notice === null) return null;
   return (
     <div className="shell-sync-banner" role="alert">
