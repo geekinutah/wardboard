@@ -73,7 +73,7 @@ Application unit tests do not apply. This task changes documentation only. The e
 |---|---|---|---|
 | 1 | Structural tests | `node --test scripts/import-guide.test.mjs` | `# fail 0`; every test below passes |
 | 2 | Red before green | run check 1 before the two docs exist | the tests fail because `docs/import/guide.md` or `docs/import/operator-prompt.md` is missing; record that output |
-| 3 | Quality gate | `./scripts/verify.sh` | exits 0, and the log shows `import-guide.test.mjs` under `node --test scripts/` |
+| 3 | Quality gate | `./scripts/verify.sh` | exits 0, and under `node --test scripts/` the suite `import guide` passes its 10 tests. Node's spec reporter prints that suite name, not the filename |
 | 4 | Scope | `git diff --name-only origin/main...HEAD` | only the three May-change paths |
 | 5 | Mutation | in a disposable worktree at the candidate, delete the sentence `Do not paste credentials into WardBoard, a collector, or a chat.` from the guide and run check 1 | `the guide forbids pasting credentials` fails; restore the file; then add the line `npx wardboard-collector` to the guide and run check 1 again | `the guide does not invent a collector command` fails; remove the worktree afterward |
 
