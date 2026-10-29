@@ -56,7 +56,9 @@ Preview writes nothing. Response 200:
 ### Position plan
 Match key: `canonicalName(organization) + "\u0000" + canonicalName(group) + "\u0000" + canonicalName(title)`.
 
-Walk report positions in document order. The nth row of a key uses the nth existing position of that key. Existing order is `position.order` ascending, and position id ascending when orders tie. A row with no such position is unfamiliar.
+Walk report positions in document order. The nth row of a key uses the nth existing position of that key. The key uses the report organization name, so a board group reached only through the key map is not consumed here. Existing order is `position.order` ascending, and position id ascending when orders tie. A row with no such position is not yet unfamiliar.
+
+When that row then selects a board group by the key map or by canonical board-group name, and that group already has the calling group and the same-title assignment, fill the next unused position of that assignment before creating one. A single assignment's position is filled this way. Create the extra list only after that position is already used. Count the filled position as matched, not unfamiliar or kept. Only a row that still has no position after that is unfamiliar.
 
 Board group for a new row, first match wins:
 1. The existing group whose `key` is in this map from `canonicalName(organization)`: `bishopric`, `elders quorum` → `elders_quorum`, `relief society` → `relief_society`, `aaronic priesthood quorums` → `aaronic_priesthood`, `young women` → `young_women`, `sunday school` → `sunday_school`, `primary` → `primary`, and `ward missionaries`, `temple and family history`, `young single adult`, `other callings` → `ward_wide`.
@@ -171,6 +173,8 @@ Route tests use the real server, the same way `apps/server/test/backup/routes.te
 | `a repeated name fills only the first list row` | two rows of one new title with the same occupant → one list, two positions, only the first occupied | placing that member on both positions; creating a second assignment |
 | `a single assignment is not widened` | one single assignment and two report rows → the single stays one position and a new list holds the extra row | setting the single assignment to two positions |
 | `aaronic report rows use the aaronic board group` | current group key `aaronic_priesthood` named `Young Men / Aaronic Priesthood`, report org `Aaronic Priesthood Quorums` → the new calling group is parented to that key | creating a second board group |
+| `a key-mapped organization fills the existing assignment` | board group key `ward_wide` named `Ward-wide Callings`, calling group `Music`, single `Music Coordinator`; one report row `Other Callings` / `Music` / `Music Coordinator` → that existing position is occupied, no second assignment is created, and the row is not unfamiliar | vacating the original position and adding a new list |
+| `a key-mapped list fills before it appends` | that same board group, an existing list with one vacant position, and two report rows of that title → the existing position is filled and exactly one position is appended | appending two positions and leaving the original vacant |
 | `proposals are untouched` | a proposal with its own placement and an accepted summary → `loadProposal` deep-equals after replace | rewriting the baseline or the summary |
 | `a stale version writes nothing` | wrong `expectedVersion` → `stale` with `currentVersion`; ward, current, and proposals deep-equal the prior values | committing the new ward anyway |
 | `duplicate and disagreeing reports are refused` | previous fingerprints equal to this bundle → `duplicate_report` and no write; different `reportDate` on one report → `inconsistent_reports` and no write. Posting the fictional PDFs twice through HTTP returns 409 `{"error":"duplicate_report"}` | replacing Current |
@@ -180,7 +184,7 @@ Route tests use the real server, the same way `apps/server/test/backup/routes.te
 | `the log is counts only` | the success line matches the counts and contains no fixture name; `console.*` is not called | logging a decision |
 
 ## Edge cases (each needs a test)
-Covered above: unique match, namesakes, returning member, declined return, earlier removed date, report conflict, missing category, youth category, vacancy, custom position, unfamiliar title, list rows, a repeated list occupant, single assignment, board-group key, proposals, stale version, duplicate report, inconsistent dates, editor, revoked session, anonymous, origin, preview leakage, websocket publish, log leakage.
+Covered above: unique match, namesakes, returning member, declined return, earlier removed date, report conflict, missing category, youth category, vacancy, custom position, unfamiliar title, list rows, a repeated list occupant, single assignment, board-group key, a key-mapped existing assignment, a key-mapped list that fills before it appends, proposals, stale version, duplicate report, inconsistent dates, editor, revoked session, anonymous, origin, preview leakage, websocket publish, log leakage.
 
 ## Human checks
 none
