@@ -68,6 +68,12 @@
   font-weight: 600;
 }
 
+img.wb-avatar-photo {
+  display: block;
+  object-fit: cover;
+  background: none;
+}
+
 .wb-avatar-muted {
   background: var(--wb-muted);
 }

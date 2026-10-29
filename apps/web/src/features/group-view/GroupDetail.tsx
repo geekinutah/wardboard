@@ -19,6 +19,7 @@ import { Button } from '../../design/Button.tsx';
 import { PersonCard } from '../../design/PersonCard.tsx';
 import { RemovedCard } from '../../design/RemovedCard.tsx';
 import { VacancySlot } from '../../design/VacancySlot.tsx';
+import { photoUrl } from '../photos/upload.ts';
 import './group-view.css';
 
 const MIN_LIST_POSITIONS = 1;
@@ -139,6 +140,11 @@ function TagLine({ lead, names, match }: { lead: string; names: string; match?: 
   );
 }
 
+function portraitUrl(ward: Ward, id: MemberId): string | null {
+  const ref = ward.members[id]?.photoRef ?? null;
+  return ref === null ? null : photoUrl(ref);
+}
+
 function PositionCard({
   ward,
   assignment,
@@ -172,6 +178,7 @@ function PositionCard({
             tags={memberTagNames(ward, position.memberId)}
             proposed={position.proposed}
             removed={memberRemoved}
+            photoUrl={portraitUrl(ward, position.memberId)}
             {...(titled ? { callingTitle: assignment.title } : {})}
           />
           {matches.length > 0 ? <TagLine lead="Matches preferred:" names={matches} match /> : null}

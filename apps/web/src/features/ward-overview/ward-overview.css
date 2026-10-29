@@ -256,3 +256,10 @@
     font-size: 11px;
   }
 }
+
+/* Stored portrait in place of the initials avatar: same 44px circle. */
+img.wb-overview-avatar-photo {
+  display: block;
+  flex: none;
+  object-fit: cover;
+}
