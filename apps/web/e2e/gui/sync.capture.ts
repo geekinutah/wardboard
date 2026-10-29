@@ -5,7 +5,7 @@ import { guiArtifactsDir } from '../checkout-server.ts';
 const SCENARIO = 'sync';
 
 test('sync', async ({ page }, testInfo) => {
-  await page.goto('/');
+  await page.goto('/?layout=desktop');
   await expect(page.getByRole('status').filter({ hasText: 'Live' })).toBeVisible();
   await expect(page.getByRole('banner').getByText('WardBoard')).toBeVisible();
 

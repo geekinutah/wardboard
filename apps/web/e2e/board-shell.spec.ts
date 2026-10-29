@@ -75,7 +75,7 @@ test('opens Current, switches to its own proposal, zooms to a group, adds a posi
   const proposalName = uniqueProposalName('Shell', testInfo);
   // Unique per repeat: addOutcome treats any existing `Vacant, <title>` article as committed.
   const title = uniqueProposalName('Fictional Chorister', testInfo);
-  await page.goto('/');
+  await page.goto('/?layout=desktop');
   await expect(page.getByRole('status').filter({ hasText: 'Live' })).toBeVisible();
   await expect(page.getByRole('main').getByText('Server: ok')).toBeVisible();
   await expect(page.getByRole('banner').getByText('WardBoard')).toBeVisible();

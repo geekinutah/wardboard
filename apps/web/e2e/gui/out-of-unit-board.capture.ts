@@ -35,7 +35,7 @@ test('out-of-unit-board', async ({ page }, testInfo) => {
   };
 
   const name = uniqueProposalName('Outside capture', testInfo);
-  await page.goto('/');
+  await page.goto('/?layout=desktop');
   await page.evaluate(async () => {
     await document.fonts.ready;
   });

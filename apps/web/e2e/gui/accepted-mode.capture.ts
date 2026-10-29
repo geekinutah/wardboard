@@ -85,7 +85,7 @@ test('accepted-mode', async ({ page }, testInfo) => {
   };
 
   const name = uniqueProposalName('Accept capture', testInfo);
-  await page.goto('/');
+  await page.goto('/?layout=desktop');
   await page.evaluate(async () => {
     await document.fonts.ready;
   });

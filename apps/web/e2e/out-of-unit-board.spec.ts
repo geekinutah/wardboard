@@ -17,7 +17,7 @@ async function expectNoHorizontalOverflow(page: Page): Promise<void> {
 
 test('open Out-of-Unit and add Kai to the dugout', async ({ page }, testInfo) => {
   const name = uniqueProposalName('Outside', testInfo);
-  await page.goto('/');
+  await page.goto('/?layout=desktop');
   await expect(page.getByRole('status').filter({ hasText: 'Live' })).toBeVisible();
   await createProposal(page, name);
   const tab = page.getByRole('tab', { name });

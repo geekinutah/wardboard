@@ -80,7 +80,7 @@ test('accept a Draft, copy the summary, and reopen it to Draft', async ({ page, 
   const canCopy = testInfo.project.name === 'desktop-chromium';
   if (canCopy) await context.grantPermissions(['clipboard-read', 'clipboard-write']);
 
-  await page.goto('/');
+  await page.goto('/?layout=desktop');
   await expect(page.getByRole('status').filter({ hasText: 'Live' })).toBeVisible();
   await createProposal(page, name);
   await addOneCalling(page, name);

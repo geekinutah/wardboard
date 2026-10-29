@@ -5,7 +5,7 @@ import { guiArtifactsDir } from '../checkout-server.ts';
 const SCENARIO = 'summary-mode';
 
 test('summary-mode', async ({ page }, testInfo) => {
-  await page.goto('/');
+  await page.goto('/?layout=desktop');
   await expect(page.getByRole('status').filter({ hasText: 'Live' })).toBeVisible();
 
   // Switch to the fixture proposal

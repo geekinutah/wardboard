@@ -23,7 +23,7 @@ async function expectAtLeast44(locator: Locator): Promise<void> {
 
 test('start a proposal from Current and land on its tab', async ({ page }, testInfo: TestInfo) => {
   const proposalName = `New plan ${testInfo.project.name}`;
-  await page.goto('/');
+  await page.goto('/?layout=desktop');
   await expect(page.getByRole('status').filter({ hasText: 'Live' })).toBeVisible();
   await expect(page.getByRole('tab', { name: /Current/ })).toHaveAttribute('aria-selected', 'true');
   await expect(page.locator('.wb-canvas-level')).toHaveText('Ward');

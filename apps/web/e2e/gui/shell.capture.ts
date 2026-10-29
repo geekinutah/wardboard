@@ -5,7 +5,7 @@ import { guiArtifactsDir } from '../checkout-server.ts';
 const SCENARIO = 'shell';
 
 test('shell', async ({ page }, testInfo) => {
-  await page.goto('/');
+  await page.goto('/?layout=desktop');
   await expect(page.getByRole('main').getByText('Server: ok')).toBeVisible();
 
   // Project names are `<viewport>-<browser>` (docs/gui-verification.md).

@@ -6,8 +6,9 @@ export type BoardEntry = {
   name: string;
   status: 'current' | 'draft' | 'accepted';
   importedAt: string | null;
-  changeCount: number;
-  removedCount: number;
+  /** `null` while the board's counts are not known (not the subscribed proposal). */
+  changeCount: number | null;
+  removedCount: number | null;
 };
 
 const IMPORT_DATE_FORMATTER = new Intl.DateTimeFormat('en-US', {
@@ -55,7 +56,9 @@ export function switcherSubtitle(entry: BoardEntry): string {
     parts.push('Accepted');
   }
 
-  if (entry.changeCount === 0) {
+  if (entry.changeCount === null) {
+    if (entry.status !== 'accepted') parts.push('Draft');
+  } else if (entry.changeCount === 0) {
     parts.push('No changes');
   } else if (entry.changeCount === 1) {
     parts.push('1 change');
@@ -63,7 +66,7 @@ export function switcherSubtitle(entry: BoardEntry): string {
     parts.push(`${String(entry.changeCount)} changes`);
   }
 
-  if (entry.removedCount > 0) {
+  if (entry.removedCount !== null && entry.removedCount > 0) {
     if (entry.removedCount === 1) {
       parts.push('1 removed item');
     } else {

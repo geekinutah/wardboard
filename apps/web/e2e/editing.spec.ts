@@ -26,7 +26,7 @@ async function expectNoHorizontalOverflow(page: Page): Promise<void> {
 }
 
 async function openApp(page: Page): Promise<void> {
-  await page.goto('/');
+  await page.goto('/?layout=desktop');
   await expect(page.getByRole('status').filter({ hasText: 'Live' })).toBeVisible();
   await expect(page.getByRole('tab', { name: /Current/ })).toHaveAttribute('aria-selected', 'true');
   await expect(page.locator('.wb-canvas-level')).toHaveText('Ward');

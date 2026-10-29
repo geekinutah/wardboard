@@ -136,4 +136,20 @@ describe('summary helpers', () => {
     };
     expect(switcherSubtitle(noChanges)).toBe('No changes');
   });
+
+  it('switcher subtitle with unknown counts shows status only', () => {
+    const base: BoardEntry = {
+      id: 'prop-x',
+      kind: 'proposal',
+      name: 'Unloaded',
+      status: 'draft',
+      importedAt: null,
+      changeCount: null,
+      removedCount: null,
+    };
+    expect(switcherSubtitle(base)).toBe('Draft');
+    expect(switcherSubtitle({ ...base, status: 'accepted' })).toBe('Accepted');
+    expect(switcherSubtitle({ ...base, changeCount: 2, removedCount: null })).toBe('2 changes');
+    expect(switcherSubtitle({ ...base, changeCount: 0, removedCount: 0 })).toBe('No changes');
+  });
 });

@@ -12,7 +12,7 @@ test('zoom into Aaronic Priesthood and change a counselor oversight on the real 
   page,
 }, testInfo) => {
   const proposalName = uniqueProposalName('Views', testInfo);
-  await page.goto('/');
+  await page.goto('/?layout=desktop');
   await expect(page.getByRole('status').filter({ hasText: 'Live' })).toBeVisible();
   await expect(page.getByRole('main').getByText('Server: ok')).toBeVisible();
 

@@ -1,6 +1,8 @@
 import { Gallery } from './design/Gallery.tsx';
 import { defaultHealthClient, type HealthClient } from './health.ts';
 import { BoardShell } from './shell/BoardShell.tsx';
+import { PhoneApp } from './shell/PhoneApp.tsx';
+import { useLayout } from './shell/useLayout.ts';
 import { SETTINGS_PATH, SettingsRoute, usePathname } from './shell/SettingsRoute.tsx';
 import { SyncProvider } from './sync/react.tsx';
 
@@ -17,10 +19,17 @@ export function App({ healthClient = defaultHealthClient }: AppProps) {
 
 function AppShell({ healthClient }: { healthClient: HealthClient }) {
   const pathname = usePathname();
+  const layout = useLayout();
   // One SyncProvider for both routes, so switching never restarts the connection.
   return (
     <SyncProvider>
-      {pathname === SETTINGS_PATH ? <SettingsRoute /> : <BoardShell healthClient={healthClient} />}
+      {pathname === SETTINGS_PATH ? (
+        <SettingsRoute />
+      ) : layout === 'phone' ? (
+        <PhoneApp />
+      ) : (
+        <BoardShell healthClient={healthClient} />
+      )}
     </SyncProvider>
   );
 }

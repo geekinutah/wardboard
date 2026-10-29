@@ -34,7 +34,7 @@ async function expectNoHorizontalOverflow(page: Page): Promise<void> {
 
 async function openDraft(page: Page, testInfo: TestInfo, prefix: string): Promise<string> {
   const name = uniqueProposalName(prefix, testInfo);
-  await page.goto('/');
+  await page.goto('/?layout=desktop');
   await expect(page.getByRole('status').filter({ hasText: 'Live' })).toBeVisible();
   await createProposal(page, name);
   const tab = page.getByRole('tab', { name });
