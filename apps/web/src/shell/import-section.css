@@ -38,6 +38,48 @@
   font-weight: 600;
 }
 
+.wb-import-section-hint {
+  margin: 0;
+  color: var(--wb-muted, #55606b);
+  font-size: 13px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.wb-import-section-howto {
+  border: 1px solid var(--wb-line, #d9ddd8);
+  border-radius: 10px;
+  background: var(--wb-surface, #fff);
+  font-size: 14px;
+}
+
+.wb-import-section-howto-summary {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.wb-import-section-steps {
+  margin: 0;
+  padding: 0 12px 0 32px;
+  line-height: 1.45;
+}
+
+.wb-import-section-steps li + li {
+  margin-top: 6px;
+}
+
+.wb-import-section-guide {
+  margin: 8px 12px 12px;
+  color: var(--wb-muted, #55606b);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
 .wb-import-section-input {
   box-sizing: border-box;
   width: 100%;
@@ -46,6 +88,16 @@
   border: 1px solid var(--wb-line, #d9ddd8);
   border-radius: 10px;
   background: var(--wb-surface, #fff);
+  color: var(--wb-ink, #18212b);
+  font: inherit;
+  font-size: 14px;
+  /* The chosen file name is shown once, in the caption below; hide the native input's own text. */
+  color: transparent;
+}
+
+.wb-import-section-input::file-selector-button {
+  min-height: 28px;
+  margin-right: 10px;
   color: var(--wb-ink, #18212b);
   font: inherit;
   font-size: 14px;

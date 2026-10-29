@@ -15,10 +15,22 @@ import './import-section.css';
 
 type ReportField = 'organizations' | 'withoutCallings' | 'outOfUnit';
 
-const FIELDS: readonly { field: ReportField; label: string }[] = [
-  { field: 'organizations', label: 'Organizations and callings' },
-  { field: 'withoutCallings', label: 'Members without callings' },
-  { field: 'outOfUnit', label: 'Out-of-unit callings' },
+const FIELDS: readonly { field: ReportField; label: string; hint: string }[] = [
+  {
+    field: 'organizations',
+    label: 'Organizations and callings',
+    hint: 'In LCR: Callings → Callings by Organization → Print → Download PDF. Choose Callings only, without Members or Ministering, if offered.',
+  },
+  {
+    field: 'withoutCallings',
+    label: 'Members without callings',
+    hint: 'In LCR: Reports → Members without Callings → Print → Download PDF.',
+  },
+  {
+    field: 'outOfUnit',
+    label: 'Out-of-unit callings',
+    hint: 'In LCR: Reports → Out-of-Unit Callings → Print → Download PDF.',
+  },
 ];
 
 const READ_FAILURE = "Those files couldn't be read as the three LCR reports.";
@@ -111,16 +123,21 @@ export function ImportSection({ fetchImpl = defaultFetch }: { fetchImpl?: Import
     body = (
       <>
         <div className="wb-import-section-files" key={inputGeneration}>
-          {FIELDS.map(({ field, label }) => {
+          {FIELDS.map(({ field, label, hint }) => {
             const id = `${baseId}-${field}`;
+            const hintId = `${id}-hint`;
             const file = picked[field];
             return (
               <div key={field} className="wb-import-section-file">
                 <label htmlFor={id} className="wb-import-section-label">
                   {label}
                 </label>
+                <p id={hintId} className="wb-import-section-hint">
+                  {hint}
+                </p>
                 <input
                   id={id}
+                  aria-describedby={hintId}
                   type="file"
                   accept="application/pdf,.pdf"
                   className="wb-import-section-input"
@@ -133,6 +150,15 @@ export function ImportSection({ fetchImpl = defaultFetch }: { fetchImpl?: Import
             );
           })}
         </div>
+        <details className="wb-import-section-howto">
+          <summary className="wb-import-section-howto-summary">How to get these reports</summary>
+          <ol className="wb-import-section-steps">
+            <li>Sign in to LCR in your own browser. WardBoard never asks for your Church password or MFA code.</li>
+            <li>Download the three reports above and keep them in a private folder.</li>
+            <li>Choose each file here, then press Preview import. Nothing changes until you confirm.</li>
+          </ol>
+          <p className="wb-import-section-guide">The full guide is docs/import/guide.md in the WardBoard repository.</p>
+        </details>
         {failure === null ? null : (
           <p className="wb-import-section-error" role="alert">
             {failure}
@@ -157,7 +183,11 @@ export function ImportSection({ fetchImpl = defaultFetch }: { fetchImpl?: Import
       <h2 id={headingId} className="wb-import-section-title">
         Import
       </h2>
-      <p className="wb-import-section-note">Replace Current with the three LCR reports. Nothing changes until you confirm.</p>
+      <p className="wb-import-section-note">
+        {current === null
+          ? 'Create Current from the three LCR reports. Nothing changes until you confirm.'
+          : 'Replace Current with the three LCR reports. Nothing changes until you confirm.'}
+      </p>
       {body}
     </section>
   );
