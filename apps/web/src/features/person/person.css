@@ -35,6 +35,10 @@
   min-width: 0;
 }
 
+.wb-person-photo {
+  object-fit: cover;
+}
+
 .wb-person-avatar {
   display: flex;
   flex: none;
