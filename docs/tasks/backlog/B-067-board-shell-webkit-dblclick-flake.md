@@ -16,6 +16,8 @@ Other unrelated e2e/capture specs also failed once while several worktrees ran t
 - desktop-chromium `accepted.spec.ts:69` and `phone-changes.spec.ts:40` ("Switch board" not found, 30s), from the T-105 implementer
 - desktop-chromium `gui/search.capture.ts:35` (heading not found), from the T-105 verifier
 
+- `scripts/e2e-slot.test.mjs:180` "runs the command with --workers appended" (empty stderr), from the T-107 verifier
+
 This may be a broader load-sensitivity problem rather than one WebKit double-click.
 
 ## Risk
