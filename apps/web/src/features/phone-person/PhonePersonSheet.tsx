@@ -11,7 +11,7 @@ export interface PhonePersonSheetProps {
   readonly onRelease: (positionId: string) => void;
   readonly onAddToDugout: () => void;
   readonly onPlaceFromDugout?: () => void;
-  readonly onOpenProfile: () => void;
+  readonly onOpenProfile?: () => void;
   readonly onClose: () => void;
 }
 
@@ -170,13 +170,15 @@ export function PhonePersonSheet({
           <div className="wb-phone-person-in-dugout">In dugout</div>
         ) : null}
 
-        <button
-          type="button"
-          className="wb-phone-person-profile-btn"
-          onClick={onOpenProfile}
-        >
-          Profile, note & photo
-        </button>
+        {onOpenProfile !== undefined ? (
+          <button
+            type="button"
+            className="wb-phone-person-profile-btn"
+            onClick={onOpenProfile}
+          >
+            Profile, note & photo
+          </button>
+        ) : null}
       </div>
     </>
   );

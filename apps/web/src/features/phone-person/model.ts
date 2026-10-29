@@ -1,5 +1,6 @@
 import {
   callingsOf,
+  dugout,
   preferenceMatches,
   vacancies,
   type Board,
@@ -33,6 +34,14 @@ export interface PhoneVacantDestinationRow {
     | { readonly kind: 'list'; readonly assignmentId: string };
   readonly title: string;
   readonly orgLabel: string;
+  readonly matchedTagNames: readonly string[];
+}
+
+export interface PhoneFillCandidateRow {
+  readonly memberId: string;
+  readonly name: string;
+  /** 'No calling' or the titles they hold, joined with ', '. */
+  readonly detail: string;
   readonly matchedTagNames: readonly string[];
 }
 
@@ -160,4 +169,59 @@ export function buildVacantDestinations(
       row.matchedTagNames.some((tag) => tag.toLowerCase().includes(q))
     );
   });
+}
+
+/**
+ * The dugout members who could fill `positionId`, in core's dugout order.
+ * Removed members are left out, and so are members already in the position's
+ * list. Matching preferred tags are shown, never used to rank or reject.
+ */
+export function buildFillCandidates(
+  board: Board,
+  ward: Ward,
+  positionId: string,
+  query?: string,
+): readonly PhoneFillCandidateRow[] {
+  const position = Object.hasOwn(board.positions, positionId) ? board.positions[positionId as PositionId] : undefined;
+  if (position === undefined) {
+    return [];
+  }
+  const assignment = board.assignments[position.assignmentId];
+  if (assignment === undefined) {
+    return [];
+  }
+
+  const inList = new Set<string>();
+  if (assignment.type === 'list') {
+    for (const [posId, occupant] of Object.entries(board.placements)) {
+      if (board.positions[posId as PositionId]?.assignmentId === assignment.id) {
+        inList.add(occupant);
+      }
+    }
+  }
+
+  const rows: PhoneFillCandidateRow[] = [];
+  for (const entry of dugout(board, ward)) {
+    const member = ward.members[entry.memberId];
+    if (member === undefined || member.removedDate !== null || inList.has(entry.memberId)) {
+      continue;
+    }
+    const matchedTagNames = preferenceMatches(board, ward, assignment.id, entry.memberId)
+      .map((id) => ward.tags[id]?.name)
+      .filter((name): name is string => name !== undefined);
+    rows.push({
+      memberId: member.id,
+      name: member.name,
+      detail: entry.callings.length === 0 ? 'No calling' : entry.callings.map((calling) => calling.title).join(', '),
+      matchedTagNames,
+    });
+  }
+
+  const q = query !== undefined ? query.trim().toLowerCase() : '';
+  if (q === '') {
+    return rows;
+  }
+  return rows.filter(
+    (row) => row.name.toLowerCase().includes(q) || row.matchedTagNames.some((tag) => tag.toLowerCase().includes(q)),
+  );
 }
