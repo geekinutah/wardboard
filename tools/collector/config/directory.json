@@ -1,0 +1,17 @@
+{
+  "_note": "Best-guess CSS selectors for the signed-in directory at directory.churchofjesuschrist.org. They have NOT been verified against the real site. If a run reports 'Unsupported directory layout', update these selectors (and bump layoutVersion if the layout really changed). The collector never guesses when a selector does not match.",
+  "layoutVersion": "directory-v1",
+  "startUrl": "https://directory.churchofjesuschrist.org/",
+  "selectors": {
+    "householdList": "[data-testid='household-list']",
+    "householdLink": "[data-testid='household-list'] a[href*='/household/']",
+    "householdName": "[data-testid='household-name']",
+    "householdImage": "[data-testid='household-photo'] img",
+    "memberEntry": "[data-testid='household-member']",
+    "memberName": "[data-testid='member-name']",
+    "memberPortrait": "[data-testid='member-photo'] img",
+    "signedOut": "form[action*='signin'], #okta-sign-in"
+  },
+  "timeouts": { "navigationMs": 30000, "elementMs": 10000 },
+  "retries": { "image": 2 }
+}

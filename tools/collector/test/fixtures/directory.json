@@ -1,0 +1,17 @@
+{
+  "_note": "Selectors for the fictional test directory in test/support/directory-server.ts. The tests replace startUrl's origin with the server's ephemeral port.",
+  "layoutVersion": "directory-v1",
+  "startUrl": "http://127.0.0.1/signin?ok=1",
+  "selectors": {
+    "householdList": "ul.household-list",
+    "householdLink": "a.household-link",
+    "householdName": "h2.household-name",
+    "householdImage": "img.household-photo",
+    "memberEntry": "li.member",
+    "memberName": ".member-name",
+    "memberPortrait": "img.member-portrait",
+    "signedOut": ".signed-out"
+  },
+  "timeouts": { "navigationMs": 15000, "elementMs": 5000 },
+  "retries": { "image": 2 }
+}
