@@ -10,6 +10,14 @@
 
 In the integrated `./scripts/verify.sh` run for T-104 (a server dev-tooling change with no web scope), `[phone-webkit] e2e/board-shell.spec.ts:72` failed. After the double-click on the `Relief Society Teachers` group target, the level label stayed `Organization` instead of `Group` (board-shell.spec.ts:22). Running that spec alone on phone-webkit with `--repeat-each=8` passed 8/8.
 
+## More occurrences (2026-10-29)
+
+Other unrelated e2e/capture specs also failed once while several worktrees ran their gates at once, then passed on re-run:
+- desktop-chromium `accepted.spec.ts:69` and `phone-changes.spec.ts:40` ("Switch board" not found, 30s), from the T-105 implementer
+- desktop-chromium `gui/search.capture.ts:35` (heading not found), from the T-105 verifier
+
+This may be a broader load-sensitivity problem rather than one WebKit double-click.
+
 ## Risk
 
 An intermittent gate failure blocks unrelated merges and invites reruns. It may also hide a real WebKit timing problem with double-click zoom while the canvas is still settling.

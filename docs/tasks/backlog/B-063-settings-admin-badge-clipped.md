@@ -22,3 +22,4 @@ Check the access rows' flex/overflow rules in the Settings phone layout so the b
 
 - `apps/web/gui-artifacts/import-settings/sources-phone-chromium.png` (T-097 capture)
 - `apps/web/src/features/settings/`
+- Seen again in the T-105 capture (`apps/web/gui-artifacts/import-guidance/*-phone-chromium.png`)
