@@ -157,9 +157,13 @@ describe('a full run over the fictional directory', () => {
 
   it('only the fixture host is contacted', () => {
     // Recorded by the test itself (support/observe.ts), not reported by the collector.
-    const { node, browser } = run.requests;
+    const { node, sockets, browser } = run.requests;
     const fixtureHost = new URL(server.origin).host;
     for (const url of [...node, ...browser]) expect(new URL(url).host, url).toBe(fixtureHost);
+    // Every TCP connection this process opened went to the fixture host, so a
+    // client that skips the request layer (node:net, http2, tls) is caught too.
+    expect(sockets.length).toBeGreaterThan(0);
+    for (const socket of sockets) expect(socket, 'TCP connection').toBe(fixtureHost);
     // Both observers really saw this run: page navigations in the browser, and
     // the collector's portrait fetches through context.request in this process.
     expect(browser.some((url) => new URL(url).pathname === '/households')).toBe(true);

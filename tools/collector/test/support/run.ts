@@ -37,7 +37,7 @@ export type Run = {
   logs: string[];
   signInMessages: string[];
   /** Every request of the run, recorded independently of the collector (see observe.ts). */
-  requests: { node: string[]; browser: string[] };
+  requests: { node: string[]; sockets: string[]; browser: string[] };
 };
 
 export async function runCollector(
@@ -65,7 +65,7 @@ export async function runCollector(
     },
     ...overrides,
   }).finally(observer.stop);
-  return { result, logs, signInMessages, requests: { node: observer.node, browser: observer.browser } };
+  return { result, logs, signInMessages, requests: { node: observer.node, sockets: observer.sockets, browser: observer.browser } };
 }
 
 /** Every file below `dir`, as sorted paths relative to it. */

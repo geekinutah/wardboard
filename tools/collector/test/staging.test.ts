@@ -303,6 +303,35 @@ describe('source boundaries', () => {
     }
   });
 
+  it('the collector source opens no network client of its own', async () => {
+    // Every request must go through the Playwright context launched by
+    // chromium.launch, which the fixture-host test observes. These modules and
+    // calls would reach the network some other way; the collector needs none.
+    const forbiddenModules = [
+      'net',
+      'tls',
+      'http',
+      'https',
+      'http2',
+      'dgram',
+      'child_process',
+      'worker_threads',
+      'undici',
+      'playwright-core',
+    ];
+    const forbiddenModule = new RegExp(`['"\`](?:node:)?(?:${forbiddenModules.join('|')})(?:/[^'"\`]*)?['"\`]`);
+    const forbiddenCalls: [string, RegExp][] = [
+      ['fetch', /(?<![\w$])fetch\b/],
+      ['connectOverCDP', /connectOverCDP/],
+      ['a browser type connect', /\.\s*connect\w*\s*\(/],
+      ['a browser type connect by name', /\[\s*['"`]connect\w*['"`]\s*\]/],
+    ];
+    for (const [name, text] of await sources()) {
+      expect(text, `${name} imports ${text.match(forbiddenModule)?.[0] ?? ''}`).not.toMatch(forbiddenModule);
+      for (const [what, pattern] of forbiddenCalls) expect(text, `${name} uses ${what}`).not.toMatch(pattern);
+    }
+  });
+
   it('the collector depends on no model SDK or AI service', async () => {
     const pkg = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8')) as {
       dependencies: Record<string, string>;
