@@ -34,7 +34,8 @@ export async function seedFixtureWard(dataDir: string): Promise<void> {
  * on 127.0.0.1, a fresh temporary data directory, and the already-built
  * apps/web/dist as the web root. Builds nothing itself.
  */
-export async function startCheckoutServer(): Promise<CheckoutServer> {
+export async function startCheckoutServer(options: { seed?: boolean } = {}): Promise<CheckoutServer> {
+  const seed = options.seed ?? true;
   try {
     await access(path.join(webDistDir, 'index.html'));
   } catch {
@@ -43,7 +44,7 @@ export async function startCheckoutServer(): Promise<CheckoutServer> {
 
   const dataDir = await mkdtemp(path.join(tmpdir(), 'wardboard-e2e-'));
   try {
-    await seedFixtureWard(dataDir);
+    if (seed) await seedFixtureWard(dataDir);
     const server = await startServer(
       {
         dataDir,

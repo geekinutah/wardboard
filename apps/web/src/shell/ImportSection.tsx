@@ -49,7 +49,8 @@ export function ImportSection({ fetchImpl = defaultFetch }: { fetchImpl?: Import
   const [failure, setFailure] = useState<string | null>(null);
   const [review, setReview] = useState<Review | null>(null);
   const current = boards?.current ?? null;
-  const noCurrent = boards !== null && current === null;
+  // With no Current the first import creates it, against version 0 (SPEC §8).
+  const expectedVersion = current === null ? 0 : current.version;
 
   const organizations = picked.organizations;
   const withoutCallings = picked.withoutCallings;
@@ -95,9 +96,7 @@ export function ImportSection({ fetchImpl = defaultFetch }: { fetchImpl?: Import
   };
 
   let body: ReactElement;
-  if (noCurrent) {
-    body = <p className="wb-import-section-note">Import needs an existing Current board.</p>;
-  } else if (review !== null && current !== null) {
+  if (review !== null && boards !== null) {
     body = (
       <>
         <div className="wb-import-section-actions">
@@ -105,7 +104,7 @@ export function ImportSection({ fetchImpl = defaultFetch }: { fetchImpl?: Import
             Start over
           </Button>
         </div>
-        <ImportReview preview={review.preview} expectedVersion={current.version} onReplace={onReplace} />
+        <ImportReview preview={review.preview} expectedVersion={expectedVersion} onReplace={onReplace} />
       </>
     );
   } else {

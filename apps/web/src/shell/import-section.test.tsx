@@ -334,14 +334,20 @@ describe('Import section in Settings', () => {
     expect(previewButton()).toBeDisabled();
   });
 
-  it('no Current shows the explanation', async () => {
-    stubFetch({});
+  it('no Current offers the first import with version 0', async () => {
+    const calls = stubFetch({});
+    const user = userEvent.setup();
     await renderSettings(ADMIN, null);
     const section = screen.getByRole('heading', { name: 'Import', level: 2 }).closest('section');
     if (section === null) throw new Error('expected a section');
-    expect(within(section).getByText('Import needs an existing Current board.')).toBeInTheDocument();
-    expect(within(section).queryByLabelText(LABELS[0])).not.toBeInTheDocument();
-    expect(within(section).queryByRole('button', { name: 'Preview import' })).not.toBeInTheDocument();
+    expect(within(section).queryByText('Import needs an existing Current board.')).not.toBeInTheDocument();
+    for (const label of LABELS) expect(within(section).getByLabelText(label)).toBeInTheDocument();
+    await openReview(user);
+    await user.click(screen.getByRole('button', { name: 'Treat as new person' }));
+    await user.click(screen.getByRole('button', { name: 'Replace Current' }));
+    await screen.findByText(/^Replaced Current/);
+    const replace = calls.find((call) => call.url.endsWith('/replace'));
+    expect(replace?.body.expectedVersion).toBe(0);
   });
 
   it('the reports never reach the console', async () => {
