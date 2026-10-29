@@ -15,6 +15,7 @@ import {
   type ImportBundle,
   type PersonDecision,
 } from '@wardboard/importer';
+import { bishopricReference } from './references.ts';
 import type {
   ImportFingerprints,
   ImportPlan,
@@ -130,6 +131,32 @@ function rowKey(row: ReportRow): string {
   return [canonicalName(row.organization), canonicalName(row.group), canonicalName(row.title)].join('\u0000');
 }
 
+const BISHOPRIC_ROLE_TITLE = {
+  bishop: 'bishop',
+  first_counselor: 'bishopric first counselor',
+  second_counselor: 'bishopric second counselor',
+} as const;
+
+function bishopricOfficeOccupant(rows: readonly ReportRow[], role: keyof typeof BISHOPRIC_ROLE_TITLE): string | null {
+  const title = BISHOPRIC_ROLE_TITLE[role];
+  for (const row of rows) {
+    if (canonicalName(row.organization) !== 'bishopric' || canonicalName(row.title) !== title) continue;
+    return row.occupant;
+  }
+  return null;
+}
+
+/** A reference that names someone the Bishopric row does not is a disagreement. A vacant reference agrees. */
+function referencesDisagree(rows: readonly ReportRow[]): boolean {
+  for (const row of rows) {
+    const role = bishopricReference(row.organization, row.group, row.title);
+    if (role === null || row.occupant === null) continue;
+    const office = bishopricOfficeOccupant(rows, role);
+    if (office === null || canonicalName(office) !== canonicalName(row.occupant)) return true;
+  }
+  return false;
+}
+
 export function planImport(input: {
   readonly bundle: ImportBundle;
   readonly ward: Ward;
@@ -162,12 +189,14 @@ export function planImport(input: {
   }
 
   const rows = reportRows(input.bundle);
+  // Aaronic bishopric rows are references. They are not matched or created as seats.
+  const seatRows = rows.filter((row) => bishopricReference(row.organization, row.group, row.title) === null);
   const slots = slotsByKey(input.current);
   const used = new Map<string, number>();
   const taken = new Set<string>();
   const matchedRows: { row: ReportRow; slot: Slot }[] = [];
   const unmatched: ReportRow[] = [];
-  for (const row of rows) {
+  for (const row of seatRows) {
     const key = rowKey(row);
     const available = slots.get(key) ?? [];
     const index = used.get(key) ?? 0;
@@ -435,7 +464,7 @@ export function planImport(input: {
     }
   }
 
-  const plannedRows = rows.map((row) => {
+  const plannedRows = seatRows.map((row) => {
     const plannedRow = planned.get(row);
     if (plannedRow === undefined) throw new Error('import row was not planned');
     return plannedRow;
@@ -447,7 +476,7 @@ export function planImport(input: {
     decisions: reconciled.decisions,
     absent: reconciled.absent,
     duplicates: reconciled.duplicates,
-    inconsistentReports: reconciled.inconsistentReports,
+    inconsistentReports: reconciled.inconsistentReports || referencesDisagree(rows),
     returning,
     needsCategory,
     unfamiliar,

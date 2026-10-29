@@ -207,7 +207,7 @@ describe('imported leadership roles', () => {
     const others = groups.filter((group) => group.name !== 'Bishopric' && !group.name.endsWith(' Presidency'));
     expect(others.length).toBeGreaterThan(0);
     for (const group of others) expect({ name: group.name, kind: group.kind }).toEqual({ name: group.name, kind: 'other' });
-    expect(others.some((group) => group.name === 'Presidency of the Aaronic Priesthood')).toBe(true);
+    expect(others.some((group) => group.name === 'Presidency of the Aaronic Priesthood')).toBe(false);
   });
 
   it('releasing an imported president releases the counselors and secretary', async () => {
