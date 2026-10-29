@@ -36,7 +36,7 @@ test('settings route on the real server', async ({ page }, testInfo) => {
   };
 
   // 1. Board header with the Settings link in the account area.
-  await page.goto('/');
+  await page.goto('/?layout=desktop');
   await page.evaluate(async () => {
     await document.fonts.ready;
   });

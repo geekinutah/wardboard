@@ -71,7 +71,7 @@ test('tags-in-app', async ({ page }, testInfo) => {
   const tag = `Cap ${uniqueTagName(testInfo)}`;
   const name = uniqueProposalName('Tags capture', testInfo);
 
-  await page.goto('/');
+  await page.goto('/?layout=desktop');
   await page.evaluate(async () => {
     await document.fonts.ready;
   });

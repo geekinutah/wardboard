@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 test("open the fixture proposal's summary and download the CSV", async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/?layout=desktop');
   await expect(page.getByRole('status').filter({ hasText: 'Live' })).toBeVisible();
 
   // Current board is open initially; verify no Summary button on Current

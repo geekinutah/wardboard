@@ -45,7 +45,7 @@ async function expectNoHorizontalOverflow(page: Page): Promise<void> {
 test('save a note, reload, and see it only in the notes dialog', async ({ page }, testInfo) => {
   const target: TargetConfig = PROJECT_TARGETS[testInfo.project.name] ?? FALLBACK_TARGET;
 
-  await page.goto('/');
+  await page.goto('/?layout=desktop');
   await expect(page.getByRole('status').filter({ hasText: 'Live' })).toBeVisible();
   await expect(page.getByText('CURRENT', { exact: true })).toBeVisible();
 

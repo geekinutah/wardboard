@@ -149,7 +149,9 @@ export function PhoneShell({
 
   const changesLabel =
     activeBoard !== undefined && activeBoard.kind === 'proposal'
-      ? `Changes · ${String(activeBoard.changeCount)}`
+      ? activeBoard.changeCount === null
+        ? 'Changes'
+        : `Changes · ${String(activeBoard.changeCount)}`
       : 'Changes';
 
   return (

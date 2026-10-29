@@ -60,7 +60,7 @@ test('editing', async ({ page }, testInfo) => {
     await page.screenshot({ path: path.join(guiArtifactsDir, SCENARIO, `${state}-${project}.png`), fullPage });
   };
 
-  await page.goto('/');
+  await page.goto('/?layout=desktop');
   await page.evaluate(async () => {
     await document.fonts.ready;
   });

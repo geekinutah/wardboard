@@ -16,7 +16,7 @@ test('board-views Aaronic level 2 capture', async ({ page }, testInfo) => {
     'utf-8',
   );
 
-  await page.goto('/');
+  await page.goto('/?layout=desktop');
   await expect(page.getByRole('status').filter({ hasText: 'Live' })).toBeVisible();
   await expect(page.getByRole('main').getByText('Server: ok')).toBeVisible();
 

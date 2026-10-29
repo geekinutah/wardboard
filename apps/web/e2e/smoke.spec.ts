@@ -4,7 +4,7 @@ test('smoke', async ({ page, baseURL }) => {
   // The checkout-scoped server is on an ephemeral 127.0.0.1 port, never a fixed one.
   expect(baseURL).toMatch(/^http:\/\/127\.0\.0\.1:\d+$/);
 
-  await page.goto('/');
+  await page.goto('/?layout=desktop');
 
   await expect(page.getByRole('banner')).toContainText('WardBoard');
   await expect(page.getByRole('main').getByText('Server: ok')).toBeVisible();

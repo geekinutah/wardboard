@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { expect, test, type Page } from '@playwright/test';
 
 async function openSettings(page: Page): Promise<void> {
-  await page.goto('/');
+  await page.goto('/?layout=desktop');
   await expect(page.getByRole('status').filter({ hasText: 'Live' })).toBeVisible();
   const link = page.getByRole('banner').getByRole('link', { name: 'Settings' });
   await expect(link).toBeVisible();

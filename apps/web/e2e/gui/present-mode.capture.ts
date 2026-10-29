@@ -23,7 +23,7 @@ test('present the fixture proposal', async ({ page }, testInfo) => {
     });
   };
 
-  await page.goto('/');
+  await page.goto('/?layout=desktop');
   await page.evaluate(async () => {
     await document.fonts.ready;
   });
