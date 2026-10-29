@@ -101,3 +101,5 @@ Candidate and discovered work that has not yet been promoted into a task contrac
 | T-097 | Import screen in Settings | 6 — Import and photos | done | 1 | desktop Chrome on a disposable data directory: import the three PDFs from `fixtures/lcr-reports/`, resolve the identities, replace Current, confirm the flow reads clearly and the board shows the new import date |
 | T-100 | Portraits on cards, dugout and presentation | 6 — Import and photos | done | 1 | office TV, presentation mode: with real-sized fictional placeholder portraits on two leaders, confirm the photos read clearly from across the room and look right beside leaders with initials |
 | T-098 | Photo bundle import | 6 — Import and photos | in progress | 0 | none |
+| T-102 | The first import creates Current on the server | 6 — Import and photos | in progress | 0 | none |
+| T-103 | With no Current, the app opens the import workflow | 6 — Import and photos | todo | 0 | none |
