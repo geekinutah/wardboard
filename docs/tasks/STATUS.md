@@ -107,4 +107,4 @@ Candidate and discovered work that has not yet been promoted into a task contrac
 | T-105 | The import screen says which reports to download and how | 6 — Import and photos | in progress | 0 | none |
 | T-106 | The import review is clearer on a first import and points to unresolved rows | 6 — Import and photos | in progress | 0 | none |
 | T-107 | Imported callings get their leadership roles and presidency groups | 6 — Import and photos | in progress | 0 | none |
-| T-108 | The "Reconnected" notice hides itself | 3 — Server and collaboration | in progress | 0 | none |
+| T-108 | The "Reconnected" notice hides itself | 3 — Server and collaboration | done | 1 | in `pnpm dev`, go back and forward in the browser or restart the server: "Reconnected" disappears after about 5 seconds; Dismiss still hides it sooner |
