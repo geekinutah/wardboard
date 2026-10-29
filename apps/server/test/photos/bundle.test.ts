@@ -264,10 +264,11 @@ describe('POST /api/photos/bundle', () => {
     expect(editorResult.status).toBe(200);
     const editorBody = JSON.parse(editorResult.body.toString('utf8')) as PhotoBundleResponse;
     expect(editorBody.portraits).toHaveLength(2);
-    expect(editorBody.portraits[0].name).toBe('Alice Young');
-    expect(editorBody.portraits[0].photoRef).toMatch(/^[0-9a-f]{64}\.png$/);
-    expect(editorBody.portraits[1].name).toBe('Bob Smith');
-    expect(editorBody.portraits[1].photoRef).toMatch(/^[0-9a-f]{64}\.jpg$/);
+    const [firstPortrait, secondPortrait] = editorBody.portraits;
+    expect(firstPortrait?.name).toBe('Alice Young');
+    expect(firstPortrait?.photoRef).toMatch(/^[0-9a-f]{64}\.png$/);
+    expect(secondPortrait?.name).toBe('Bob Smith');
+    expect(secondPortrait?.photoRef).toMatch(/^[0-9a-f]{64}\.jpg$/);
     expect(editorBody.skippedHousehold).toBe(1);
 
     const editorPhotos = await storedNames(editorStarted.dataDir);
