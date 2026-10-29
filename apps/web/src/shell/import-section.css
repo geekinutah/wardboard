@@ -1,0 +1,85 @@
+/* Import section in the Settings cards column (T-097): the column supplies width and spacing. */
+.wb-import-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  color: var(--wb-ink, #18212b);
+}
+
+.wb-import-section-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.wb-import-section-note {
+  margin: 0;
+  color: var(--wb-muted, #55606b);
+  font-size: 14px;
+}
+
+.wb-import-section-files {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.wb-import-section-file {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.wb-import-section-label {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.wb-import-section-input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 10px;
+  border: 1px solid var(--wb-line, #d9ddd8);
+  border-radius: 10px;
+  background: var(--wb-surface, #fff);
+  color: var(--wb-ink, #18212b);
+  font: inherit;
+  font-size: 14px;
+}
+
+.wb-import-section-name {
+  color: var(--wb-ink-2, #3a444f);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.wb-import-section-error {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--wb-vacancy-border, #c9772e);
+  border-radius: 10px;
+  background: var(--wb-vacancy-fill, #fff8f1);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.wb-import-section-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* Touch targets: 44px on every viewport inside Settings, not only on phones. */
+.wb-import-section button {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+/* The review is a full-page screen elsewhere; inside Settings it fills the column. */
+.wb-import-section .wb-import {
+  max-width: none;
+  padding: 0;
+}
