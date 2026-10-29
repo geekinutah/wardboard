@@ -67,9 +67,7 @@ test('an Admin imports the three reports from Settings and replaces Current', as
   const count = await rows.count();
   for (let index = 0; index < count; index += 1) {
     const row = rows.nth(index);
-    await row.getByRole('button', { name: 'Treat as new person' }).click();
-    const adult = row.getByRole('button', { name: 'Adult', exact: true });
-    if ((await adult.count()) > 0) await adult.click();
+    await row.getByRole('button', { name: 'Adult', exact: true }).click();
   }
   const replace = page.getByRole('button', { name: 'Replace Current' });
   await expect(replace).toBeEnabled();

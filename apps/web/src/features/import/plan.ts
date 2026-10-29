@@ -200,7 +200,7 @@ function decisionRows(preview: ImportPreview): ImportReviewRow[] {
   return rows;
 }
 
-export function planImportReview(preview: ImportPreview): ImportReview {
+export function planImportReview(preview: ImportPreview, firstImport = false): ImportReview {
   return {
     sources: sourcesOf(preview),
     stats: [
@@ -208,7 +208,7 @@ export function planImportReview(preview: ImportPreview): ImportReview {
       { label: 'Matched positions', value: preview.matchedPositions },
       { label: 'Kept positions', value: preview.keptPositions },
       { label: 'Outside-ward callings', value: outsideWard(preview) },
-      { label: 'Unfamiliar callings', value: preview.unfamiliar.length },
+      { label: firstImport ? 'New callings' : 'Unfamiliar callings', value: preview.unfamiliar.length },
     ],
     blocked: blockedOf(preview),
     rows: decisionRows(preview),
@@ -230,6 +230,8 @@ function asNew(row: ImportReviewRow, choice: ImportResolution): ImportResolution
 }
 
 function normalize(row: ImportReviewRow, choice: ImportResolution | undefined): ImportResolution | null {
+  // A row with nothing to match and no category to pick is already new.
+  if (row.matchOptions.length === 0 && !row.needsCategory) return { action: 'new' };
   if (choice === undefined) return null;
   switch (row.kind) {
     case 'namesake':
