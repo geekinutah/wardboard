@@ -129,10 +129,11 @@ May change:
 - `apps/server/package.json`
 - `pnpm-lock.yaml` (the new workspace link only)
 - `apps/server/src/import/**` (new)
-- `apps/server/src/server.ts` (route dispatch only)
+- `apps/server/src/server.ts` (route dispatch, and an optional `log` callback passed into the import handler)
 - `apps/server/src/store/types.ts`, `apps/server/src/store/index.ts`, `apps/server/src/store/persist.ts` (one transactional replace)
 - `apps/server/src/ws/channel.ts` (`publishImport` only)
 - `apps/server/test/import/**` (new)
+- `docker/Dockerfile` (copy `packages/importer/src` into the runtime image, and the comment that names it)
 
 Must not change:
 - `packages/importer/**`, `packages/core/**`, `apps/web/**`, parsers, fixtures, `docs/tasks/**`, existing tests, anything else.
@@ -144,7 +145,7 @@ New dependencies allowed: `@wardboard/importer` workspace dependency only.
 |---|---|---|---|
 | 1 | Import tests | `pnpm --filter @wardboard/server exec vitest run test/import` | every test below passes |
 | 2 | Server tests | `pnpm --filter @wardboard/server test` | exits 0 |
-| 3 | Scope | `git diff --name-only origin/main...HEAD` | only the May change paths |
+| 3 | Scope | `git diff --name-only origin/main...HEAD` | only the May change paths, including `docker/Dockerfile` |
 | 4 | Quality gate | `./scripts/verify.sh` | exits 0 |
 
 ## Unit tests to write
