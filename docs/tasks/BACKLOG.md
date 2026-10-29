@@ -96,3 +96,4 @@ observation / review finding
 | B-064 | P3 | web dugout | candidate | The dugout filter's "All" chip renders without its label |
 | B-065 | P3 | web phone / e2e | candidate | Small wording and capture follow-ups from the T-094/T-097/T-100 wave |
 | B-066 | P3 | server import tests | candidate | Harden the first-import server tests |
+| B-067 | P2 | e2e / web canvas | candidate | board-shell e2e can miss the group double-click on phone-webkit under load |
