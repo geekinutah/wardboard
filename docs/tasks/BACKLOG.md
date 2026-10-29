@@ -87,3 +87,5 @@ observation / review finding
 | B-055 | P3 | import | candidate | A custom marker on a report row is stored as a standard assignment |
 | B-056 | P3 | import | candidate | Import preview JSON omits the current board version, so replace learns it from a stale refusal |
 | B-057 | P3 | web photos | candidate | Photo upload uses the browser's unstyled file input |
+| B-058 | P3 | core fixtures / e2e | candidate | The seeded fixture proposal has no edits, so browser tests never show a non-zero diff |
+| B-059 | P3 | web phone shell | candidate | Phone shell lacks the artboard's Live indicator, proposal options and switcher footnote |

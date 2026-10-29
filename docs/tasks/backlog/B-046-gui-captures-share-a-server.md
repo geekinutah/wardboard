@@ -23,3 +23,4 @@ Give each capture scenario its own server, or reset the fixture between scenario
 - T-081 verifier, `docs/tasks/evidence/T-081.md`: the extra tabs are present in the after-exit captures. `present-mode.capture.ts` does not create proposals.
 - `apps/web/e2e/gui/start-proposal.capture.ts` creates `Primary <project>`.
 - Seen again in T-083 round 2 (out-of-unit-board captures: piled-up "Outside capture … r0 t0" tabs); docs/tasks/evidence/T-083.md
+- Seen again in T-092 (2026-10-28): leftover proposals ("Accept capture desktop-chromium r0 t0" …) make the new phone board switcher long, pushing Start proposal below the fold in `switcher-phone-webkit.png`, and wrap the desktop tab strip. docs/tasks/evidence/T-092.md
