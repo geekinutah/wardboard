@@ -265,7 +265,7 @@ function replaceStored(store: Store, applied: Applied, expectedVersion: number):
 }
 
 /** Writes the ward's first Current. A concurrent first import that already won makes this one stale. */
-function initializeCurrent(store: Store, applied: Applied): Stored {
+export function initializeCurrent(store: Store, applied: Applied): Stored {
   const initialized = store.initialize({
     ward: applied.ward,
     current: applied.current,

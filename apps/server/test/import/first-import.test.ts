@@ -7,11 +7,12 @@ import { DatabaseSync } from 'node:sqlite';
 import { fileURLToPath } from 'node:url';
 import { WebSocket, type RawData } from 'ws';
 import { boardId, createBoard, createWard, sequentialIds } from '@wardboard/core';
-import { extractPdf } from '@wardboard/importer';
+import { extractPdf, importReports } from '@wardboard/importer';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createAccess, type Access, type User } from '../../src/access/index.ts';
 import { databasePath, migrate, openDatabase } from '../../src/db/index.ts';
-import { emptyCurrentBoard } from '../../src/import/index.ts';
+import { applyImport, emptyCurrentBoard, planImport, type ImportResolution } from '../../src/import/index.ts';
+import { initializeCurrent } from '../../src/import/http.ts';
 import {
   fixtureIdentityProvider,
   openStore,
@@ -318,7 +319,19 @@ describe('first import', () => {
     const decisions = parsed.decisions;
     if (!Array.isArray(decisions)) throw new Error('decisions missing');
     expect(decisions.length).toBeGreaterThan(0);
-    for (const decision of decisions) expect(asRecord(decision).kind).toBe('new');
+    // Against an empty ward nothing can match; anyone not new is a namesake conflict
+    // inside the reports themselves (SPEC §8), with no stored candidates.
+    let conflicts = 0;
+    for (const decision of decisions) {
+      const item = asRecord(decision);
+      expect(item.kind).not.toBe('matched');
+      if (item.kind === 'new') continue;
+      conflicts += 1;
+      expect(item.kind).toBe('ambiguous');
+      expect(item.reason).toBe('report_conflict');
+      expect(item.candidates).toEqual([]);
+    }
+    expect(decisions.filter((decision) => asRecord(decision).kind === 'new').length).toBeGreaterThan(conflicts);
     expect(decisions.some((decision) => asRecord(decision).name === 'Stanley, Zed')).toBe(true);
     expect(parsed.keptPositions).toBe(0);
     expect(parsed.matchedPositions).toBe(0);
@@ -388,7 +401,7 @@ describe('first import', () => {
     expect(lines.filter((line) => line.startsWith('import replace'))).toEqual([]);
   });
 
-  it('a second first import is stale', async () => {
+  it('a second first import is refused and changes nothing', async () => {
     const started = await startWith(ADMIN);
     const first = await firstImport(started);
     expect(first.status).toBe(200);
@@ -397,12 +410,58 @@ describe('first import', () => {
     if (before === null) throw new Error('first import did not create Current');
     const beforeWard = store.loadWard();
 
+    // The same reports again take the existing-Current path, where the duplicate
+    // report check runs before the version check (pinned by routes.test.ts).
     const second = await firstImport(started);
     expect(second.status).toBe(409);
-    expect(JSON.parse(second.body.toString('utf8'))).toEqual({
-      error: 'stale',
-      currentVersion: before.board.version,
+    expect(JSON.parse(second.body.toString('utf8'))).toEqual({ error: 'duplicate_report' });
+    expect(store.loadCurrent()).toEqual(before);
+    expect(store.loadWard()).toEqual(beforeWard);
+  });
+
+  it('a first import that loses the race is stale', async () => {
+    const root = await makeRoot();
+    const db = openDatabase(path.join(root, 'race.db'));
+    databases.push(db);
+    migrate(db);
+    const store = openStore(db, importClock);
+    expect(store.loadCurrent()).toBeNull();
+
+    // This import planned and applied while there was no Current...
+    const bundle = importReports({
+      organizations: extractPdf(new Uint8Array(organizationsPdf)),
+      withoutCallings: extractPdf(new Uint8Array(withoutPdf)),
+      outOfUnit: extractPdf(new Uint8Array(outPdf)),
     });
+    const plan = planImport({ bundle, ward: store.loadWard(), current: emptyCurrentBoard(boardId('board-loser')) });
+    const resolutions: Record<string, ImportResolution> = {};
+    for (const decision of plan.decisions) {
+      if (decision.kind === 'ambiguous' || (decision.kind === 'new' && decision.category === null)) {
+        resolutions[decision.key] = { action: 'new', category: 'adult' };
+      }
+    }
+    const applied = applyImport({
+      plan,
+      resolutions,
+      expectedVersion: 0,
+      ids: sequentialIds('loser'),
+      clock: importClock,
+    });
+    if (!applied.ok) throw new Error(`apply failed: ${applied.error}`);
+
+    // ...but another first import wrote its Current first.
+    const winner = buildCurrent({
+      version: 4,
+      members: [person('mem-zz', 'Zzalpha, Qqqonly')],
+      groups: [],
+    });
+    const won = store.initialize({ ward: winner.ward, current: winner.current, importVersion: 'winner' });
+    if (!won.ok) throw new Error(won.error.message);
+    const before = store.loadCurrent();
+    if (before === null) throw new Error('winner missing');
+    const beforeWard = store.loadWard();
+
+    expect(initializeCurrent(store, applied)).toEqual({ ok: false, stale: 4 });
     expect(store.loadCurrent()).toEqual(before);
     expect(store.loadWard()).toEqual(beforeWard);
   });
