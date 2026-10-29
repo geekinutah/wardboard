@@ -90,7 +90,7 @@ observation / review finding
 | B-058 | P3 | core fixtures / e2e | candidate | The seeded fixture proposal has no edits, so browser tests never show a non-zero diff |
 | B-059 | P3 | web phone shell | candidate | Phone shell lacks the artboard's Live indicator, proposal options and switcher footnote |
 | B-060 | P2 | tools/collector | candidate | Collector follow-ups: .js not scanned by source rules, sign-out during fetches, stale-collection retention, CDN portrait host |
-| B-061 | P2 | import / server | accepted | The first import can't run when there is no Current board |
+| B-061 | P2 | import / server | resolved | The first import can't run when there is no Current board |
 | B-062 | P3 | web import | candidate | The import review lists every identity row one at a time |
 | B-063 | P3 | web settings | candidate | The Admin badge in People & access is clipped at phone width |
 | B-064 | P3 | web dugout | candidate | The dugout filter's "All" chip renders without its label |

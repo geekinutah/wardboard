@@ -102,4 +102,4 @@ Candidate and discovered work that has not yet been promoted into a task contrac
 | T-100 | Portraits on cards, dugout and presentation | 6 — Import and photos | done | 1 | office TV, presentation mode: with real-sized fictional placeholder portraits on two leaders, confirm the photos read clearly from across the room and look right beside leaders with initials |
 | T-098 | Photo bundle import | 6 — Import and photos | in progress | 0 | none |
 | T-102 | The first import creates Current on the server | 6 — Import and photos | done | 1 | none |
-| T-103 | With no Current, the app opens the import workflow | 6 — Import and photos | in progress | 0 | none |
+| T-103 | With no Current, the app opens the import workflow | 6 — Import and photos | done | 1 | on a fresh, disposable data directory: as the Admin in desktop Chrome, open `/`, import the three fixture PDFs, create Current, and confirm the setup reads clearly and lands on the board; open `/` on a phone during setup and confirm it reads well |

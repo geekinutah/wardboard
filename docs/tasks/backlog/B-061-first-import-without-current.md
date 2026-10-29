@@ -2,7 +2,7 @@
 
 **Priority:** P2  
 **Area:** import / server  
-**State:** accepted  
+**State:** resolved  
 **Found:** 2026-10-29, controller while writing T-097  
 **Promoted to:** T-102, T-103 (Mike, 2026-10-29: "if there is no current, we should default to an import workflow")
 
