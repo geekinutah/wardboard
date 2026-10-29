@@ -60,21 +60,14 @@ describe('wardOverview', () => {
     expect(updatedTiles.map((t) => t.boardGroupId)).toEqual(remainingVisible.map((g) => g.id));
   });
 
-  it('leaders are prominent positions at any depth in structural order', () => {
+  it('the Aaronic tile has no leaders', () => {
     const { baseline, board } = fixtureSetup();
     const tiles = wardOverview(board, baseline);
 
     const aaronicGroup = findGroupByKey(board, 'aaronic_priesthood');
     const aaronicTile = tiles.find((t) => t.boardGroupId === aaronicGroup.id);
     expect(aaronicTile).toBeDefined();
-
-    // Aaronic priesthood has quorum presidencies nested in child calling groups:
-    // Priests Quorum, Teachers Quorum, Deacons Quorum.
-    // Leaders must include prominent positions from those nested groups in structural order.
-    const titles = aaronicTile?.leaders.map((l) => l.title);
-    expect(titles).toBeDefined();
-    expect(titles).toContain('Teachers Quorum President');
-    expect(titles).toContain('Deacons Quorum President');
+    expect(aaronicTile?.leaders).toEqual([]);
   });
 
   it('vacant leader has null memberId', () => {

@@ -1,5 +1,5 @@
 import type { BoardGroupId, CallingGroupId, MemberId, PositionId } from '../model/ids.ts';
-import type { Board, BoardGroup, CallingAssignment, CallingGroup, Position } from '../model/types.ts';
+import type { Board, BoardGroup, BoardGroupKey, CallingAssignment, CallingGroup, Position } from '../model/types.ts';
 import { diffBoards } from '../diff/index.ts';
 import { rootBoardGroupOf } from './views.ts';
 
@@ -95,6 +95,122 @@ function compareChains(left: readonly ChainLink[], right: readonly ChainLink[]):
     }
   }
   return left.length - right.length;
+}
+
+/** Board groups whose overview tile shows the presidency's three leaders. */
+const LEADER_TILE_KEYS: ReadonlySet<BoardGroupKey> = new Set([
+  'bishopric',
+  'elders_quorum',
+  'relief_society',
+  'young_women',
+  'primary',
+  'sunday_school',
+]);
+
+function showsLeaders(key: BoardGroupKey | null): boolean {
+  return key !== null && LEADER_TILE_KEYS.has(key);
+}
+
+function byOrderThenId(
+  left: { readonly order: number; readonly id: string },
+  right: { readonly order: number; readonly id: string },
+): number {
+  if (left.order !== right.order) {
+    return left.order - right.order;
+  }
+  return left.id.localeCompare(right.id, 'en');
+}
+
+function childCallingGroups(board: Board, boardGroupId: BoardGroupId): CallingGroup[] {
+  return Object.values(board.callingGroups).filter(
+    (group) => group.parent.kind === 'boardGroup' && group.parent.id === boardGroupId,
+  );
+}
+
+function isNamedPresidency(group: CallingGroup, boardGroup: BoardGroup): boolean {
+  return group.name.trim().toLowerCase() === `${boardGroup.name} Presidency`.trim().toLowerCase();
+}
+
+/** The bishopric group, or the organization's own presidency. Null when neither qualifies. */
+function leadershipGroup(board: Board, boardGroup: BoardGroup): CallingGroup | null {
+  const children = childCallingGroups(board, boardGroup.id);
+  if (boardGroup.key === 'bishopric') {
+    const bishopric = children.filter((group) => group.kind === 'bishopric').sort(byOrderThenId);
+    return bishopric[0] ?? null;
+  }
+  const presidencies = children.filter((group) => group.kind === 'presidency').sort(byOrderThenId);
+  const named = presidencies.find((group) => isNamedPresidency(group, boardGroup));
+  return named ?? presidencies[0] ?? null;
+}
+
+function singlePosition(board: Board, assignment: CallingAssignment): Position {
+  const matches = Object.values(board.positions).filter((position) => position.assignmentId === assignment.id);
+  const position = matches[0];
+  if (matches.length !== 1 || position === undefined) {
+    throw new Error(`single assignment ${assignment.id} does not have one position`);
+  }
+  return position;
+}
+
+function leaderFromAssignment(
+  board: Board,
+  assignment: CallingAssignment,
+  proposedPositions: ReadonlySet<PositionId>,
+): OverviewLeader {
+  const position = singlePosition(board, assignment);
+  return {
+    positionId: position.id,
+    title: assignment.title,
+    memberId: board.placements[position.id] ?? null,
+    proposed: proposedPositions.has(position.id),
+  };
+}
+
+/**
+ * President, then counselors in assignment order, at most three.
+ * Vacancies stay. `prominent` is not read.
+ */
+function leadersInGroup(
+  board: Board,
+  leadership: CallingGroup,
+  proposedPositions: ReadonlySet<PositionId>,
+): OverviewLeader[] {
+  const singles = Object.values(board.assignments).filter(
+    (assignment) =>
+      assignment.groupId === leadership.id &&
+      assignment.enabled &&
+      assignment.type === 'single' &&
+      (assignment.leadershipRole === 'president' || assignment.leadershipRole === 'counselor'),
+  );
+  const presidents = singles.filter((assignment) => assignment.leadershipRole === 'president').sort(byOrderThenId);
+  const counselors = singles.filter((assignment) => assignment.leadershipRole === 'counselor').sort(byOrderThenId);
+  const chosen: CallingAssignment[] = [];
+  const president = presidents[0];
+  if (president !== undefined) {
+    chosen.push(president);
+  }
+  for (const counselor of counselors) {
+    if (chosen.length >= 3) {
+      break;
+    }
+    chosen.push(counselor);
+  }
+  return chosen.map((assignment) => leaderFromAssignment(board, assignment, proposedPositions));
+}
+
+function tileLeaders(
+  board: Board,
+  boardGroup: BoardGroup,
+  proposedPositions: ReadonlySet<PositionId>,
+): OverviewLeader[] {
+  if (!showsLeaders(boardGroup.key)) {
+    return [];
+  }
+  const leadership = leadershipGroup(board, boardGroup);
+  if (leadership === null) {
+    return [];
+  }
+  return leadersInGroup(board, leadership, proposedPositions);
 }
 
 function compareSlots(left: OrderedSlot, right: OrderedSlot): number {
@@ -197,22 +313,15 @@ export function wardOverview(board: Board, baseline: Board | null): readonly Ove
 
     const positionCount = slots.length;
     let filledCount = 0;
-    const leaders: OverviewLeader[] = [];
 
     for (const slot of slots) {
       const occupant = board.placements[slot.position.id] ?? null;
       if (occupant !== null) {
         filledCount += 1;
       }
-      if (slot.assignment.prominent) {
-        leaders.push({
-          positionId: slot.position.id,
-          title: slot.assignment.title,
-          memberId: occupant,
-          proposed: proposedPositions.has(slot.position.id),
-        });
-      }
     }
+
+    const leaders = tileLeaders(board, group, proposedPositions);
 
     const vacantCount = positionCount - filledCount;
     const changeCount = changeCounts.get(group.id) ?? 0;
