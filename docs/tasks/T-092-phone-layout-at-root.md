@@ -33,7 +33,7 @@ export function chooseLayout(override: Layout | null, narrow: boolean): Layout;
 - `chooseLayout`: the override if non-null, else `'phone'` when `narrow`, else `'desktop'`.
 
 ### Hook (`apps/web/src/shell/useLayout.ts`)
-`useLayout(): Layout` reads the search and `sessionStorage` once on mount and applies `persist` (`setItem`/`removeItem`). It follows `matchMedia(PHONE_MEDIA_QUERY)` and its `change` events. When `window.matchMedia` is undefined (jsdom), `narrow` is `false`. Any `sessionStorage` exception counts as `stored = null` and skips the write. The URL is not rewritten.
+`useLayout(): Layout` reads the search and `sessionStorage` once on mount and applies `persist` (`setItem`/`removeItem`). It follows `matchMedia(PHONE_MEDIA_QUERY)` and its `change` events. When `window.matchMedia` is undefined (jsdom), `narrow` is `false`. Any `sessionStorage` exception counts as `stored = null` and skips the write. **Amended 2026-10-28 (round 1 blocker):** after reading it, when the URL has a `layout` parameter, remove only that parameter with `history.replaceState` (keep the path, every other parameter, and the hash; push no history entry). Existing specs that load `/?layout=desktop` then see `/` again, as their assertions expect (for example `settings-route.spec.ts`'s Back check). The override still lives in `sessionStorage`, so reloads and in-app navigation keep it.
 
 ### App (`apps/web/src/App.tsx`)
 `/__gallery` is unchanged. `/settings` renders `SettingsRoute` in either layout. Otherwise, `'phone'` renders `<PhoneApp />` and `'desktop'` renders `<BoardShell />`, both inside the same single `SyncProvider`. Do not change `BoardShell.tsx`.
@@ -99,6 +99,7 @@ New dependencies allowed: none.
 | `chooseLayout prefers the override, then width` | the four combinations | width overriding an explicit choice |
 | `useLayout follows the media query` | a stubbed `matchMedia` that flips `matches` and fires `change` switches the hook's result | reading width once |
 | `useLayout without matchMedia is desktop` | jsdom without `matchMedia` → `desktop` | throwing |
+| `useLayout removes the layout parameter from the address` | `/?layout=desktop&x=1#h` becomes `/?x=1#h` through `replaceState`, `history.length` is unchanged, and the stored override is `desktop` | leaving the parameter (breaks the existing settings Back check); dropping other parameters; `pushState` |
 | `useLayout survives a sessionStorage error` | a `getItem` that throws still yields the width layout and no exception | unguarded storage |
 | `phone app opens Current and lists boards` | after `boards` arrives, the shell heading is `Current`, the switcher lists Current then proposals by `tabOrder`, and `open` was called once with Current's board id | not opening; desktop tab order ignored |
 | `subscribed proposal shows its counts; others show status only` | the active proposal's switcher subtitle shows its change count; another Draft shows `Draft` | computing counts from the wrong board; showing `No changes` for an unloaded proposal |
@@ -115,7 +116,7 @@ Use the sync test helpers the existing shell tests use (read `BoardShell.test.ts
 ## e2e (`apps/web/e2e/phone-app.spec.ts`)
 - `phone width opens the phone layout at /` (phone projects): `/` shows the `Board sections` navigation with Board, Search, `Dugout · n` and Changes, the heading `Current`, and an organization from the fixture (for example `Primary`). The desktop `Boards` tablist is absent. The page has no horizontal overflow.
 - `the switcher opens a proposal` (phone projects): open the switcher, choose `Spring adjustments`, see the heading `Spring adjustments`, `PROPOSED`, and a summary matching `/\+\d+ callings? · −\d+ releases? · \d+ vacant/`. Read-only use of the fixture proposal is fine.
-- `layout=desktop keeps the desktop shell after reload` (phone projects): `/?layout=desktop` shows the `Boards` tablist. After `page.reload()` and after navigating to `/` in the same tab, it still does. `/?layout=auto` then shows the phone layout.
+- `layout=desktop keeps the desktop shell after reload` (phone projects): `/?layout=desktop` shows the `Boards` tablist and the address becomes `/`. After `page.reload()` and after navigating to `/` in the same tab, it still does. `/?layout=auto` then shows the phone layout.
 - `wide screens keep the desktop shell` (desktop-chromium, tv-chromium): `/` shows the `Boards` tablist and no `Board sections` navigation.
 - `an edit on desktop updates the phone without reload` (phone-chromium only): the phone starts its own uniquely named proposal through the switcher's Start proposal (use `uniqueProposalName` from `e2e/support/proposals.ts`). A second browser context at the desktop viewport opens `/?layout=desktop`, selects that proposal's tab, and adds a member to the dugout through the person inspector's add-to-dugout action. The phone's `Dugout · n` label increases by one without a reload.
 
