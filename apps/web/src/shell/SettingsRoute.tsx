@@ -11,6 +11,7 @@ import type {
 import type { SyncClient } from '../sync/client.ts';
 import type { RequestResult } from '../sync/protocol.ts';
 import { useAccess, useMe, useSettings, useSync, useSyncClient } from '../sync/react.tsx';
+import { ImportSection } from './ImportSection.tsx';
 import { TagLibrarySection } from './TagLibrarySection.tsx';
 import './settings-route.css';
 
@@ -201,7 +202,12 @@ export function SettingsRoute(): ReactElement {
         actions={actions}
         onBack={backToBoard}
         onRestored={reloadBoard}
-        extra={<TagLibrarySection />}
+        extra={
+          <>
+            <TagLibrarySection />
+            {isAdmin ? <ImportSection /> : null}
+          </>
+        }
       />
     </div>
   );
