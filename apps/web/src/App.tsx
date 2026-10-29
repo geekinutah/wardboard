@@ -1,5 +1,6 @@
 import { Gallery } from './design/Gallery.tsx';
 import { defaultHealthClient, type HealthClient } from './health.ts';
+import { FirstImportGate } from './shell/FirstImport.tsx';
 import { BoardShell } from './shell/BoardShell.tsx';
 import { PhoneApp } from './shell/PhoneApp.tsx';
 import { useLayout } from './shell/useLayout.ts';
@@ -25,10 +26,8 @@ function AppShell({ healthClient }: { healthClient: HealthClient }) {
     <SyncProvider>
       {pathname === SETTINGS_PATH ? (
         <SettingsRoute />
-      ) : layout === 'phone' ? (
-        <PhoneApp />
       ) : (
-        <BoardShell healthClient={healthClient} />
+        <FirstImportGate>{layout === 'phone' ? <PhoneApp /> : <BoardShell healthClient={healthClient} />}</FirstImportGate>
       )}
     </SyncProvider>
   );

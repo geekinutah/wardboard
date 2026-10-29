@@ -1,0 +1,40 @@
+/* First-import setup page (T-103): one centered column on the app ground, the Import section inside. */
+.wb-first-import {
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 100vh;
+  padding: 24px 16px;
+  background: var(--wb-ground, #f3f4f1);
+  color: var(--wb-ink, #18212b);
+}
+
+.wb-first-import-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 720px;
+  min-width: 0;
+  margin: 0 auto;
+}
+
+.wb-first-import-title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.wb-first-import-text {
+  margin: 0;
+  color: var(--wb-ink-2, #3a444f);
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.wb-first-import-loading {
+  margin: 0;
+  color: var(--wb-muted, #55606b);
+  font-size: 14px;
+}
