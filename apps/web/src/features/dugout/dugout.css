@@ -67,6 +67,15 @@
 }
 
 .wb-dugout-filter,
+/* A stored portrait is not tinted or overlaid with initials. */
+.wb-dugout-row img.wb-avatar-photo {
+  background-color: transparent !important;
+}
+
+.wb-dugout-row img.wb-avatar-photo::after {
+  content: none;
+}
+
 .wb-dugout-more {
   box-sizing: border-box;
   min-width: 44px;

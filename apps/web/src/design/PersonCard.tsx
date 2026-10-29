@@ -14,6 +14,7 @@ export type PersonCardProps = {
   release?: boolean | undefined;
   removed?: boolean | undefined;
   className?: string | undefined;
+  photoUrl?: string | null | undefined;
 };
 
 export function PersonCard({
@@ -25,6 +26,7 @@ export function PersonCard({
   release = false,
   removed = false,
   className,
+  photoUrl = null,
 }: PersonCardProps): ReactElement {
   if (removed) {
     return (
@@ -58,6 +60,7 @@ export function PersonCard({
         needsApproval={needsApproval}
         proposed={proposed}
         release={release}
+        photoUrl={photoUrl}
       />
     </article>
   );

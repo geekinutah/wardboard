@@ -2,6 +2,7 @@ import { useState, type CSSProperties, type ReactElement } from 'react';
 import { dugout, type Board, type DugoutEntry, type Member, type Ward } from '@wardboard/core';
 import { PersonCard } from '../../design/PersonCard.tsx';
 import { avatarColor, initials } from '../../design/person.ts';
+import { photoUrl } from '../photos/upload.ts';
 import './dugout.css';
 
 const VISIBLE_LIMIT = 6;
@@ -164,6 +165,7 @@ export function DugoutPanel({ board, ward }: DugoutPanelProps): ReactElement {
                 name={`${member.name} · ${kind}`}
                 tags={tagNames(ward, member)}
                 needsApproval={member.needsApproval}
+                photoUrl={member.photoRef === null ? null : photoUrl(member.photoRef)}
                 {...(placed === null ? {} : { callingTitle: placed })}
               />
             </article>

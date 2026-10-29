@@ -324,3 +324,9 @@
     gap: 6px;
   }
 }
+
+/* Stored portrait in place of the initials avatar: same 72px circle. */
+img.wb-presentation-avatar-photo {
+  display: block;
+  object-fit: cover;
+}

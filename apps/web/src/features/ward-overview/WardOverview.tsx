@@ -2,6 +2,8 @@ import type { ReactElement } from 'react';
 import { wardOverview, type Board, type BoardGroupId, type OverviewLeader, type Ward } from '@wardboard/core';
 import { Chip } from '../../design/Chip.tsx';
 import { avatarColor, displayName, initials } from '../../design/person.ts';
+import { Portrait } from '../../design/PersonContent.tsx';
+import { photoUrl } from '../photos/upload.ts';
 import './ward-overview.css';
 
 export interface WardOverviewProps {
@@ -60,13 +62,18 @@ function LeaderSlot({ leader, ward }: { leader: OverviewLeader; ward: Ward }): R
   return (
     <div className="wb-overview-leader">
       <div className="wb-overview-avatar-wrapper">
-        <span
-          className={`wb-overview-avatar ${leader.proposed ? 'wb-overview-avatar-proposed' : ''}`}
-          style={{ backgroundColor: bg }}
-          aria-hidden="true"
+        <Portrait
+          url={member === undefined || member.photoRef === null ? null : photoUrl(member.photoRef)}
+          className={`wb-overview-avatar wb-overview-avatar-photo ${leader.proposed ? 'wb-overview-avatar-proposed' : ''}`}
         >
-          {avatarInitials}
-        </span>
+          <span
+            className={`wb-overview-avatar ${leader.proposed ? 'wb-overview-avatar-proposed' : ''}`}
+            style={{ backgroundColor: bg }}
+            aria-hidden="true"
+          >
+            {avatarInitials}
+          </span>
+        </Portrait>
       </div>
       <span className="wb-overview-leader-name">{name}</span>
       {leader.proposed ? <span className="wb-overview-leader-proposed-badge">+ Proposed</span> : null}

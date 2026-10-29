@@ -11,6 +11,8 @@ import {
   type Ward,
 } from '@wardboard/core';
 import { avatarColor, displayName, initials } from '../../design/person.ts';
+import { Portrait } from '../../design/PersonContent.tsx';
+import { photoUrl } from '../photos/upload.ts';
 import './presentation.css';
 
 export type PresentationStatus = 'current' | 'draft' | 'accepted';
@@ -86,18 +88,22 @@ function LeaderSlot({
   const name = member !== undefined ? displayName(member.name) : 'Unknown';
   const avatarInitials = member !== undefined ? initials(member.name) : '?';
   const background = member !== undefined ? avatarColor(member.name) : '#2F5D8A';
+  const avatarClass = leader.proposed
+    ? 'wb-presentation-avatar wb-presentation-avatar-proposed'
+    : 'wb-presentation-avatar';
   const tags = member !== undefined ? memberTags(member, ward) : [];
   const needsApproval = showNeedsApproval && member !== undefined && member.needsApproval;
 
   return (
     <div className="wb-presentation-leader">
-      <span
-        className={leader.proposed ? 'wb-presentation-avatar wb-presentation-avatar-proposed' : 'wb-presentation-avatar'}
-        style={{ backgroundColor: background }}
-        aria-hidden="true"
+      <Portrait
+        url={member === undefined || member.photoRef === null ? null : photoUrl(member.photoRef)}
+        className={`${avatarClass} wb-presentation-avatar-photo`}
       >
-        {avatarInitials}
-      </span>
+        <span className={avatarClass} style={{ backgroundColor: background }} aria-hidden="true">
+          {avatarInitials}
+        </span>
+      </Portrait>
       <span className="wb-presentation-name">{name}</span>
       {leader.proposed ? <span className="wb-presentation-proposed">Proposed</span> : null}
       <span className="wb-presentation-role">{leader.title}</span>

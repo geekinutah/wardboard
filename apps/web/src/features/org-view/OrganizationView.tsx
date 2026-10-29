@@ -13,6 +13,7 @@ import { cx } from '../../design/cx.ts';
 import { PersonCard } from '../../design/PersonCard.tsx';
 import { RemovedCard } from '../../design/RemovedCard.tsx';
 import { VacancySlot } from '../../design/VacancySlot.tsx';
+import { photoUrl } from '../photos/upload.ts';
 import './org-view.css';
 
 export interface OrganizationViewProps {
@@ -112,6 +113,7 @@ export function OrganizationView({
                         callingTitle={card.title}
                         proposed={card.proposed}
                         removed={memberRemoved}
+                        photoUrl={member === undefined || member.photoRef === null ? null : photoUrl(member.photoRef)}
                       />
                     )
                   ) : positionRemoved ? (

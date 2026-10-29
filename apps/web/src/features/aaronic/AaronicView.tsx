@@ -17,8 +17,10 @@ import { Button } from '../../design/Button.tsx';
 import { cx } from '../../design/cx.ts';
 import { PersonCard } from '../../design/PersonCard.tsx';
 import { avatarColor, initials } from '../../design/person.ts';
+import { Portrait } from '../../design/PersonContent.tsx';
 import { VacancySlot } from '../../design/VacancySlot.tsx';
 import { overseerLabel } from '../org-view/OrganizationView.tsx';
+import { photoUrl } from '../photos/upload.ts';
 import './aaronic.css';
 
 const OVERSEER_OPTIONS: readonly Overseer[] = ['bishop', 'first_counselor', 'second_counselor'];
@@ -50,7 +52,17 @@ function isFixedGroup(board: Board, groupId: CallingGroupId): boolean {
   );
 }
 
-function bishopHolder(board: Board, ward: Ward): string | null {
+function portraitUrl(ward: Ward, id: MemberId): string | null {
+  const ref = ward.members[id]?.photoRef ?? null;
+  return ref === null ? null : photoUrl(ref);
+}
+
+interface BishopHolder {
+  readonly name: string;
+  readonly photoUrl: string | null;
+}
+
+function bishopHolder(board: Board, ward: Ward): BishopHolder | null {
   const bishopric = Object.values(board.callingGroups).find((group) => group.kind === 'bishopric');
   if (bishopric === undefined) return null;
   const assignment = Object.values(board.assignments).find(
@@ -65,7 +77,7 @@ function bishopHolder(board: Board, ward: Ward): string | null {
   if (memberId === undefined) return null;
   const member = ward.members[memberId];
   if (member === undefined) return null;
-  return member.name;
+  return { name: member.name, photoUrl: portraitUrl(ward, memberId) };
 }
 
 function memberName(ward: Ward, memberId: MemberId): string {
@@ -127,6 +139,7 @@ function PositionCard({
         <PersonCard
           name={memberName(ward, memberId)}
           proposed={position.proposed}
+          photoUrl={portraitUrl(ward, memberId)}
           {...(titled ? { callingTitle: assignment.title } : {})}
         />
       )}
@@ -134,7 +147,8 @@ function PositionCard({
   );
 }
 
-function LinkedBishop({ name, onOpen }: { name: string | null; onOpen: (() => void) | undefined }): ReactElement {
+function LinkedBishop({ bishop, onOpen }: { bishop: BishopHolder | null; onOpen: (() => void) | undefined }): ReactElement {
+  const name = bishop === null ? null : bishop.name;
   return (
     <button
       type="button"
@@ -144,9 +158,11 @@ function LinkedBishop({ name, onOpen }: { name: string | null; onOpen: (() => vo
       }}
     >
       {name === null ? null : (
-        <span className="wb-avatar" style={{ backgroundColor: avatarColor(name) }} aria-hidden="true">
-          {initials(name)}
-        </span>
+        <Portrait url={bishop === null ? null : bishop.photoUrl} className="wb-avatar wb-avatar-photo">
+          <span className="wb-avatar" style={{ backgroundColor: avatarColor(name) }} aria-hidden="true">
+            {initials(name)}
+          </span>
+        </Portrait>
       )}
       <span className="wb-aaronic-linked-copy">
         <span className="wb-aaronic-linked-name">{name === null ? 'Vacant' : name}</span>
@@ -163,7 +179,7 @@ function QuorumColumn({
   baseline,
   group,
   readOnly,
-  bishopName,
+  bishop,
   onSetOversight,
   onOpenBishopric,
 }: {
@@ -172,7 +188,7 @@ function QuorumColumn({
   baseline: Board | null;
   group: CallingGroup;
   readOnly: boolean;
-  bishopName: string | null;
+  bishop: BishopHolder | null;
   onSetOversight: (request: SetOversightRequest) => void;
   onOpenBishopric: (() => void) | undefined;
 }): ReactElement {
@@ -224,7 +240,7 @@ function QuorumColumn({
           {`${String(counts.filled)} filled · ${String(counts.vacant)} vacant`}
         </p>
       </div>
-      {fixed ? <LinkedBishop name={bishopName} onOpen={onOpenBishopric} /> : null}
+      {fixed ? <LinkedBishop bishop={bishop} onOpen={onOpenBishopric} /> : null}
       {showEditor ? (
         <fieldset className="wb-aaronic-fieldset">
           <legend className="wb-aaronic-legend">Overseer</legend>
@@ -284,7 +300,7 @@ export function AaronicView({
     throw new TypeError(`board group ${boardGroupId} does not exist`);
   }
   const groups = topLevelGroups(board, boardGroupId);
-  const bishopName = bishopHolder(board, ward);
+  const bishop = bishopHolder(board, ward);
 
   return (
     <div className="wb-aaronic">
@@ -297,7 +313,7 @@ export function AaronicView({
             baseline={baseline}
             group={group}
             readOnly={readOnly}
-            bishopName={bishopName}
+            bishop={bishop}
             onSetOversight={onSetOversight}
             onOpenBishopric={onOpenBishopric}
           />

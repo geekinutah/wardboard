@@ -1,9 +1,38 @@
-import type { ReactElement } from 'react';
+import { useState, type ReactElement, type ReactNode } from 'react';
 import { Chip } from './Chip.tsx';
 import { cx } from './cx.ts';
 import { avatarColor, displayName, initials } from './person.ts';
 
 const releaseMark = '\u2212';
+
+export type PortraitProps = {
+  url: string | null | undefined;
+  className: string;
+  children: ReactNode;
+};
+
+/**
+ * A decorative portrait in place of an avatar. Renders the fallback (the
+ * initials avatar) when there is no URL or the image failed to load. The
+ * failure is remembered per URL, so a different URL tries again.
+ */
+export function Portrait({ url, className, children }: PortraitProps): ReactElement {
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
+  if (typeof url === 'string' && url.length > 0 && failedUrl !== url) {
+    return (
+      <img
+        className={className}
+        src={url}
+        alt=""
+        aria-hidden="true"
+        onError={() => {
+          setFailedUrl(url);
+        }}
+      />
+    );
+  }
+  return <>{children}</>;
+}
 
 export type PersonContentProps = {
   name: string;
@@ -14,6 +43,7 @@ export type PersonContentProps = {
   release?: boolean | undefined;
   mutedAvatar?: boolean | undefined;
   status?: string | undefined;
+  photoUrl?: string | null | undefined;
 };
 
 export function PersonContent({
@@ -25,19 +55,22 @@ export function PersonContent({
   release = false,
   mutedAvatar = false,
   status,
+  photoUrl = null,
 }: PersonContentProps): ReactElement {
   const shownName = displayName(name);
   const title = callingTitle ?? '';
   const tagList = tags ?? [];
   return (
     <div className="wb-person-main">
-      <span
-        className={cx('wb-avatar', mutedAvatar ? 'wb-avatar-muted' : undefined)}
-        style={mutedAvatar ? undefined : { backgroundColor: avatarColor(shownName) }}
-        aria-hidden="true"
-      >
-        {initials(name)}
-      </span>
+      <Portrait url={mutedAvatar ? null : photoUrl} className="wb-avatar wb-avatar-photo">
+        <span
+          className={cx('wb-avatar', mutedAvatar ? 'wb-avatar-muted' : undefined)}
+          style={mutedAvatar ? undefined : { backgroundColor: avatarColor(shownName) }}
+          aria-hidden="true"
+        >
+          {initials(name)}
+        </span>
+      </Portrait>
       <div className="wb-person-body">
         <span className="wb-person-name">{shownName}</span>
         {title.length > 0 && release ? (
