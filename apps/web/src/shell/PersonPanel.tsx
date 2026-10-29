@@ -10,6 +10,9 @@ import { memberId, type Board, type MemberId, type Ward } from '@wardboard/core'
 import { Button } from '../design/Button.tsx';
 import { NotesDialog, type NoteSaveResult } from '../features/person/NotesDialog.tsx';
 import { PersonInspector } from '../features/person/PersonInspector.tsx';
+import { assignPhoto } from '../features/photos/assignPhoto.ts';
+import { PhotoUpload } from '../features/photos/PhotoUpload.tsx';
+import { photoUrl, uploadPhoto } from '../features/photos/upload.ts';
 import { useSync, useSyncClient } from '../sync/react.tsx';
 import { MemberTagsSection } from './TagsWiring.tsx';
 
@@ -37,7 +40,7 @@ export function PersonPanel({
   onSelectMember,
 }: PersonPanelProps): ReactElement | null {
   const client = useSyncClient();
-  const { send } = useSync();
+  const { send, me } = useSync();
   const [container, setContainer] = useState<HTMLDivElement | null>(null);
 
   useLayoutEffect(() => {
@@ -129,6 +132,10 @@ export function PersonPanel({
     return notesDialogElement;
   }
 
+  const selectedMember = Object.hasOwn(ward.members, selectedMemberId)
+    ? ward.members[memberId(selectedMemberId)]
+    : undefined;
+
   const inspectorContent = (
     <div className="shell-person-panel-inner">
       <style>{`
@@ -140,6 +147,9 @@ export function PersonPanel({
           border-left: 0;
           width: 100%;
           padding-top: 10px;
+        }
+        .shell-person-photo {
+          padding: 12px 16px 16px 16px;
         }
         .shell-person-panel-bar {
           display: flex;
@@ -170,6 +180,20 @@ export function PersonPanel({
         }}
       />
       <MemberTagsSection ward={ward} memberId={selectedMemberId} />
+      {selectedMember === undefined || me === null ? null : (
+        <div className="shell-person-photo">
+          <PhotoUpload
+            key={selectedMember.id}
+            member={{ id: selectedMember.id, name: selectedMember.name, photoRef: selectedMember.photoRef }}
+            currentUrl={selectedMember.photoRef === null ? null : photoUrl(selectedMember.photoRef)}
+            upload={uploadPhoto}
+            assign={async (id, ref) => {
+              const result = await assignPhoto(client, id, ref);
+              if (!result.ok) throw new Error(result.message);
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 

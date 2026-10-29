@@ -7,6 +7,7 @@ export type PhotoUploadProps = {
   readonly member: PhotoMember;
   readonly upload: (file: File) => Promise<{ photoRef: string }>;
   readonly assign: (memberId: string, photoRef: string) => Promise<void>;
+  readonly currentUrl?: string | null;
 };
 
 const ACCEPTED = new Set(['image/jpeg', 'image/png']);
@@ -16,7 +17,7 @@ function messageOf(caught: unknown): string {
   return 'The photo could not be saved.';
 }
 
-export function PhotoUpload({ member, upload, assign }: PhotoUploadProps): ReactElement {
+export function PhotoUpload({ member, upload, assign, currentUrl = null }: PhotoUploadProps): ReactElement {
   const inputId = useId();
   const urlRef = useRef<string | null>(null);
   const pending = useRef(false);
@@ -105,7 +106,7 @@ export function PhotoUpload({ member, upload, assign }: PhotoUploadProps): React
       {incomingUrl === null ? null : (
         <PhotoCompareDialog
           memberName={member.name}
-          currentUrl={null}
+          currentUrl={currentUrl}
           incomingUrl={incomingUrl}
           sourceLabel="Direct upload"
           index={1}

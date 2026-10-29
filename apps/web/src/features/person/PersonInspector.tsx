@@ -1,4 +1,4 @@
-import type { ReactElement } from 'react';
+import { useState, type ReactElement } from 'react';
 import {
   callingsOf,
   dugout,
@@ -12,6 +12,7 @@ import {
 import { Button } from '../../design/Button.tsx';
 import { Chip } from '../../design/Chip.tsx';
 import { avatarColor, initials } from '../../design/person.ts';
+import { photoUrl } from '../photos/upload.ts';
 import './person.css';
 
 export interface PersonInspectorProps {
@@ -60,6 +61,7 @@ export function PersonInspector({
   onOpenNotes,
   onAddToDugout,
 }: PersonInspectorProps): ReactElement {
+  const [failedRef, setFailedRef] = useState<string | null>(null);
   const member = Object.hasOwn(ward.members, memberId) ? ward.members[memberId] : undefined;
   if (member === undefined) {
     return (
@@ -86,9 +88,20 @@ export function PersonInspector({
   return (
     <aside aria-label={`Person: ${member.name}`} className="wb-person-inspector" data-member-id={member.id}>
       <div className="wb-person-identity">
-        <span className="wb-person-avatar" style={{ backgroundColor: avatarColor(member.name) }} aria-hidden="true">
-          {initials(member.name)}
-        </span>
+        {member.photoRef !== null && member.photoRef !== failedRef ? (
+          <img
+            className="wb-person-avatar wb-person-photo"
+            src={photoUrl(member.photoRef)}
+            alt={`Portrait of ${member.name}`}
+            onError={() => {
+              setFailedRef(member.photoRef);
+            }}
+          />
+        ) : (
+          <span className="wb-person-avatar" style={{ backgroundColor: avatarColor(member.name) }} aria-hidden="true">
+            {initials(member.name)}
+          </span>
+        )}
         <div className="wb-person-identity-text">
           <h2 className="wb-person-name">{member.name}</h2>
           <p className="wb-person-category">{categoryLabel(member.category)}</p>
