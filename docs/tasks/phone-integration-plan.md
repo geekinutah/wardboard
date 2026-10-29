@@ -14,7 +14,7 @@ A task appears in [`STATUS.md`](./STATUS.md) once its contract is written. IDs n
 | T-095 | Phone search and dugout tabs | T-092, T-050 | `shell/PhoneApp.tsx` (tab wiring) | Search and Dugout tabs replace their placeholders and open the person sheet |
 | T-096 | Phone changes tab and Accept | T-092, T-051 | `shell/PhoneApp.tsx` (tab wiring) | Changes tab replaces its placeholder, including Accept for a Draft |
 | T-097 | Import screen in Settings | T-059, T-080 | `shell/SettingsRoute.tsx`, `features/import` wiring | Contracted. Admins upload the three PDFs, review the T-059 preview, and replace Current in the app; Editors don't see it |
-| T-098 | Photo bundle import | T-061, T-093 | server bundle route, `features/photos` wiring | An Editor picks a collector bundle; names match against the ward with confirmation for namesakes; first photos apply; replacements go through the one-at-a-time comparison; collector cleanup is offered after handoff |
+| T-098 | Photo bundle import | T-061, T-093 | server bundle route, `features/photos` wiring | Contracted. An Editor picks a collector bundle; names match against the ward with confirmation for namesakes; first photos apply; replacements go through the one-at-a-time comparison; collector cleanup is offered after handoff |
 | T-099 | Import guide and operator prompt for the shipped collector | T-061, T-098 | `docs/import/` | The guide's version line and steps describe the shipped collector with real commands, and the structural tests are updated by contract |
 | T-100 | Portraits on cards, dugout and presentation | T-093 | `design/PersonContent.tsx` and callers | Contracted. Cards show a stored portrait instead of initials wherever SPEC shows a face, including leadership photos in presentation mode |
 

@@ -2,7 +2,7 @@
 
 **Priority:** P2  
 **Area:** web sync  
-**State:** accepted  
+**State:** resolved  
 **Found:** 2026-10-27, T-071 verifier  
 **Promoted to:** T-030
 
