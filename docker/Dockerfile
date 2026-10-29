@@ -32,7 +32,11 @@ COPY apps/server/package.json ./apps/server/package.json
 COPY apps/web/package.json ./apps/web/package.json
 COPY packages/core/package.json ./packages/core/package.json
 COPY packages/importer/package.json ./packages/importer/package.json
-RUN pnpm install --prod --frozen-lockfile
+COPY tools/collector/package.json ./tools/collector/package.json
+# The directory photo collector (tools/collector) is a local command, not part
+# of the server: keep it and its Playwright dependency out of the image.
+RUN pnpm install --prod --frozen-lockfile --filter '!@wardboard/collector' \
+    && rm -rf tools
 
 # The server, core, and importer run as TypeScript directly under Node (type
 # stripping), so only their sources are needed, plus the built web client.
