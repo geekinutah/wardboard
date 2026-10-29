@@ -83,3 +83,5 @@ observation / review finding
 | B-051 | P3 | web photos | candidate | A failed replacement upload renders its alert under the open comparison dialog |
 | B-052 | P2 | web e2e | candidate | Some e2e specs still fail intermittently under load (board-views:11 on phone-webkit twice) |
 | B-053 | P3 | tooling / gate | candidate | No test pins the e2e slot pool's default lock directory |
+| B-054 | P2 | import | candidate | LCR calling titles do not match the seeded handbook labels, so the first import can add parallel positions |
+| B-055 | P3 | import | candidate | A custom marker on a report row is stored as a standard assignment |
