@@ -103,4 +103,4 @@ Candidate and discovered work that has not yet been promoted into a task contrac
 | T-098 | Photo bundle import | 6 — Import and photos | done | 1 | none |
 | T-102 | The first import creates Current on the server | 6 — Import and photos | done | 1 | none |
 | T-103 | With no Current, the app opens the import workflow | 6 — Import and photos | done | 1 | on a fresh, disposable data directory: as the Admin in desktop Chrome, open `/`, import the three fixture PDFs, create Current, and confirm the setup reads clearly and lands on the board; open `/` on a phone during setup and confirm it reads well |
-| T-104 | `pnpm dev -- --empty` starts a dev server with no Current | — (dev tooling, off-roadmap) | in progress | 0 | none |
+| T-104 | `pnpm dev -- --empty` starts a dev server with no Current | — (dev tooling, off-roadmap) | done | 1 | `pnpm dev -- --empty --reset` in desktop Chrome: Set up WardBoard appears; import the three fixture PDFs, create Current, land on the board; plain `pnpm dev` still has the fictional ward |
