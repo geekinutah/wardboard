@@ -2,6 +2,7 @@
 
 **Milestone:** 6 — Import and photos
 **Depends on:** T-058 (import replace on the server). Done.
+- **Amended 2026-10-29 (round 1):** the preview and second-import test expectations were corrected, and `initializeCurrent` is exported for a direct race test. See `docs/tasks/evidence/T-102.md`.
 - Promoted from B-061. Mike decided on 2026-10-29: "if there is no current, we should default to an import workflow." This task is the server half. T-103 (the web half) depends on it.
 - Runs in parallel with T-098 (photo bundle import, another controller). T-098 does not edit any file listed here; this task must not edit `apps/server/src/photos/**`, `apps/server/src/server.ts` or anything in `apps/web/`.
 
@@ -13,7 +14,7 @@ On a data directory with no Current board, `POST /api/import/preview` returns a 
 ## Design decisions (binding)
 - **Empty Current.** Add a pure `emptyCurrentBoard(id: BoardId): Board` in `apps/server/src/import/` (new file `empty.ts`, re-exported from `import/index.ts`). It returns `kind: 'current'`, `version: 0`, and no board groups, calling groups, assignments, positions, placements, oversight, approvals or dugout inclusions. It must pass `createBoard` with an empty ward.
 - **Planning without a Current.** In `http.ts`, when `store.loadCurrent()` is null, plan against `emptyCurrentBoard(...)` and `store.loadWard()`, with no previous fingerprints. The planner already creates the board groups, calling groups and assignments that the rows need. For the preview, use a fixed id that is never stored. For the replace, use a fresh id from `input.ids`.
-- **Replace without a Current.** `expectedVersion` must be `0`. Any other value returns 409 `{ "error": "stale", "currentVersion": 0 }`. With 0, run `applyImport` as today, then write the result with `store.initialize({ ward, current, importVersion })` instead of `replaceCurrent`. Note that `initialize` stamps `importedAt` from the store clock. If `initialize` refuses with `already_initialized` (another first import won the race), return 409 `stale` with the `currentVersion` of the Current that now exists. Any other refusal returns 400 `bad_request`, as today. On success: `channel.publishImport()`, the same log line, and the same 200 body as an ordinary replace.
+- **Replace without a Current.** `expectedVersion` must be `0`. Any other value returns 409 `{ "error": "stale", "currentVersion": 0 }`. With 0, run `applyImport` as today, then write the result with `store.initialize({ ward, current, importVersion })` instead of `replaceCurrent`. Note that `initialize` stamps `importedAt` from the store clock. If `initialize` refuses with `already_initialized` (another first import won the race), return 409 `stale` with the `currentVersion` of the Current that now exists. Any other refusal returns 400 `bad_request`, as today. Put this write-and-map step in a function `initializeCurrent` exported from `import/http.ts` (not re-exported from `import/index.ts`), so the race outcome can be tested directly. In-process HTTP can't interleave two first imports, because the handler is synchronous from the body read to the write. On success: `channel.publishImport()`, the same log line, and the same 200 body as an ordinary replace.
 - **With a Current**, nothing changes. A replace with `expectedVersion: 0` against an existing Current is refused `stale` by the existing check.
 - The routes stay Admin-only, origin-checked and size-limited as today. Logs never include report contents or names, as today.
 - **SPEC.md.** Append this sentence to §8, after the "Replace atomically" list: `**CONFIRMED (2026-10-29):** When there is no Current board, WardBoard opens the import workflow, and the first import creates Current from the three reports.` No other SPEC change.
@@ -47,16 +48,17 @@ New dependencies allowed: none.
 | Test name | Behavior it proves | A bug that would make it fail |
 |---|---|---|
 | `emptyCurrentBoard is a valid empty Current` | `createBoard(emptyCurrentBoard(id), emptyWard)` succeeds; version 0; every collection is empty | a board that fails validation |
-| `preview without a Current returns a plan` | 200 with a preview whose `decisions` are all `new` (empty ward) and that plans positions; nothing is written (`loadCurrent()` is still null) | the old 400; writing on preview |
+| `preview without a Current returns a plan` | 200 with a preview where no decision is `matched` (empty ward), every decision that isn't `new` is `ambiguous` with reason `report_conflict` and no candidates (a namesake conflict inside the reports, SPEC §8), and positions are planned; nothing is written (`loadCurrent()` is still null) | the old 400; writing on preview; matching against members that don't exist |
 | `first replace creates Current and broadcasts it` | 200 with `importVersion` and `importedAt`; `loadCurrent()` returns a board at version 1 holding the reports' groups, assignments and placements, with a ward of the new members; a connected, signed-in client receives a `boards` message whose `current` is non-null | still calling `replaceCurrent`; no broadcast |
 | `first replace needs expectedVersion 0` | `expectedVersion: 3` with no Current returns 409 `{ error: 'stale', currentVersion: 0 }`, and nothing is written | accepting any version |
-| `a second first import is stale` | after one successful first import, a replace with `expectedVersion: 0` returns 409 `stale` with the new Current's version, and the stored Current is unchanged | overwriting Current |
+| `a second first import is refused and changes nothing` | after one successful first import, a second replace of the same reports with `expectedVersion: 0` takes the existing-Current path and returns 409 `{ error: 'duplicate_report' }` (the existing check order, which `routes.test.ts` pins); the stored Current and ward are unchanged | overwriting Current |
+| `a first import that loses the race is stale` | calling the exported `initializeCurrent` (see Design decisions) on a real store that already has a Current returns the stale refusal with that Current's version, and the stored Current is unchanged | mapping `already_initialized` to 400 or overwriting |
 | `first import keeps only allow-listed fields` | after the first replace, the database file and the captured log lines contain none of the fixture reports' phone numbers, emails or birth dates (pick three values from `fixtures/lcr-reports/README.md`'s description and the PDFs' text, as the T-056 leakage tests do) | storing a discarded field |
 | `Editors are refused without a Current` | an Editor's preview and replace both return 403, and nothing is written | gating skipped on the new path |
 | `with a Current, replace behaves as before` | a seeded Current plus `expectedVersion: 0` returns 409 `stale` with its version | the new path running when a Current exists |
 
 ## Edge cases (each needs a test)
-Covered above: no Current on preview and replace, wrong expected version, two first imports, Editor, an existing Current, leakage.
+Covered above: no Current on preview and replace, a namesake conflict inside the reports, wrong expected version, a second sequential first import, losing the first-import race, Editor, an existing Current, leakage.
 
 ## Human checks
 none (T-103 carries the device check).
