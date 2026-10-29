@@ -718,6 +718,103 @@ describe('import plan and replace', () => {
     expect(calling[0]?.key).toBeNull();
   });
 
+  it('a key-mapped organization fills the existing assignment', () => {
+    const { store } = prepare({
+      members: [person('mem-brielle', 'Northwood, Brielle')],
+      groups: [
+        {
+          id: 'bg-wide',
+          name: 'Ward-wide Callings',
+          key: 'ward_wide' as const,
+          callingGroups: [
+            {
+              id: 'cg-music',
+              name: 'Music',
+              assignments: [
+                {
+                  id: 'as-coord',
+                  title: 'Music Coordinator',
+                  positions: [{ id: 'pos-coord', lineageId: 'lin-coord' }],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+    const { plan, record } = commitFor(
+      store,
+      bundle({
+        organizations: [
+          row('Other Callings', 'Music', [{ title: 'Music Coordinator', occupant: 'Northwood, Brielle' }]),
+        ],
+      }),
+      {},
+    );
+    const assignments = titled(record.board, 'Music Coordinator');
+    expect(assignments).toHaveLength(1);
+    expect(assignments[0]?.id).toBe('as-coord');
+    expect(assignments[0]?.type).toBe('single');
+    expect(positionsOf(record.board, 'as-coord')).toHaveLength(1);
+    expect(record.board.placements[positionId('pos-coord')]).toBe(memberId('mem-brielle'));
+    expect(plan.unfamiliar).toEqual([]);
+    expect(plan.matchedPositions).toBe(1);
+    expect(plan.keptPositions).toBe(0);
+  });
+
+  it('a key-mapped list fills before it appends', () => {
+    const { store } = prepare({
+      members: [person('mem-brielle', 'Northwood, Brielle'), person('mem-cora', 'Lark, Cora')],
+      groups: [
+        {
+          id: 'bg-wide',
+          name: 'Ward-wide Callings',
+          key: 'ward_wide' as const,
+          callingGroups: [
+            {
+              id: 'cg-music',
+              name: 'Music',
+              assignments: [
+                {
+                  id: 'as-coord',
+                  title: 'Music Coordinator',
+                  type: 'list' as const,
+                  positions: [{ id: 'pos-coord', lineageId: 'lin-coord' }],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+    const { plan, record } = commitFor(
+      store,
+      bundle({
+        organizations: [
+          row('Other Callings', 'Music', [
+            { title: 'Music Coordinator', occupant: 'Northwood, Brielle' },
+            { title: 'Music Coordinator', occupant: 'Lark, Cora' },
+          ]),
+        ],
+      }),
+      {},
+    );
+    const assignments = titled(record.board, 'Music Coordinator');
+    expect(assignments).toHaveLength(1);
+    expect(assignments[0]?.id).toBe('as-coord');
+    expect(assignments[0]?.type).toBe('list');
+    const positions = positionsOf(record.board, 'as-coord');
+    expect(positions).toHaveLength(2);
+    expect(positions[0]?.id).toBe(positionId('pos-coord'));
+    expect(record.board.placements[positionId('pos-coord')]).toBe(memberId('mem-brielle'));
+    expect(record.board.placements[positions[1]?.id ?? positionId('missing')]).toBe(memberId('mem-cora'));
+    expect(plan.unfamiliar).toEqual([
+      { organization: 'Other Callings', group: 'Music', title: 'Music Coordinator', vacant: false },
+    ]);
+    expect(plan.matchedPositions).toBe(1);
+    expect(plan.keptPositions).toBe(0);
+  });
+
   it('proposals are untouched', () => {
     const { db, store } = prepare({
       members: [person('mem-amy', 'Amy, One'), person('mem-bea', 'Bea, Two')],

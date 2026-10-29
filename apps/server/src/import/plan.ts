@@ -164,6 +164,7 @@ export function planImport(input: {
   const rows = reportRows(input.bundle);
   const slots = slotsByKey(input.current);
   const used = new Map<string, number>();
+  const taken = new Set<string>();
   const matchedRows: { row: ReportRow; slot: Slot }[] = [];
   const unmatched: ReportRow[] = [];
   for (const row of rows) {
@@ -173,6 +174,7 @@ export function planImport(input: {
     const slot = available[index];
     if (slot !== undefined) {
       used.set(key, index + 1);
+      taken.add(slot.positionId);
       matchedRows.push({ row, slot });
     } else {
       unmatched.push(row);
@@ -358,6 +360,14 @@ export function planImport(input: {
     });
   }
 
+  const openPosition = (assignmentId: string): string | undefined => {
+    const open = Object.values(input.current.positions)
+      .filter((position) => position.assignmentId === assignmentId && !taken.has(position.id))
+      .sort((left, right) => left.order - right.order || left.id.localeCompare(right.id));
+    return open[0]?.id;
+  };
+
+  let filledExisting = 0;
   const unfamiliar: ImportPlan['unfamiliar'][number][] = [];
   for (const row of unmatched) {
     const boardRef = resolveBoardGroup(row.organization);
@@ -365,37 +375,64 @@ export function planImport(input: {
     const key = slotKey(row);
     let assignment = createdLists.get(key);
     let assignmentType: AssignmentType = 'list';
+    let position: StructureRef | undefined;
     if (assignment === undefined) {
       const existing = existingOfTitle(callingRef, row.title);
       const existingList = existing.find((item) => item.type === 'list');
-      const existingSingle = existing.find((item) => item.type === 'single');
       if (existingList !== undefined) {
-        assignment = { kind: 'existing', id: existingList.id };
-      } else if (existingSingle !== undefined || (unmatchedCounts.get(key) ?? 0) > 1) {
-        assignment = pushAssignment(callingRef, row.title, 'list');
-        createdLists.set(key, assignment);
+        const open = openPosition(existingList.id);
+        if (open !== undefined) {
+          assignment = { kind: 'existing', id: existingList.id };
+          position = { kind: 'existing', id: open };
+          taken.add(open);
+          filledExisting += 1;
+        } else {
+          assignment = { kind: 'existing', id: existingList.id };
+        }
       } else {
-        assignment = pushAssignment(callingRef, row.title, 'single');
-        assignmentType = 'single';
+        const singles = existing
+          .filter((item) => item.type === 'single')
+          .sort((left, right) => left.order - right.order || left.id.localeCompare(right.id));
+        for (const single of singles) {
+          const open = openPosition(single.id);
+          if (open === undefined) continue;
+          assignment = { kind: 'existing', id: single.id };
+          assignmentType = 'single';
+          position = { kind: 'existing', id: open };
+          taken.add(open);
+          filledExisting += 1;
+          break;
+        }
+        if (assignment === undefined) {
+          if (singles.length > 0 || (unmatchedCounts.get(key) ?? 0) > 1) {
+            assignment = pushAssignment(callingRef, row.title, 'list');
+            createdLists.set(key, assignment);
+          } else {
+            assignment = pushAssignment(callingRef, row.title, 'single');
+            assignmentType = 'single';
+          }
+        }
       }
     }
-    const position = pushPosition(assignment, refKey(assignment));
+    const placed = position ?? pushPosition(assignment, refKey(assignment));
     const decisionKey = row.occupant === null ? null : canonicalName(row.occupant);
     const decision = decisionKey === null ? undefined : decisionByKey.get(decisionKey);
     planned.set(row, {
       ...row,
       decisionKey,
       conflict: decision?.kind === 'ambiguous' && decision.reason === 'report_conflict',
-      position,
+      position: placed,
       assignment,
       assignmentType,
     });
-    unfamiliar.push({
-      organization: row.organization,
-      group: row.group,
-      title: row.title,
-      vacant: row.occupant === null,
-    });
+    if (position === undefined) {
+      unfamiliar.push({
+        organization: row.organization,
+        group: row.group,
+        title: row.title,
+        vacant: row.occupant === null,
+      });
+    }
   }
 
   const plannedRows = rows.map((row) => {
@@ -403,7 +440,7 @@ export function planImport(input: {
     if (plannedRow === undefined) throw new Error('import row was not planned');
     return plannedRow;
   });
-  let usedExisting = 0;
+  let usedExisting = filledExisting;
   for (const count of used.values()) usedExisting += count;
 
   return {
