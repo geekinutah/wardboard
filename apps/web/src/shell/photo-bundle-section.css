@@ -1,0 +1,252 @@
+/* Photo Bundle section in Settings (T-098) */
+.wb-photo-bundle-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  color: var(--wb-ink, #18212b);
+}
+
+.wb-photo-bundle-section-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.wb-photo-bundle-subheading {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--wb-ink, #18212b);
+}
+
+.wb-photo-bundle-note {
+  margin: 0;
+  color: var(--wb-muted, #55606b);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.wb-photo-bundle-select-pane,
+.wb-photo-bundle-matches-pane,
+.wb-photo-bundle-review-pane,
+.wb-photo-bundle-done-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+.wb-photo-bundle-file-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.wb-photo-bundle-label {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.wb-photo-bundle-input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 10px;
+  border: 1px solid var(--wb-line, #d9ddd8);
+  border-radius: 10px;
+  background: var(--wb-surface, #fff);
+  color: var(--wb-ink, #18212b);
+  font: inherit;
+  font-size: 14px;
+}
+
+.wb-photo-bundle-file-count {
+  margin: 0;
+  font-size: 13px;
+  color: var(--wb-ink-2, #3a444f);
+}
+
+.wb-photo-bundle-summary {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--wb-ink-2, #3a444f);
+}
+
+.wb-photo-bundle-alert {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--wb-vacancy-border, #c9772e);
+  border-radius: 10px;
+  background: var(--wb-vacancy-fill, #fff8f1);
+  color: var(--wb-ink, #18212b);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.wb-photo-bundle-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.wb-photo-bundle-group-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--wb-muted, #55606b);
+}
+
+.wb-photo-bundle-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.wb-photo-bundle-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--wb-surface, #fff);
+  border: 1px solid var(--wb-line, #d9ddd8);
+  border-radius: 8px;
+  min-width: 0;
+  font-size: 14px;
+}
+
+.wb-photo-bundle-name {
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wb-photo-bundle-badge {
+  flex-shrink: 0;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: var(--wb-ground, #f3f4f1);
+  color: var(--wb-ink-2, #3a444f);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.wb-photo-bundle-note {
+  flex-shrink: 0;
+  color: var(--wb-muted, #55606b);
+  font-size: 13px;
+  font-style: italic;
+}
+
+.wb-photo-bundle-ambiguous-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background: var(--wb-surface, #fff);
+  border: 1px solid var(--wb-line, #d9ddd8);
+  border-radius: 8px;
+  min-width: 0;
+}
+
+.wb-photo-bundle-ambiguous-name {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.wb-photo-bundle-ambiguous-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+}
+
+.wb-photo-bundle-candidate-btn,
+.wb-photo-bundle-skip-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--wb-line, #d9ddd8);
+  border-radius: 8px;
+  background: var(--wb-surface, #fff);
+  color: var(--wb-ink, #18212b);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.wb-photo-bundle-candidate-btn:hover,
+.wb-photo-bundle-skip-btn:hover {
+  border-color: var(--wb-accent, #1d5c68);
+}
+
+.wb-photo-bundle-candidate-btn[aria-pressed="true"],
+.wb-photo-bundle-skip-btn[aria-pressed="true"] {
+  background: var(--wb-accent, #1d5c68);
+  border-color: var(--wb-accent, #1d5c68);
+  color: #fff;
+  font-weight: 600;
+}
+
+.wb-photo-bundle-candidate-btn:focus-visible,
+.wb-photo-bundle-skip-btn:focus-visible {
+  outline: 2px solid var(--wb-accent-dark, #123e47);
+  outline-offset: 2px;
+}
+
+.wb-photo-bundle-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.wb-photo-bundle-actions button {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+.wb-photo-bundle-cleanup-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid var(--wb-line, #d9ddd8);
+  border-radius: 10px;
+  background: var(--wb-surface, #fff);
+}
+
+.wb-photo-bundle-cleanup-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.wb-photo-bundle-cleanup-code {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: var(--wb-ground, #f3f4f1);
+  color: var(--wb-ink, #18212b);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.4;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
