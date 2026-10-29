@@ -1,4 +1,4 @@
-import fs from 'node:fs';
+import fs, { mkdirSync } from 'node:fs';
 import { access, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
@@ -12,9 +12,11 @@ export type DevServerOptions = {
   port: number;
   webDir: string;
   reset?: boolean;
+  /** Seed the fictional fixture ward when no Current exists. Default true. */
+  seed?: boolean;
 };
 
-export type DevRunningServer = RunningServer & { seeded: SeededState };
+export type DevRunningServer = RunningServer & { seeded: SeededState | 'unseeded' };
 
 /** The fictional admin every client is signed in as. */
 const DEV_ADMIN_LOGIN = 'dev-admin@example.test';
@@ -49,7 +51,7 @@ function fullyResolve(input: string): string {
 }
 
 /**
- * The only paths `--reset` may delete: exactly `<repo>/data/dev`, or strictly
+ * The only paths `--reset` may delete: exactly `<repo>/data/dev` or `<repo>/data/dev-empty`, or strictly
  * inside the OS temp dir. `..` segments and symlinks in existing parents are
  * resolved before comparing, and the temp dir itself (not strictly inside) is
  * refused.
@@ -57,8 +59,14 @@ function fullyResolve(input: string): string {
 export function isSafeResetPath(dataDir: string): boolean {
   const resolved = fullyResolve(dataDir);
   if (resolved === fullyResolve(path.join(repoRoot, 'data', 'dev'))) return true;
+  if (resolved === fullyResolve(path.join(repoRoot, 'data', 'dev-empty'))) return true;
   const tempRoot = fullyResolve(os.tmpdir());
   return resolved !== tempRoot && resolved.startsWith(`${tempRoot}${path.sep}`);
+}
+
+/** Reads `--reset` and `--empty` from the command-line arguments; anything else is ignored. */
+export function parseDevArgs(argv: readonly string[]): { reset: boolean; empty: boolean } {
+  return { reset: argv.includes('--reset'), empty: argv.includes('--empty') };
 }
 
 /**
@@ -84,12 +92,18 @@ export async function startDevServer(options: DevServerOptions): Promise<DevRunn
   if (options.reset) {
     if (!isSafeResetPath(options.dataDir)) {
       throw new Error(
-        `Refusing to reset "${options.dataDir}": only <repo>/data/dev or a directory strictly inside the OS temp dir may be wiped`,
+        `Refusing to reset "${options.dataDir}": only <repo>/data/dev, <repo>/data/dev-empty, or a directory strictly inside the OS temp dir may be wiped`,
       );
     }
     await rm(options.dataDir, { recursive: true, force: true });
   }
-  const seeded = seedFixtureDataDir(options.dataDir);
+  let seeded: SeededState | 'unseeded';
+  if (options.seed === false) {
+    mkdirSync(options.dataDir, { recursive: true });
+    seeded = 'unseeded';
+  } else {
+    seeded = seedFixtureDataDir(options.dataDir);
+  }
   const server = await startServer(
     {
       dataDir: options.dataDir,
@@ -112,7 +126,7 @@ function isRunDirectly(): boolean {
 }
 
 async function main(): Promise<void> {
-  const reset = process.argv.slice(2).includes('--reset');
+  const { reset, empty } = parseDevArgs(process.argv.slice(2));
 
   let port: number;
   try {
@@ -133,17 +147,22 @@ async function main(): Promise<void> {
   let running: DevRunningServer;
   try {
     running = await startDevServer({
-      dataDir: path.join(repoRoot, 'data', 'dev'),
+      dataDir: path.join(repoRoot, 'data', empty ? 'dev-empty' : 'dev'),
       port,
       webDir,
       reset,
+      seed: !empty,
     });
   } catch (error) {
     console.error(error instanceof Error ? error.message : 'WardBoard dev failed to start');
     process.exit(1);
   }
 
-  console.log(`WardBoard dev: ${running.url} (fictional data, signed in as Dev Admin)`);
+  console.log(
+    empty
+      ? `WardBoard dev: ${running.url} (empty: no Current yet, open it to run the first import; signed in as Dev Admin)`
+      : `WardBoard dev: ${running.url} (fictional data, signed in as Dev Admin)`,
+  );
 
   let shuttingDown = false;
   const shutdown = (): void => {
