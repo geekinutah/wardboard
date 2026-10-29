@@ -10,7 +10,7 @@ import {
   type PhotoBundleResponse,
   type WardMemberForMatching,
 } from '../features/photos/bundle.ts';
-import { PhotoBatchReview, type PhotoBatchStep } from '../features/photos/PhotoBatchReview.tsx';
+import { PhotoBatchReview } from '../features/photos/PhotoBatchReview.tsx';
 import { planPhotoBatch, type PhotoMember } from '../features/photos/plan.ts';
 import { useSync, useSyncClient } from '../sync/react.tsx';
 import './photo-bundle-section.css';
@@ -29,7 +29,11 @@ interface CompareReviewItem {
   readonly photoRef: string;
 }
 
-export function PhotoBundleSection({ fetchImpl = window.fetch }: PhotoBundleSectionProps): ReactElement {
+function defaultFetch(...args: Parameters<typeof fetch>): ReturnType<typeof fetch> {
+  return window.fetch(...args);
+}
+
+export function PhotoBundleSection({ fetchImpl = defaultFetch }: PhotoBundleSectionProps): ReactElement {
   const client = useSyncClient();
   const { ward } = useSync();
 
@@ -96,7 +100,6 @@ export function PhotoBundleSection({ fetchImpl = window.fetch }: PhotoBundleSect
       ? Object.values(ward.members).map((m) => ({
           id: m.id,
           name: m.name,
-          canonicalName: m.canonicalName,
           photoRef: m.photoRef,
           removedDate: m.removedDate,
         }))
@@ -167,17 +170,19 @@ export function PhotoBundleSection({ fetchImpl = window.fetch }: PhotoBundleSect
       return;
     }
 
-    const compareList: CompareReviewItem[] = plan.compare.map((memberId) => {
-      const inc = incoming.find((i) => i.memberId === memberId)!;
-      const currentMember = ward?.members[memberId];
-      return {
+    const compareList: CompareReviewItem[] = [];
+    for (const memberId of plan.compare) {
+      const inc = incoming.find((i) => i.memberId === memberId);
+      if (inc === undefined) continue;
+      const currentMember = ward ? (ward.members as Record<string, { photoRef: string | null }>)[memberId] : undefined;
+      compareList.push({
         memberId,
         memberName: inc.memberName,
         currentUrl: currentMember?.photoRef ? `/api/photos/${currentMember.photoRef}` : null,
         incomingUrl: `/api/photos/${inc.photoRef}`,
         photoRef: inc.photoRef,
-      };
-    });
+      });
+    }
 
     setCompareItems(compareList);
     setLoading(false);
@@ -202,7 +207,7 @@ export function PhotoBundleSection({ fetchImpl = window.fetch }: PhotoBundleSect
   const skippedHousehold = bundleResponse?.skippedHousehold ?? 0;
   const householdNote =
     skippedHousehold > 0
-      ? ` · ${skippedHousehold} ${skippedHousehold === 1 ? 'household image' : 'household images'} skipped`
+      ? ` · ${String(skippedHousehold)} ${skippedHousehold === 1 ? 'household image' : 'household images'} skipped`
       : '';
 
   return (
@@ -241,7 +246,9 @@ export function PhotoBundleSection({ fetchImpl = window.fetch }: PhotoBundleSect
             <Button
               variant="primary"
               disabled={files.length === 0 || loading}
-              onClick={() => void handleReview()}
+              onClick={() => {
+                void handleReview();
+              }}
             >
               {loading ? 'Reading bundle…' : 'Review photo bundle'}
             </Button>
@@ -253,8 +260,8 @@ export function PhotoBundleSection({ fetchImpl = window.fetch }: PhotoBundleSect
         <div className="wb-photo-bundle-matches-pane">
           <h3 className="wb-photo-bundle-subheading">Review photo matches</h3>
           <p className="wb-photo-bundle-summary">
-            {matchedMatches.length} matched · {ambiguousMatches.length} need confirmation ·{' '}
-            {unmatchedMatches.length} unmatched{householdNote}
+            {String(matchedMatches.length)} matched · {String(ambiguousMatches.length)} need confirmation ·{' '}
+            {String(unmatchedMatches.length)} unmatched{householdNote}
           </p>
 
           {duplicateTargetError && (
@@ -297,7 +304,9 @@ export function PhotoBundleSection({ fetchImpl = window.fetch }: PhotoBundleSect
                             type="button"
                             className="wb-photo-bundle-candidate-btn"
                             aria-pressed={sel === cand.memberId}
-                            onClick={() => handleSelectCandidate(m.index, cand.memberId)}
+                            onClick={() => {
+                              handleSelectCandidate(m.index, cand.memberId);
+                            }}
                           >
                             Assign to {cand.name}
                           </button>
@@ -306,7 +315,9 @@ export function PhotoBundleSection({ fetchImpl = window.fetch }: PhotoBundleSect
                           type="button"
                           className="wb-photo-bundle-skip-btn"
                           aria-pressed={sel === 'skip'}
-                          onClick={() => handleSelectCandidate(m.index, 'skip')}
+                          onClick={() => {
+                            handleSelectCandidate(m.index, 'skip');
+                          }}
                         >
                           Skip
                         </button>
@@ -339,7 +350,9 @@ export function PhotoBundleSection({ fetchImpl = window.fetch }: PhotoBundleSect
             <Button
               variant="primary"
               disabled={!canImport || loading}
-              onClick={() => void handleImport()}
+              onClick={() => {
+                void handleImport();
+              }}
             >
               {loading ? 'Importing…' : 'Import photos'}
             </Button>

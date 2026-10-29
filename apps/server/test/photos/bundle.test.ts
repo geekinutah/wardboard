@@ -1,6 +1,5 @@
 import { createHash } from 'node:crypto';
 import { request as httpRequest, type ClientRequest, type IncomingHttpHeaders } from 'node:http';
-import { connect } from 'node:net';
 import { mkdtemp, readdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -16,6 +15,7 @@ import {
   type RunningServer,
 } from '../../src/index.ts';
 import { MAX_BUNDLE_BYTES } from '../../src/photos/index.ts';
+import type { PhotoBundleRequest, PhotoBundleResponse } from '../../src/photos/bundle.ts';
 import { minimalJpeg, minimalPng } from './fixtures.ts';
 
 const BASE_ORIGIN = 'http://wardboard.example';
@@ -262,7 +262,7 @@ describe('POST /api/photos/bundle', () => {
       bundle.json,
     );
     expect(editorResult.status).toBe(200);
-    const editorBody = JSON.parse(editorResult.body.toString('utf8'));
+    const editorBody = JSON.parse(editorResult.body.toString('utf8')) as PhotoBundleResponse;
     expect(editorBody.portraits).toHaveLength(2);
     expect(editorBody.portraits[0].name).toBe('Alice Young');
     expect(editorBody.portraits[0].photoRef).toMatch(/^[0-9a-f]{64}\.png$/);
@@ -283,7 +283,7 @@ describe('POST /api/photos/bundle', () => {
       bundle.json,
     );
     expect(adminResult.status).toBe(200);
-    const adminBody = JSON.parse(adminResult.body.toString('utf8'));
+    const adminBody = JSON.parse(adminResult.body.toString('utf8')) as PhotoBundleResponse;
     expect(adminBody.portraits).toHaveLength(2);
     const adminPhotos = await storedNames(adminStarted.dataDir);
     expect(adminPhotos).toHaveLength(2);
@@ -370,43 +370,65 @@ describe('POST /api/photos/bundle', () => {
     const started = await startEditor();
     const base = validBundle();
 
+    const baseReq = JSON.parse(base.json) as PhotoBundleRequest;
+
     // 1. Wrong format
-    const badFormat = JSON.parse(base.json);
-    badFormat.manifest.format = 'wrong-format';
+    const badFormat = {
+      ...baseReq,
+      manifest: { ...baseReq.manifest, format: 'wrong-format' },
+    };
     let res = await call(started.server.port, 'POST', '/api/photos/bundle', { origin: BASE_ORIGIN }, JSON.stringify(badFormat));
     expect(res.status).toBe(400);
     expect(JSON.parse(res.body.toString('utf8'))).toEqual({ error: 'invalid_bundle' });
     expect(await storedNames(started.dataDir)).toHaveLength(0);
 
     // 2. Wrong version
-    const badVersion = JSON.parse(base.json);
-    badVersion.manifest.version = 2;
+    const badVersion = {
+      ...baseReq,
+      manifest: { ...baseReq.manifest, version: 2 },
+    };
     res = await call(started.server.port, 'POST', '/api/photos/bundle', { origin: BASE_ORIGIN }, JSON.stringify(badVersion));
     expect(res.status).toBe(400);
     expect(await storedNames(started.dataDir)).toHaveLength(0);
 
     // 3. Path traversal filename
-    const pathTraversal = JSON.parse(base.json);
-    pathTraversal.manifest.portraits[0].file = '../etc/passwd.png';
+    const pathTraversal = {
+      ...baseReq,
+      manifest: {
+        ...baseReq.manifest,
+        portraits: baseReq.manifest.portraits.map((p, idx) =>
+          idx === 0 ? { ...p, file: '../etc/passwd.png' } : p,
+        ),
+      },
+    };
     res = await call(started.server.port, 'POST', '/api/photos/bundle', { origin: BASE_ORIGIN }, JSON.stringify(pathTraversal));
     expect(res.status).toBe(400);
     expect(await storedNames(started.dataDir)).toHaveLength(0);
 
     // 4. SHA-256 stem mismatch
-    const hashMismatch = JSON.parse(base.json);
-    const goodFile = Object.keys(hashMismatch.files)[0]!;
+    const goodFile = Object.keys(baseReq.files)[0] ?? '';
     const corruptStem = '0'.repeat(64);
     const corruptFile = `${corruptStem}.png`;
-    hashMismatch.manifest.portraits[0].file = corruptFile;
-    hashMismatch.files[corruptFile] = hashMismatch.files[goodFile];
-    delete hashMismatch.files[goodFile];
+    const hashMismatch: PhotoBundleRequest = {
+      manifest: {
+        ...baseReq.manifest,
+        portraits: baseReq.manifest.portraits.map((p, idx) =>
+          idx === 0 ? { ...p, file: corruptFile } : p,
+        ),
+      },
+      files: {
+        [corruptFile]: baseReq.files[goodFile] ?? '',
+      },
+    };
     res = await call(started.server.port, 'POST', '/api/photos/bundle', { origin: BASE_ORIGIN }, JSON.stringify(hashMismatch));
     expect(res.status).toBe(400);
     expect(await storedNames(started.dataDir)).toHaveLength(0);
 
     // 5. Missing file entry in `files`
-    const missingFile = JSON.parse(base.json);
-    delete missingFile.files[Object.keys(missingFile.files)[0]!];
+    const missingFile: PhotoBundleRequest = {
+      manifest: baseReq.manifest,
+      files: {},
+    };
     res = await call(started.server.port, 'POST', '/api/photos/bundle', { origin: BASE_ORIGIN }, JSON.stringify(missingFile));
     expect(res.status).toBe(400);
     expect(await storedNames(started.dataDir)).toHaveLength(0);

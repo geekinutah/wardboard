@@ -50,7 +50,7 @@ async function expectTargetsAtLeast44(locator: Locator): Promise<void> {
   );
   expect(targets.length).toBeGreaterThan(0);
   for (const target of targets) {
-    expect(target.height, target.name ?? undefined).toBeGreaterThanOrEqual(44);
+    expect(target.height, target.name).toBeGreaterThanOrEqual(44);
   }
 }
 

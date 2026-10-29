@@ -127,14 +127,20 @@ export function matchBundlePortraits(
       };
     }
 
-    if (matchingMembers.length === 1 && !p.duplicateName && (portraitNameCounts.get(norm) ?? 0) === 1) {
+    const firstCandidate = matchingMembers[0];
+    if (
+      matchingMembers.length === 1 &&
+      firstCandidate !== undefined &&
+      !p.duplicateName &&
+      (portraitNameCounts.get(norm) ?? 0) === 1
+    ) {
       return {
         kind: 'matched',
         index,
         name: p.name,
         file: p.file,
         photoRef: p.photoRef,
-        member: matchingMembers[0]!,
+        member: firstCandidate,
       };
     }
 
@@ -216,9 +222,25 @@ async function fileToBase64(file: File): Promise<string> {
   let binary = '';
   const len = bytes.byteLength;
   for (let i = 0; i < len; i++) {
-    binary += String.fromCharCode(bytes[i]!);
+    const byte = bytes[i];
+    if (byte !== undefined) {
+      binary += String.fromCharCode(byte);
+    }
   }
   return btoa(binary);
+}
+
+function isManifest(val: unknown): val is PhotoBundleManifest {
+  if (typeof val !== 'object' || val === null || Array.isArray(val)) return false;
+  const obj = val as Record<string, unknown>;
+  return (
+    obj.format === 'wardboard-photo-bundle' &&
+    obj.version === 1 &&
+    typeof obj.layoutVersion === 'string' &&
+    Array.isArray(obj.portraits) &&
+    Array.isArray(obj.missing) &&
+    typeof obj.skippedHousehold === 'number'
+  );
 }
 
 export async function readBundleFiles(files: Iterable<File>): Promise<ReadBundleResult> {
@@ -231,10 +253,10 @@ export async function readBundleFiles(files: Iterable<File>): Promise<ReadBundle
     };
   }
 
-  let manifest: PhotoBundleManifest;
+  let parsed: unknown;
   try {
     const text = await manifestFile.text();
-    manifest = JSON.parse(text);
+    parsed = JSON.parse(text) as unknown;
   } catch {
     return {
       ok: false,
@@ -242,19 +264,13 @@ export async function readBundleFiles(files: Iterable<File>): Promise<ReadBundle
     };
   }
 
-  if (
-    !manifest ||
-    manifest.format !== 'wardboard-photo-bundle' ||
-    manifest.version !== 1 ||
-    !Array.isArray(manifest.portraits) ||
-    !Array.isArray(manifest.missing) ||
-    typeof manifest.skippedHousehold !== 'number'
-  ) {
+  if (!isManifest(parsed)) {
     return {
       ok: false,
       message: "Select manifest.json and every portrait image from the collector's bundle folder.",
     };
   }
+  const manifest = parsed;
 
   const fileMap = new Map<string, File>();
   for (const f of fileArray) {
@@ -264,7 +280,7 @@ export async function readBundleFiles(files: Iterable<File>): Promise<ReadBundle
   const filesRecord: Record<string, string> = {};
   for (const portrait of manifest.portraits) {
     const f = fileMap.get(portrait.file);
-    if (!f) {
+    if (f === undefined) {
       return {
         ok: false,
         message: "Select manifest.json and every portrait image from the collector's bundle folder.",
@@ -273,8 +289,10 @@ export async function readBundleFiles(files: Iterable<File>): Promise<ReadBundle
   }
 
   for (const portrait of manifest.portraits) {
-    const f = fileMap.get(portrait.file)!;
-    filesRecord[portrait.file] = await fileToBase64(f);
+    const f = fileMap.get(portrait.file);
+    if (f !== undefined) {
+      filesRecord[portrait.file] = await fileToBase64(f);
+    }
   }
 
   return {

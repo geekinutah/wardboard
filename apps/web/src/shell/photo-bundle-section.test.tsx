@@ -1,9 +1,9 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import type { Ward } from '@wardboard/core';
+import type { Member, MemberId, Ward } from '@wardboard/core';
 import { SyncClient, type SyncDeps, type WebSocketLike } from '../sync/client.ts';
-import type { Me } from '../sync/protocol.ts';
+import type { Me, RequestResult } from '../sync/protocol.ts';
 import { SyncProvider } from '../sync/react.tsx';
 import { PhotoBundleSection } from './PhotoBundleSection.tsx';
 import { SettingsRoute } from './SettingsRoute.tsx';
@@ -40,10 +40,10 @@ const ADMIN: Me = { login: 'ada@example.test', displayName: 'Ada Admin', role: '
 const EDITOR: Me = { login: 'ben@example.test', displayName: 'Ben Editor', role: 'editor' };
 
 function makeWard(members: Array<{ id: string; name: string; photoRef: string | null }>): Ward {
-  const membersRecord: Record<string, any> = {};
+  const membersRecord: Record<string, Member> = {};
   for (const m of members) {
     membersRecord[m.id] = {
-      id: m.id,
+      id: m.id as MemberId,
       name: m.name,
       category: 'adult',
       photoRef: m.photoRef,
@@ -77,7 +77,7 @@ function setupClient(): { client: SyncClient; socket: FakeSocket } {
     },
     requestIds: () => {
       request += 1;
-      return `req-${request}`;
+      return `req-${String(request)}`;
     },
   };
   const client = new SyncClient(deps);
@@ -88,17 +88,12 @@ function setupClient(): { client: SyncClient; socket: FakeSocket } {
 function parseFrames(sent: readonly string[], type: string): Record<string, unknown>[] {
   const found: Record<string, unknown>[] = [];
   for (const raw of sent) {
-    const frame = JSON.parse(raw) as unknown;
-    if (typeof frame === 'object' && frame !== null && (frame as any).type === type) found.push(frame as any);
+    const frame: unknown = JSON.parse(raw);
+    if (typeof frame === 'object' && frame !== null && 'type' in frame && frame.type === type) {
+      found.push(frame);
+    }
   }
   return found;
-}
-
-function lastRequestId(sent: readonly string[], type: string): string {
-  const frames = parseFrames(sent, type);
-  const frame = frames[frames.length - 1];
-  if (frame === undefined || typeof frame.requestId !== 'string') throw new Error(`no ${type} frame`);
-  return frame.requestId;
 }
 
 function deliverHello(socket: FakeSocket, me: Me, ward: Ward | null = null): void {
@@ -108,8 +103,9 @@ function deliverHello(socket: FakeSocket, me: Me, ward: Ward | null = null): voi
   const whoamiFrames = parseFrames(socket.sent, 'whoami');
   if (whoamiFrames.length > 0) {
     const whoami = whoamiFrames[whoamiFrames.length - 1];
+    const requestId = whoami && typeof whoami.requestId === 'string' ? whoami.requestId : '';
     act(() => {
-      socket.receive({ type: 'me', requestId: String(whoami?.requestId ?? ''), user: me });
+      socket.receive({ type: 'me', requestId, user: me });
     });
   }
   act(() => {
@@ -187,7 +183,7 @@ describe('PhotoBundleSection', () => {
 
     render(
       <SyncProvider client={setup.client}>
-        <PhotoBundleSection fetchImpl={fakeFetch as any} />
+        <PhotoBundleSection fetchImpl={fakeFetch} />
       </SyncProvider>,
     );
     deliverHello(setup.socket, EDITOR, ward);
@@ -253,11 +249,11 @@ describe('PhotoBundleSection', () => {
         }),
     });
 
-    const updateMemberSpy = vi.spyOn(setup.client, 'updateMember').mockResolvedValue({ ok: true });
+    const updateMemberSpy = vi.spyOn(setup.client, 'updateMember').mockResolvedValue({ ok: true } as RequestResult);
 
     render(
       <SyncProvider client={setup.client}>
-        <PhotoBundleSection fetchImpl={fakeFetch as any} />
+        <PhotoBundleSection fetchImpl={fakeFetch} />
       </SyncProvider>,
     );
     deliverHello(setup.socket, EDITOR, ward);
@@ -345,7 +341,7 @@ describe('PhotoBundleSection', () => {
 
     rerender(
       <SyncProvider client={setup.client}>
-        <PhotoBundleSection fetchImpl={serverFails as any} />
+        <PhotoBundleSection fetchImpl={serverFails} />
       </SyncProvider>,
     );
 

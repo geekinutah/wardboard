@@ -171,7 +171,7 @@ export async function handleBundleUpload(
     portraits: validated.manifest.portraits.map((portrait) => ({
       name: portrait.name,
       file: portrait.file,
-      photoRef: refByFile.get(portrait.file)!,
+      photoRef: refByFile.get(portrait.file) ?? '',
       duplicateName: portrait.duplicateName,
     })),
     missing: validated.manifest.missing,
