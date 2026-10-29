@@ -93,4 +93,4 @@ observation / review finding
 | B-061 | P2 | import / server | candidate | The first import can't run when there is no Current board |
 | B-062 | P3 | web import | candidate | The import review lists every identity row one at a time |
 | B-063 | P3 | web settings | candidate | The Admin badge in People & access is clipped at phone width |
-| B-064 | P3 | web dugout | candidate | The dugout panel's "All" filter pill may render without its label |
+| B-064 | P3 | web dugout | candidate | The dugout filter's "All" chip renders without its label |

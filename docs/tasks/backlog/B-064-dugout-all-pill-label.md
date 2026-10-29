@@ -1,9 +1,9 @@
-# B-064: The dugout panel's "All" filter pill may render without its label
+# B-064: The dugout filter's "All" chip renders without its label
 
 **Priority:** P3  
 **Area:** web dugout  
 **State:** candidate  
-**Found:** 2026-10-29, T-100 implementer (GUI capture); not yet confirmed by a verifier  
+**Found:** 2026-10-29, T-100 implementer (GUI capture); confirmed by the T-100 verifier in the dugout, organization and group-detail captures  
 **Promoted to:** —
 
 ## Finding
