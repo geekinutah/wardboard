@@ -82,9 +82,7 @@ test('first import on the real server', async ({ page }, testInfo) => {
   const count = await rows.count();
   for (let index = 0; index < count; index += 1) {
     const row = rows.nth(index);
-    await row.getByRole('button', { name: 'Treat as new person' }).click();
-    const adult = row.getByRole('button', { name: 'Adult', exact: true });
-    if ((await adult.count()) > 0) await adult.click();
+    await row.getByRole('button', { name: 'Adult', exact: true }).click();
   }
   await page.getByRole('button', { name: 'Replace Current' }).click();
   await expect(page.getByRole('heading', { name: 'Set up WardBoard' })).toHaveCount(0);

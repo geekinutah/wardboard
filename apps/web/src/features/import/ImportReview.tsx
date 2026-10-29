@@ -1,4 +1,4 @@
-import { useRef, useState, type ReactElement } from 'react';
+import { useId, useRef, useState, type ReactElement } from 'react';
 import { Button } from '../../design/Button.tsx';
 import {
   planImportReview,
@@ -31,6 +31,8 @@ const DISCARDED = [
   'Class rosters',
   'Ministering',
 ] as const;
+
+const NEW_PERSON_DETAIL = 'Not in WardBoard yet. Choose adult or youth.';
 
 const KEPT = 'Names · youth/adult · callings and positions · vacancies · outside-ward callings';
 
@@ -108,7 +110,9 @@ export function ImportReview({
   const [pending, setPending] = useState(false);
   const [result, setResult] = useState<ReplaceOutcome | null>(null);
   const pendingRef = useRef(false);
-  const review = planImportReview(preview);
+  const review = planImportReview(preview, expectedVersion === 0);
+  const idBase = useId();
+  const rowRefs = useRef(new Map<string, HTMLElement>());
   const decision = resolutionsFor(preview, choices);
   const blocked = blockedMessage(review.blocked);
   const ready = decision.ready;
@@ -124,6 +128,17 @@ export function ImportReview({
       return;
     }
     choose(row.key, { action: 'match', memberId });
+  }
+
+  const unresolvedRows = review.rows.filter((row) => !(row.key in decision.resolutions));
+  const firstUnresolved = unresolvedRows[0];
+
+  function goToNext(): void {
+    if (firstUnresolved === undefined) return;
+    const element = rowRefs.current.get(firstUnresolved.key);
+    if (element === undefined) return;
+    if (typeof element.scrollIntoView === 'function') element.scrollIntoView({ block: 'center' });
+    element.focus({ preventScroll: true });
   }
 
   function chooseNew(row: ImportReviewRow): void {
@@ -188,14 +203,36 @@ export function ImportReview({
           ) : (
             <p className="wb-import-muted">Names alone aren&apos;t enough to merge. Choose how each row should be matched.</p>
           )}
-          {review.rows.map((row) => {
+          <p className="wb-import-count" aria-live="polite">
+            {unresolvedRows.length > 0 ? `${String(unresolvedRows.length)} of ${String(review.rows.length)} need a choice` : ''}
+          </p>
+          {review.rows.map((row, rowIndex) => {
             const choice = choices[row.key];
-            const showCategory = row.needsCategory && (choice?.action === 'new' || row.matchOptions.length === 0);
+            const noMatch = row.matchOptions.length === 0;
+            const unresolved = !(row.key in decision.resolutions);
+            const showCategory = row.needsCategory && (choice?.action === 'new' || noMatch);
+            const detail = noMatch && row.kind === 'new' && row.needsCategory ? NEW_PERSON_DETAIL : row.detail;
+            const tagId = `${idBase}-tag-${String(rowIndex)}`;
             return (
-              <article key={row.key} className="wb-import-row" aria-label={row.name}>
+              <article
+                key={row.key}
+                className={unresolved ? 'wb-import-row is-unresolved' : 'wb-import-row'}
+                aria-label={row.name}
+                aria-describedby={unresolved ? tagId : undefined}
+                tabIndex={-1}
+                ref={(element) => {
+                  if (element === null) rowRefs.current.delete(row.key);
+                  else rowRefs.current.set(row.key, element);
+                }}
+              >
                 <div className="wb-import-person-copy">
                   <p className="wb-import-person">{row.name}</p>
-                  <p className="wb-import-muted">{row.detail}</p>
+                  {unresolved ? (
+                    <p className="wb-import-tag" id={tagId}>
+                      Needs a choice
+                    </p>
+                  ) : null}
+                  <p className="wb-import-muted">{noMatch && !row.needsCategory ? 'Will be added' : detail}</p>
                 </div>
                 <div className="wb-import-choices">
                   {row.matchOptions.map((option) => (
@@ -208,13 +245,15 @@ export function ImportReview({
                       }}
                     />
                   ))}
-                  <ChoiceButton
-                    label="Treat as new person"
-                    pressed={choice?.action === 'new'}
-                    onClick={() => {
-                      chooseNew(row);
-                    }}
-                  />
+                  {noMatch ? null : (
+                    <ChoiceButton
+                      label="Treat as new person"
+                      pressed={choice?.action === 'new'}
+                      onClick={() => {
+                        chooseNew(row);
+                      }}
+                    />
+                  )}
                   {showCategory ? (
                     <>
                       <ChoiceButton
@@ -267,6 +306,11 @@ export function ImportReview({
             Proposals keep their own baselines. Notes and tags carry over only for confirmed matches.
           </p>
         </div>
+        {firstUnresolved === undefined ? null : (
+          <Button variant="secondary" className="wb-import-next" onClick={goToNext}>
+            {`Go to next: ${firstUnresolved.name}`}
+          </Button>
+        )}
         <Button
           className="wb-import-replace"
           disabled={!ready || pending}
