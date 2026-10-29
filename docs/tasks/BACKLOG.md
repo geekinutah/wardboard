@@ -95,3 +95,4 @@ observation / review finding
 | B-063 | P3 | web settings | candidate | The Admin badge in People & access is clipped at phone width |
 | B-064 | P3 | web dugout | candidate | The dugout filter's "All" chip renders without its label |
 | B-065 | P3 | web phone / e2e | candidate | Small wording and capture follow-ups from the T-094/T-097/T-100 wave |
+| B-066 | P3 | server import tests | candidate | Harden the first-import server tests |
