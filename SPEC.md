@@ -226,6 +226,8 @@ Stable lineage IDs may connect corresponding positions for comparison, but must 
 4. Explicitly confirm replacement of current.
 5. Replace atomically; a failed import leaves the old current intact.
 
+**CONFIRMED (2026-10-29):** When there is no Current board, WardBoard opens the import workflow, and the first import creates Current from the three reports.
+
 **CONFIRMED:** Primary roster inputs are the three verified PDF report routes described in section 15. Direct photo upload and user-initiated automated directory photo scraping are supported. CSV and a photos folder remain optional convenience inputs; TSV/XLSX are deferred unless needed. Automated PDF harvesting and photo scraping use deterministic local code. No Church credentials are stored by the app or collectors. Section 15 supersedes earlier exploratory input suggestions.
 
 Member identity matching must not silently merge namesakes. Local IDs or an approved source key can reconcile identities; normalized names alone are not sufficient for ambiguous cases. **CONFIRMED:** Matching uses name comparison only, never a Church identifier. An exact, unique name match reuses the existing local member; namesakes, changed names, and new names resembling existing members are presented for explicit confirmation in the import preview.

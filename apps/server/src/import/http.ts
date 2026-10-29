@@ -1,14 +1,18 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
+import { boardId } from '@wardboard/core';
 import { extractPdf, importReports, type ImportBundle } from '@wardboard/importer';
 import type { Role } from '../access/index.ts';
 import type { Store } from '../store/index.ts';
 import type { OperationChannel } from '../ws/channel.ts';
 import { applyImport } from './apply.ts';
+import { emptyCurrentBoard } from './empty.ts';
 import { planImport } from './plan.ts';
 import type { ImportFingerprints, ImportPlan, ImportResolution, ImportResolutions } from './types.ts';
 
 const MAX_IMPORT_BYTES = 2_000_000;
 const FINGERPRINT_VERSION = /^[0-9a-f]{64}\.[0-9a-f]{64}\.[0-9a-f]{64}$/;
+/** Id of the empty Current a first-import preview plans against. Never stored. */
+const PREVIEW_BOARD_ID = 'first-import-preview';
 
 export type ImportHttpInput = {
   req: IncomingMessage;
@@ -225,9 +229,15 @@ function refusal(error: 'duplicate_report' | 'inconsistent_reports' | 'unresolve
   return JSON.stringify({ error });
 }
 
-function planCurrent(store: Store, bundle: ImportBundle): ImportPlan | null {
+/**
+ * Plans the import against the stored Current, or against an empty Current with
+ * the given id when the ward has none yet (the first import).
+ */
+function planCurrent(store: Store, bundle: ImportBundle, firstBoardId: () => string): ImportPlan {
   const current = store.loadCurrent();
-  if (current === null) return null;
+  if (current === null) {
+    return planImport({ bundle, ward: store.loadWard(), current: emptyCurrentBoard(boardId(firstBoardId())) });
+  }
   const previous = previousFingerprints(current.importVersion);
   return planImport({
     bundle,
@@ -235,6 +245,42 @@ function planCurrent(store: Store, bundle: ImportBundle): ImportPlan | null {
     current: current.board,
     ...(previous === undefined ? {} : { previousFingerprints: previous }),
   });
+}
+
+type Applied = Extract<ReturnType<typeof applyImport>, { ok: true }>;
+type Stored = { ok: true; importVersion: string; importedAt: string } | { ok: false; stale?: number };
+
+function replaceStored(store: Store, applied: Applied, expectedVersion: number): Stored {
+  const replaced = store.replaceCurrent({
+    ward: applied.ward,
+    current: applied.current,
+    expectedVersion,
+    importVersion: applied.importVersion,
+    importedAt: applied.importedAt,
+  });
+  if (!replaced.ok) {
+    return replaced.error.code === 'stale' ? { ok: false, stale: replaced.error.currentVersion } : { ok: false };
+  }
+  return { ok: true, importVersion: replaced.value.current.importVersion, importedAt: replaced.value.current.importedAt };
+}
+
+/** Writes the ward's first Current. A concurrent first import that already won makes this one stale. */
+export function initializeCurrent(store: Store, applied: Applied): Stored {
+  const initialized = store.initialize({
+    ward: applied.ward,
+    current: applied.current,
+    importVersion: applied.importVersion,
+  });
+  if (!initialized.ok) {
+    if (initialized.error.code === 'already_initialized') {
+      const winner = store.loadCurrent();
+      return { ok: false, stale: winner === null ? 0 : winner.board.version };
+    }
+    return { ok: false };
+  }
+  const created = store.loadCurrent();
+  if (created === null) return { ok: false };
+  return { ok: true, importVersion: created.importVersion, importedAt: created.importedAt };
 }
 
 export async function handleImportRequest(input: ImportHttpInput): Promise<void> {
@@ -287,11 +333,7 @@ export async function handleImportRequest(input: ImportHttpInput): Promise<void>
         sendJson(input.res, 400, '{"error":"bad_request"}');
         return;
       }
-      const plan = planCurrent(input.store, bundle);
-      if (plan === null) {
-        sendJson(input.res, 400, '{"error":"bad_request"}');
-        return;
-      }
+      const plan = planCurrent(input.store, bundle, () => PREVIEW_BOARD_ID);
       input.log?.(previewLog(plan));
       sendJson(input.res, 200, previewJson(plan));
       return;
@@ -312,11 +354,12 @@ export async function handleImportRequest(input: ImportHttpInput): Promise<void>
       sendJson(input.res, 400, '{"error":"bad_request"}');
       return;
     }
-    const plan = planCurrent(input.store, bundle);
-    if (plan === null) {
-      sendJson(input.res, 400, '{"error":"bad_request"}');
+    const first = input.store.loadCurrent() === null;
+    if (first && expectedVersion !== 0) {
+      sendJson(input.res, 409, refusal('stale', 0));
       return;
     }
+    const plan = planCurrent(input.store, bundle, input.ids);
     const applied = applyImport({
       plan,
       resolutions,
@@ -332,16 +375,10 @@ export async function handleImportRequest(input: ImportHttpInput): Promise<void>
       );
       return;
     }
-    const replaced = input.store.replaceCurrent({
-      ward: applied.ward,
-      current: applied.current,
-      expectedVersion,
-      importVersion: applied.importVersion,
-      importedAt: applied.importedAt,
-    });
-    if (!replaced.ok) {
-      if (replaced.error.code === 'stale') {
-        sendJson(input.res, 409, refusal('stale', replaced.error.currentVersion));
+    const stored = first ? initializeCurrent(input.store, applied) : replaceStored(input.store, applied, expectedVersion);
+    if (!stored.ok) {
+      if (stored.stale !== undefined) {
+        sendJson(input.res, 409, refusal('stale', stored.stale));
         return;
       }
       sendJson(input.res, 400, '{"error":"bad_request"}');
@@ -356,8 +393,8 @@ export async function handleImportRequest(input: ImportHttpInput): Promise<void>
       200,
       JSON.stringify({
         replaced: true,
-        importVersion: replaced.value.current.importVersion,
-        importedAt: replaced.value.current.importedAt,
+        importVersion: stored.importVersion,
+        importedAt: stored.importedAt,
         matched: applied.matched,
         created: applied.created,
         removed: applied.removed,
