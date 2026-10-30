@@ -106,6 +106,7 @@ const HINTS = [
   ['Organizations and callings', 'In LCR: Callings → Callings by Organization → Print → Download PDF. Choose Callings only, without Members or Ministering, if offered.'],
   ['Members without callings', 'In LCR: Reports → Members without Callings → Print → Download PDF.'],
   ['Out-of-unit callings', 'In LCR: Reports → Out-of-Unit Callings → Print → Download PDF.'],
+  ['Member list', 'In LCR: Reports → Member Directory → Print → Download PDF. The printed report is titled "Member List".'],
 ] as const;
 
 function pdf(name: string): File {
@@ -144,7 +145,7 @@ describe('Import sources guidance', () => {
     const steps = within(details as HTMLElement).getAllByRole('listitem');
     expect(steps.map((step) => step.textContent)).toEqual([
       'Sign in to LCR in your own browser. WardBoard never asks for your Church password or MFA code.',
-      'Download the three reports above and keep them in a private folder.',
+      'Download the four reports above and keep them in a private folder.',
       'Choose each file here, then press Preview import. Nothing changes until you confirm.',
     ]);
     expect(details?.textContent).toContain('docs/import/guide.md');
@@ -152,13 +153,13 @@ describe('Import sources guidance', () => {
 
   it('first import says Create Current', async () => {
     await renderSettings(ADMIN, null);
-    expect(screen.getByText('Create Current from the three LCR reports. Nothing changes until you confirm.')).toBeInTheDocument();
+    expect(screen.getByText('Create Current from the four LCR reports. Nothing changes until you confirm.')).toBeInTheDocument();
     expect(sectionText()).not.toContain('Replace Current');
   });
 
   it('with a Current the intro still says Replace Current', async () => {
     await renderSettings(ADMIN);
-    expect(screen.getByText('Replace Current with the three LCR reports. Nothing changes until you confirm.')).toBeInTheDocument();
+    expect(screen.getByText('Replace Current with the four LCR reports. Nothing changes until you confirm.')).toBeInTheDocument();
     expect(sectionText()).not.toContain('Create Current');
   });
 

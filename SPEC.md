@@ -226,9 +226,9 @@ Stable lineage IDs may connect corresponding positions for comparison, but must 
 4. Explicitly confirm replacement of current.
 5. Replace atomically; a failed import leaves the old current intact.
 
-**CONFIRMED (2026-10-29):** When there is no Current board, WardBoard opens the import workflow, and the first import creates Current from the three reports.
+**CONFIRMED (2026-10-29):** When there is no Current board, WardBoard opens the import workflow, and the first import creates Current from the four reports.
 
-**CONFIRMED:** Primary roster inputs are the three verified PDF report routes described in section 15. Direct photo upload and user-initiated automated directory photo scraping are supported. CSV and a photos folder remain optional convenience inputs; TSV/XLSX are deferred unless needed. Automated PDF harvesting and photo scraping use deterministic local code. No Church credentials are stored by the app or collectors. Section 15 supersedes earlier exploratory input suggestions.
+**CONFIRMED:** Primary roster inputs are the four verified PDF report routes described in section 15. Direct photo upload and user-initiated automated directory photo scraping are supported. CSV and a photos folder remain optional convenience inputs; TSV/XLSX are deferred unless needed. Automated PDF harvesting and photo scraping use deterministic local code. No Church credentials are stored by the app or collectors. Section 15 supersedes earlier exploratory input suggestions.
 
 Member identity matching must not silently merge namesakes. Local IDs or an approved source key can reconcile identities; normalized names alone are not sufficient for ambiguous cases. **CONFIRMED:** Matching uses name comparison only, never a Church identifier. An exact, unique name match reuses the existing local member; namesakes, changed names, and new names resembling existing members are presented for explicit confirmation in the import preview.
 
@@ -496,11 +496,13 @@ The app must provide a maintained, versioned guide matching the released collect
 
 1. Launch the local collection tool, or choose manual PDF upload. Read its required browser capabilities and select a private local staging location. Select the intended ward and requested inputs.
 2. Sign into the official Church browser session yourself, including MFA if requested. Do not paste credentials into WardBoard, a collector configuration, or a chat.
-3. Collect these PDF reports through their official UI: **Callings → Callings by Organization → Print → Download PDF**; **Reports → Members without Callings → Print → Download PDF**; **Reports → Out-of-Unit Callings → Print → Download PDF**. For organization output, prefer Callings only with Members/Ministering excluded where the current UI permits. Wait for generation to complete. The collector must validate report identity/completeness rather than rely on download filenames.
+3. Collect these PDF reports through their official UI: **Callings → Callings by Organization → Print → Download PDF**; **Reports → Members without Callings → Print → Download PDF**; **Reports → Out-of-Unit Callings → Print → Download PDF**; **Reports → Member Directory → Print → Download PDF** (the printed title is "Member List"). For organization output, prefer Callings only with Members/Ministering excluded where the current UI permits. Wait for generation to complete. The collector must validate report identity/completeness rather than rely on download filenames.
 4. Optionally run the directory-photo collector in that signed-in browser, restricted to individual portraits and the minimal names/approved keys needed for matching. Direct in-app member-photo upload remains available instead.
 5. Review the deterministic import preview: report coverage, duplicate files, filled/vacant positions, external callings, unmatched people, and ambiguous identities. Resolve ambiguities explicitly; no silent name-only merges.
 6. Confirm current-board replacement. Existing proposals keep their own baselines and show divergence notices. Review every existing-photo replacement side by side and choose Keep Current, Use New Photo, or Cancel.
 7. Verify the completion summary and staging cleanup. Keep original source PDFs only if you intentionally choose to retain your own copies; the app does not archive them automatically. Sign out or close the Church browser session when you choose.
+
+**CONFIRMED (2026-10-30):** The Member List is a required fourth report. It supplies youth/adult for people the other reports don't age. Only name and the derived category are kept; gender, age, birth date, phone and email are discarded before storage.
 
 ### Reusable prompt for an optional AI operator
 
@@ -524,7 +526,7 @@ Ship a copyable prompt alongside the human guide. It must be usable by an agent 
 
 ### Verification required before shipping collectors
 
-- A human can harvest the three PDFs, collect/upload photos, preview and import with all model services unavailable and no model configuration present.
+- A human can harvest the four PDFs, collect/upload photos, preview and import with all model services unavailable and no model configuration present.
 - The deterministic collector follows the same code path with or without an optional AI operator; repeat fixture runs produce equivalent normalized output.
 - Test fictional multi-page PDFs, mixed calling/member tables, duplicate reports, wrapped titles, explicit vacancies, external sections, changed layouts, and ambiguous names. Validate counts and reject unexpected report types/incomplete output before replacement.
 - Test photo matching, absent/failed images, interrupted collection, and existing-photo comparison decisions without collecting real ward fixtures into the repository.

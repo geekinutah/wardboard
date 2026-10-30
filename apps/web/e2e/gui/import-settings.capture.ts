@@ -67,6 +67,7 @@ test('import in settings on the real server', async ({ page }, testInfo) => {
   await page.getByLabel('Organizations and callings').setInputFiles(path.join(REPORTS, 'organizations-and-callings.pdf'));
   await page.getByLabel('Members without callings').setInputFiles(path.join(REPORTS, 'members-without-callings.pdf'));
   await page.getByLabel('Out-of-unit callings').setInputFiles(path.join(REPORTS, 'out-of-unit-callings.pdf'));
+  await page.getByLabel('Member list').setInputFiles(path.join(REPORTS, 'member-list.pdf'));
   await expect(section.getByText('out-of-unit-callings.pdf')).toBeVisible();
   await section.scrollIntoViewIfNeeded();
   await expectNoHorizontalOverflow(page);

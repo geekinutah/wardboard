@@ -31,6 +31,7 @@ const fixtureDocs = {
   organizations: extractPdf(loadFixture('organizations-and-callings.pdf')),
   withoutCallings: extractPdf(loadFixture('members-without-callings.pdf')),
   outOfUnit: extractPdf(loadFixture('out-of-unit-callings.pdf')),
+  memberList: extractPdf(loadFixture('member-list.pdf')),
 };
 
 interface BundleOptions {
@@ -93,6 +94,14 @@ function bundle(options: BundleOptions = {}): ImportBundle {
       unitName: options.outOfUnitUnitName ?? UNIT,
       reportDate: options.outOfUnitDate ?? DATE,
       externalCallings: externalCallings.map((calling) => ({ ...calling })),
+    },
+    memberList: {
+      kind: 'member-list',
+      unitName: options.organizationsUnitName ?? UNIT,
+      reportDate: DATE,
+      listedCount: 0,
+      excludedUnder11: 0,
+      entries: [],
     },
   };
 }

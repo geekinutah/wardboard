@@ -36,6 +36,7 @@ test('a first import names the unresolved row and jumps to it', async ({ page },
   await page.getByLabel('Organizations and callings').setInputFiles(path.join(REPORTS, 'organizations-and-callings.pdf'));
   await page.getByLabel('Members without callings').setInputFiles(path.join(REPORTS, 'members-without-callings.pdf'));
   await page.getByLabel('Out-of-unit callings').setInputFiles(path.join(REPORTS, 'out-of-unit-callings.pdf'));
+  await page.getByLabel('Member list').setInputFiles(path.join(REPORTS, 'member-list.pdf'));
   await page.getByRole('button', { name: 'Preview import' }).click();
   await expect(page.getByRole('heading', { name: 'Review before replacing Current' })).toBeVisible();
 

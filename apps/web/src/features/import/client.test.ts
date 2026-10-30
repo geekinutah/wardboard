@@ -6,6 +6,7 @@ const pdfs = {
   organizations: 'JVBERg==',
   withoutCallings: 'AQID',
   outOfUnit: '////',
+  memberList: 'BAUG',
 };
 
 const preview: ImportPreview = {
@@ -49,7 +50,7 @@ function jsonBody(body: BodyInit | null | undefined): string {
 }
 
 describe('import client', () => {
-  it('preview posts the three pdf fields', async () => {
+  it('preview posts the four pdf fields', async () => {
     const calls: { url: string; init: RequestInit | undefined }[] = [];
     const fetchImpl: ImportFetch = (input, init) => {
       calls.push({ url: requestUrl(input), init });
@@ -148,20 +149,24 @@ describe('import client', () => {
     const organizations = new Uint8Array([0x25, 0x50, 0x44, 0x46, 0xfa]);
     const withoutCallings = new Uint8Array([1, 2, 3]);
     const outOfUnit = new Uint8Array([255, 254, 253, 0]);
+    const memberList = new Uint8Array([4, 5, 6, 7]);
 
     const result = await readReportFiles({
       organizations: new File([organizations], 'organizations.pdf', { type: 'application/pdf' }),
       withoutCallings: new File([withoutCallings], 'without.pdf', { type: 'application/pdf' }),
       outOfUnit: new File([outOfUnit], 'out.pdf', { type: 'application/pdf' }),
+      memberList: new File([memberList], 'members.pdf', { type: 'application/pdf' }),
     });
 
     expect(result).toEqual({
       organizations: Buffer.from(organizations).toString('base64'),
       withoutCallings: Buffer.from(withoutCallings).toString('base64'),
       outOfUnit: Buffer.from(outOfUnit).toString('base64'),
+      memberList: Buffer.from(memberList).toString('base64'),
     });
     expect(result.organizations.startsWith('data:')).toBe(false);
     expect(result.withoutCallings.startsWith('data:')).toBe(false);
     expect(result.outOfUnit.startsWith('data:')).toBe(false);
+    expect(result.memberList.startsWith('data:')).toBe(false);
   });
 });

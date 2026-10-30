@@ -48,8 +48,8 @@ test('import sources guidance in settings', async ({ page }, testInfo) => {
   await section.scrollIntoViewIfNeeded();
 
   const hints = section.locator('.wb-import-section-hint');
-  await expect(hints).toHaveCount(3);
-  for (let index = 0; index < 3; index += 1) await expect(hints.nth(index)).toBeVisible();
+  await expect(hints).toHaveCount(4);
+  for (let index = 0; index < 4; index += 1) await expect(hints.nth(index)).toBeVisible();
   const summary = section.getByText('How to get these reports');
   await expect(summary).toBeVisible();
   await expectNoHorizontalOverflow(page);
@@ -62,6 +62,7 @@ test('import sources guidance in settings', async ({ page }, testInfo) => {
   await page.getByLabel('Organizations and callings').setInputFiles(path.join(REPORTS, 'organizations-and-callings.pdf'));
   await page.getByLabel('Members without callings').setInputFiles(path.join(REPORTS, 'members-without-callings.pdf'));
   await page.getByLabel('Out-of-unit callings').setInputFiles(path.join(REPORTS, 'out-of-unit-callings.pdf'));
+  await page.getByLabel('Member list').setInputFiles(path.join(REPORTS, 'member-list.pdf'));
   await expect(section.getByText('out-of-unit-callings.pdf')).toBeVisible();
   await expectNoHorizontalOverflow(page);
   await expectTargetsAtLeast44(section.locator('.wb-import-section-input'));

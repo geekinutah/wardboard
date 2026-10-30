@@ -36,6 +36,7 @@ const fixturesDir = path.join(path.dirname(fileURLToPath(import.meta.url)), '../
 const organizationsPdf = readFileSync(path.join(fixturesDir, 'organizations-and-callings.pdf'));
 const withoutPdf = readFileSync(path.join(fixturesDir, 'members-without-callings.pdf'));
 const outPdf = readFileSync(path.join(fixturesDir, 'out-of-unit-callings.pdf'));
+const memberListPdf = readFileSync(path.join(fixturesDir, 'member-list.pdf'));
 
 const servers: RunningServer[] = [];
 const databases: DatabaseSync[] = [];
@@ -219,11 +220,12 @@ function openSocket(port: number): Promise<{ ws: WebSocket; inbox: Inbox }> {
   });
 }
 
-function pdfFields(): { organizations: string; withoutCallings: string; outOfUnit: string } {
+function pdfFields(): { organizations: string; withoutCallings: string; outOfUnit: string; memberList: string } {
   return {
     organizations: organizationsPdf.toString('base64'),
     withoutCallings: withoutPdf.toString('base64'),
     outOfUnit: outPdf.toString('base64'),
+    memberList: memberListPdf.toString('base64'),
   };
 }
 
@@ -338,6 +340,13 @@ describe('first import', () => {
     expect(parsed.absent).toEqual([]);
     expect(store.loadCurrent()).toBeNull();
     expect(store.loadWard().members).toEqual({});
+
+    // The Member List is required: the old three-report body is refused.
+    const { organizations, withoutCallings, outOfUnit } = pdfFields();
+    const three = Buffer.from(JSON.stringify({ organizations, withoutCallings, outOfUnit }));
+    const refused = await call(started.server.port, 'POST', '/api/import/preview', jsonHeaders(three, BASE_ORIGIN), three);
+    expect(refused.status).toBe(400);
+    expect(store.loadCurrent()).toBeNull();
   });
 
   it('first replace creates Current and broadcasts it', async () => {
@@ -432,6 +441,7 @@ describe('first import', () => {
       organizations: extractPdf(new Uint8Array(organizationsPdf)),
       withoutCallings: extractPdf(new Uint8Array(withoutPdf)),
       outOfUnit: extractPdf(new Uint8Array(outPdf)),
+      memberList: extractPdf(new Uint8Array(memberListPdf)),
     });
     const plan = planImport({ bundle, ward: store.loadWard(), current: emptyCurrentBoard(boardId('board-loser')) });
     const resolutions: Record<string, ImportResolution> = {};

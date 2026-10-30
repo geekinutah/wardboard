@@ -104,6 +104,8 @@ function sourcesOf(preview: ImportPreview): ImportSourceCard[] {
     detail: 'Included in this preview',
     status: duplicates.has(source.kind) ? 'Duplicate report' : 'Validated',
   }));
+  // The Member List settles youth/adult only. It is never fingerprinted, so it is never a duplicate.
+  sources.push({ name: 'Member list', detail: 'Included in this preview', status: 'Validated' });
   sources.push({
     name: 'Directory photos',
     detail: 'Optional · upload in the app or collect later',

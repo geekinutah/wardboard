@@ -26,7 +26,7 @@ async function expectNoHorizontalOverflow(page: Page): Promise<void> {
   expect(overflow.scrollWidth).toBeLessThanOrEqual(overflow.clientWidth);
 }
 
-test('an Admin imports the three reports from Settings and replaces Current', async ({ page, browser }, testInfo) => {
+test('an Admin imports the four reports from Settings and replaces Current', async ({ page, browser }, testInfo) => {
   test.skip(
     testInfo.project.name !== 'desktop-chromium' && testInfo.project.name !== 'phone-chromium',
     'Import in Settings runs on one desktop and one phone engine',
@@ -55,6 +55,7 @@ test('an Admin imports the three reports from Settings and replaces Current', as
   await page.getByLabel('Organizations and callings').setInputFiles(path.join(REPORTS, 'organizations-and-callings.pdf'));
   await page.getByLabel('Members without callings').setInputFiles(path.join(REPORTS, 'members-without-callings.pdf'));
   await page.getByLabel('Out-of-unit callings').setInputFiles(path.join(REPORTS, 'out-of-unit-callings.pdf'));
+  await page.getByLabel('Member list').setInputFiles(path.join(REPORTS, 'member-list.pdf'));
   await expect(page.getByText('out-of-unit-callings.pdf')).toBeVisible();
   await checkOverflow();
   await page.getByRole('button', { name: 'Preview import' }).click();

@@ -9,7 +9,7 @@ vi.mock('./useLayout.ts', () => ({ useLayout: () => layoutMock.value }));
 
 const ADMIN: Me = { login: 'ada@example.test', displayName: 'Ada Admin', role: 'admin' };
 const EDITOR: Me = { login: 'ben@example.test', displayName: 'Ben Editor', role: 'editor' };
-const LABELS = ['Organizations and callings', 'Members without callings', 'Out-of-unit callings'] as const;
+const LABELS = ['Organizations and callings', 'Members without callings', 'Out-of-unit callings', 'Member list'] as const;
 const pendingHealth: HealthClient = () => new Promise<HealthResponse>(() => undefined);
 
 const sockets: FakeWebSocket[] = [];
@@ -120,7 +120,7 @@ describe('first import', () => {
     showBoards(connect(ADMIN), false);
 
     expect(screen.getByRole('heading', { level: 1, name: 'Set up WardBoard' })).toBeInTheDocument();
-    expect(screen.getByText("There's no Current board yet. Import the ward's three LCR reports to create it.")).toBeInTheDocument();
+    expect(screen.getByText("There's no Current board yet. Import the ward's four LCR reports to create it.")).toBeInTheDocument();
     const main = screen.getByRole('main');
     for (const label of LABELS) expect(within(main).getByLabelText(label)).toBeInTheDocument();
   });

@@ -9,8 +9,8 @@ import { SettingsRoute } from './SettingsRoute.tsx';
 const ADMIN: Me = { login: 'ada@example.test', displayName: 'Ada Admin', role: 'admin' };
 const EDITOR: Me = { login: 'ben@example.test', displayName: 'Ben Editor', role: 'editor' };
 
-const LABELS = ['Organizations and callings', 'Members without callings', 'Out-of-unit callings'] as const;
-const READ_FAILURE = "Those files couldn't be read as the three LCR reports.";
+const LABELS = ['Organizations and callings', 'Members without callings', 'Out-of-unit callings', 'Member list'] as const;
+const READ_FAILURE = "Those files couldn't be read as the four LCR reports.";
 
 const PREVIEW = {
   decisions: [
@@ -146,8 +146,8 @@ function stubFetch(replies: { preview?: Reply; replace?: Reply }): Call[] {
   return calls;
 }
 
-const CONTENTS = ['one-orgs', 'two-without', 'three-out'] as const;
-const NAMES = ['secret-orgs.pdf', 'secret-without.pdf', 'secret-out.pdf'] as const;
+const CONTENTS = ['one-orgs', 'two-without', 'three-out', 'four-members'] as const;
+const NAMES = ['secret-orgs.pdf', 'secret-without.pdf', 'secret-out.pdf', 'secret-members.pdf'] as const;
 
 function pdf(name: string, text: string): File {
   const bytes = new TextEncoder().encode(text);
@@ -160,7 +160,7 @@ function pdf(name: string, text: string): File {
   return file;
 }
 
-async function chooseAll(user: ReturnType<typeof userEvent.setup>, count = 3): Promise<void> {
+async function chooseAll(user: ReturnType<typeof userEvent.setup>, count = 4): Promise<void> {
   for (let index = 0; index < count; index += 1) {
     const label = LABELS[index];
     const content = CONTENTS[index];
@@ -195,7 +195,7 @@ describe('Import section in Settings', () => {
     stubFetch({});
     await renderSettings(ADMIN);
     expect(screen.getByRole('heading', { name: 'Import', level: 2 })).toBeInTheDocument();
-    expect(screen.getByText('Replace Current with the three LCR reports. Nothing changes until you confirm.')).toBeInTheDocument();
+    expect(screen.getByText('Replace Current with the four LCR reports. Nothing changes until you confirm.')).toBeInTheDocument();
     for (const label of LABELS) {
       const input = screen.getByLabelText(label);
       expect(input).toHaveAttribute('type', 'file');
@@ -211,7 +211,7 @@ describe('Import section in Settings', () => {
     expect(calls.filter((call) => call.url.includes('/api/import/'))).toHaveLength(0);
   });
 
-  it('Preview stays disabled until all three reports are chosen', async () => {
+  it('Preview stays disabled until all four reports are chosen', async () => {
     stubFetch({});
     const user = userEvent.setup();
     await renderSettings(ADMIN);
@@ -222,10 +222,12 @@ describe('Import section in Settings', () => {
     await user.upload(screen.getByLabelText(LABELS[1]), pdf(NAMES[1], CONTENTS[1]));
     expect(previewButton()).toBeDisabled();
     await user.upload(screen.getByLabelText(LABELS[2]), pdf(NAMES[2], CONTENTS[2]));
+    expect(previewButton()).toBeDisabled();
+    await user.upload(screen.getByLabelText(LABELS[3]), pdf(NAMES[3], CONTENTS[3]));
     expect(previewButton()).toBeEnabled();
   });
 
-  it('Preview posts the three encoded reports', async () => {
+  it('Preview posts the four encoded reports', async () => {
     const calls = stubFetch({});
     const user = userEvent.setup();
     await renderSettings(ADMIN);
@@ -237,6 +239,7 @@ describe('Import section in Settings', () => {
       organizations: btoa(CONTENTS[0]),
       withoutCallings: btoa(CONTENTS[1]),
       outOfUnit: btoa(CONTENTS[2]),
+      memberList: btoa(CONTENTS[3]),
     });
   });
 
@@ -266,6 +269,7 @@ describe('Import section in Settings', () => {
       organizations: btoa(CONTENTS[0]),
       withoutCallings: btoa(CONTENTS[1]),
       outOfUnit: btoa(CONTENTS[2]),
+      memberList: btoa(CONTENTS[3]),
       expectedVersion: 7,
       resolutions: { 'pineda, otto': { action: 'new' } },
     });
@@ -316,6 +320,7 @@ describe('Import section in Settings', () => {
     const bad = pdf(NAMES[2], CONTENTS[2]);
     Object.defineProperty(bad, 'arrayBuffer', { configurable: true, value: () => Promise.reject(new Error('unreadable')) });
     await user.upload(screen.getByLabelText(LABELS[2]), bad);
+    await user.upload(screen.getByLabelText(LABELS[3]), pdf(NAMES[3], CONTENTS[3]));
     await user.click(previewButton());
     expect(await screen.findByRole('alert')).toHaveTextContent(READ_FAILURE);
     expect(calls).toHaveLength(0);

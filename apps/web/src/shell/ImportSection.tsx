@@ -13,7 +13,7 @@ import type { ImportPreview } from '../features/import/plan.ts';
 import { useSync } from '../sync/react.tsx';
 import './import-section.css';
 
-type ReportField = 'organizations' | 'withoutCallings' | 'outOfUnit';
+type ReportField = 'organizations' | 'withoutCallings' | 'outOfUnit' | 'memberList';
 
 const FIELDS: readonly { field: ReportField; label: string; hint: string }[] = [
   {
@@ -31,9 +31,14 @@ const FIELDS: readonly { field: ReportField; label: string; hint: string }[] = [
     label: 'Out-of-unit callings',
     hint: 'In LCR: Reports → Out-of-Unit Callings → Print → Download PDF.',
   },
+  {
+    field: 'memberList',
+    label: 'Member list',
+    hint: 'In LCR: Reports → Member Directory → Print → Download PDF. The printed report is titled "Member List".',
+  },
 ];
 
-const READ_FAILURE = "Those files couldn't be read as the three LCR reports.";
+const READ_FAILURE = "Those files couldn't be read as the four LCR reports.";
 
 const FAILURE_MESSAGES: Record<ImportPreviewFailure, string> = {
   forbidden: 'Only admins can import.',
@@ -50,7 +55,7 @@ function defaultFetch(...args: Parameters<ImportFetch>): ReturnType<ImportFetch>
   return window.fetch(...args);
 }
 
-/** The Settings "Import" section (SPEC §8): three reports in, the T-059 review, then replace. Admin only. */
+/** The Settings "Import" section (SPEC §8): four reports in, the T-059 review, then replace. Admin only. */
 export function ImportSection({ fetchImpl = defaultFetch }: { fetchImpl?: ImportFetch }): ReactElement {
   const { boards } = useSync();
   const headingId = useId();
@@ -67,7 +72,9 @@ export function ImportSection({ fetchImpl = defaultFetch }: { fetchImpl?: Import
   const organizations = picked.organizations;
   const withoutCallings = picked.withoutCallings;
   const outOfUnit = picked.outOfUnit;
-  const ready = organizations !== undefined && withoutCallings !== undefined && outOfUnit !== undefined;
+  const memberList = picked.memberList;
+  const ready =
+    organizations !== undefined && withoutCallings !== undefined && outOfUnit !== undefined && memberList !== undefined;
 
   function onPick(field: ReportField, event: ChangeEvent<HTMLInputElement>): void {
     const file = event.target.files?.[0];
@@ -76,13 +83,21 @@ export function ImportSection({ fetchImpl = defaultFetch }: { fetchImpl?: Import
   }
 
   async function runPreview(): Promise<void> {
-    if (organizations === undefined || withoutCallings === undefined || outOfUnit === undefined || reading) return;
+    if (
+      organizations === undefined ||
+      withoutCallings === undefined ||
+      outOfUnit === undefined ||
+      memberList === undefined ||
+      reading
+    ) {
+      return;
+    }
     setReading(true);
     setFailure(null);
     try {
       let encoded: ImportReportFiles;
       try {
-        encoded = await readReportFiles({ organizations, withoutCallings, outOfUnit });
+        encoded = await readReportFiles({ organizations, withoutCallings, outOfUnit, memberList });
       } catch {
         setFailure(READ_FAILURE);
         return;
@@ -154,7 +169,7 @@ export function ImportSection({ fetchImpl = defaultFetch }: { fetchImpl?: Import
           <summary className="wb-import-section-howto-summary">How to get these reports</summary>
           <ol className="wb-import-section-steps">
             <li>Sign in to LCR in your own browser. WardBoard never asks for your Church password or MFA code.</li>
-            <li>Download the three reports above and keep them in a private folder.</li>
+            <li>Download the four reports above and keep them in a private folder.</li>
             <li>Choose each file here, then press Preview import. Nothing changes until you confirm.</li>
           </ol>
           <p className="wb-import-section-guide">The full guide is docs/import/guide.md in the WardBoard repository.</p>
@@ -185,8 +200,8 @@ export function ImportSection({ fetchImpl = defaultFetch }: { fetchImpl?: Import
       </h2>
       <p className="wb-import-section-note">
         {current === null
-          ? 'Create Current from the three LCR reports. Nothing changes until you confirm.'
-          : 'Replace Current with the three LCR reports. Nothing changes until you confirm.'}
+          ? 'Create Current from the four LCR reports. Nothing changes until you confirm.'
+          : 'Replace Current with the four LCR reports. Nothing changes until you confirm.'}
       </p>
       {body}
     </section>
