@@ -101,3 +101,4 @@ observation / review finding
 | B-069 | P2 | import | accepted | Members who hold callings arrive without youth/adult |
 | B-070 | P1 | import | resolved | The import creates duplicate bishopric seats under the Aaronic Priesthood |
 | B-071 | P2 | import | declined | A report-conflict seat stays vacant even after the conflict is resolved |
+| B-072 | P2 | web import review | candidate | The import review's discarded-fields list doesn't mention gender |

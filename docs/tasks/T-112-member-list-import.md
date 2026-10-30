@@ -27,6 +27,7 @@ Preview and replace require four PDFs: the existing three plus the LCR Member Li
   - no Member List entry has that name;
   - the name appears more than once in the Member List;
   - the matching entry was excluded because the person is under 11.
+- A person who is a report conflict (`ambiguous`/`report_conflict`) is not filled from the Member List; they are always asked. (Controller interpretation, round 3.)
 - A category already derived from Members without Callings is kept. If the Member List disagrees with it, the person's category becomes `null`, so the review asks. Neither report wins silently.
 - Matching decisions (matched, new, namesake, resembles, report conflict) do not change.
 - The Member List takes part in the same unit consistency check as the other three reports: a Member List for a different unit makes `inconsistentReports` true.
@@ -60,6 +61,8 @@ Existing tests that build a three-report body, choose three files, or assert thr
 - add the Member List fixture, field, file, label or picker alongside the existing three;
 - change "three" to "four" in a test name, an expected string, or a label list;
 - change an assertion that a three-key body succeeds into one that the four-key body succeeds, and add (not replace) an assertion that the three-key body is now `400`.
+
+One named exception (added in round 3): `apps/web/e2e/import-review.spec.ts` line ~49, `expect(count).toBeGreaterThan(2)`, becomes `expect(count).toBe(2)`. The required Member List leaves exactly the two printed namesakes needing a choice, so the old bound can't hold; the test still resolves one row, skips the other, and checks that Go to next names, focuses and shows it.
 
 No other change to an existing test. No assertion may be deleted or loosened, and no test may be skipped. The files expected to need this are:
 - `apps/server/test/import/routes.test.ts`, `first-import.test.ts`, `aaronic-links.test.ts`, `leadership-import.test.ts`, `helpers.ts`
