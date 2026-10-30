@@ -2,7 +2,7 @@
 
 **Milestone:** 6 — Import and photos
 **Depends on:** an anonymized Member List fixture PDF supplied by Mike (`HUMAN_BACKLOG.md`, "Refreshed report fixtures"), committed as `fixtures/lcr-reports/member-list.pdf`. **Do not start until it is on `main`.** Also T-053–T-056 (the existing parsers and allow-list), which are done.
-- Promoted from B-069. Mike decided on 2026-10-29 to add a full ward directory report, option (a): an optional fourth report used only for youth/adult.
+- Promoted from B-069. Mike decided on 2026-10-29 to add a full ward directory report, option (a): a fourth report used only for youth/adult. On 2026-10-30 Mike made it required, not optional (T-112). The LCR path is Reports → Member Directory → Print; the printed title is `Member List`.
 - T-112 wires this parser into the import. It depends on this task.
 
 **Spec refs:**
