@@ -46,7 +46,7 @@ test('a first import names the unresolved row and jumps to it', async ({ page },
 
   const rows = page.locator('.wb-import-row');
   const count = await rows.count();
-  expect(count).toBeGreaterThan(2);
+  expect(count).toBe(2);
   await expect(rows.first().getByRole('button', { name: 'Treat as new person' })).toHaveCount(0);
   await expect(page.getByText(`${String(count)} of ${String(count)} need a choice`)).toBeVisible();
 
