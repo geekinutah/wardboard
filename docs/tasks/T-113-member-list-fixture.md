@@ -1,6 +1,7 @@
 # T-113: Make the Member List fixture readable and consistent with the other fixtures
 
 **Milestone:** 6 — Import and photos (fixture for T-111/T-112)
+**Amended 2026-10-29 (round 1):** namesakes, phone style and README wording; see `docs/tasks/evidence/T-113.md`.
 **Depends on:** Mike's commit `52cdc6f`, which added `fixtures/lcr-reports/member-list-anonymized.pdf` and is merged into this branch.
 - Mike, 2026-10-29: "I just want you to fix the new PDF. You can rename it if you want, whatever. I don't want a new script that tries to anonymize things. This isn't going to happen often."
 - This changes test data only. No application behavior changes. The proof is the executable structural test named below, plus a mutation.
@@ -46,11 +47,11 @@
   - Relief Society, Young Women and Primary presidency callings → `F`.
   - Bishopric, Elders Quorum, Aaronic and quorum callings → `M`.
   - Any remaining person gets a gender consistent with their first name. List those people in the report.
-- **Phone and email.** Keep the existing fictional style: `(801) 555-NNNN`, and `first.lastNN@example.com` derived from the fictional name. Some rows may be blank, as now.
+- **Phone and email.** Keep the existing fixtures' style, `(555) 555-NNNN`, with the same number for the same person as in the other fixtures, and `first.lastNN@example.com` derived from the fictional name. Some rows may be blank, as now.
 - **Children.** You may keep some rows for under-11 children with new fictional names that appear in no other fixture, and say how many. They prove the parser's exclusion.
 - **Layout.** Keep the rows-per-page, fonts, x positions and repeated header as Mike's file has them. Change only text and the number of pages.
 
-**`Westdale, Gus`.** He appears in both Callings by Organization and Members without Callings in the existing fixtures. Mike says that can't happen in real reports. This task does not fix the other three fixtures. He gets exactly one Member List row, with the youth age from Members without Callings. Note this in the README.
+**Namesakes.** The fixtures print two different people as `Westdale, Gus`: an adult in Members without Callings and the Elders Quorum roster, and an 11-year-old Teachers Quorum President. They also print two different people as `Fairwell, Sage Casey Kendall Reagan`. Each person gets their own row. The README notes these namesake pairs.
 
 **Rename.** Use `git mv` to rename it to `member-list.pdf`.
 
@@ -58,7 +59,7 @@
 - Mike supplied the layout on 2026-10-29.
 - The rows were rewritten to the existing fictional identities.
 - The streams were re-encoded so the importer can read them.
-- Mark the menu path as unconfirmed: Mike called the report "Member Directory".
+- Mark the menu path as unconfirmed: Mike called the report "Member Directory". Reword the README's "Don't edit these PDFs by hand" rule so it applies to the three report PDFs anonymized from LCR, and points to the provenance note for `member-list.pdf`.
 
 ## Structural test (the executable check)
 Add `packages/importer/test/member-list-fixture.test.ts`. It uses only `extractPdf` and the existing parsers; the Member List parser comes later in T-111. Test names:
@@ -66,7 +67,8 @@ Add `packages/importer/test/member-list-fixture.test.ts`. It uses only `extractP
 | Test name | What it checks | A realistic defect it catches |
 |---|---|---|
 | `the member list fixture is readable` | `extractPdf` succeeds; page 1 has `Member List`, `Cedar 14th Ward (100001)` and the six headings in order | ASCII85 left in place; broken xref |
-| `every fixture person appears exactly once` | the set of printed names from the three other fixtures (via their parsers) is a subset of the Member List's name cells, each exactly once | the original 42-of-251 mismatch; duplicates |
+| `every fixture person appears exactly once` | every distinct (name, age) person from the three other fixtures has exactly one Member List row with that name and age. A name appears more than once only for namesakes | the original 42-of-251 mismatch; duplicates; collapsed namesakes |
+| `namesakes keep separate rows` | `Westdale, Gus` has two rows, an adult and an 11-year-old, and `Fairwell, Sage Casey Kendall Reagan` has two rows with different ages | collapsing namesakes into one row |
 | `ages agree with members without callings` | for each Members without Callings candidate, the Member List age gives the same `categoryForAge` | a re-aged person |
 | `birth dates agree with ages` | each row's birth date and age are consistent as of the footer date | random dates |
 | `contact details are fictional` | every phone cell matches `\(\d{3}\) 555-\d{4}`; every email ends `@example.com`; no other `@` or phone-shaped text | a real-looking value |
@@ -90,7 +92,7 @@ New dependencies allowed: none.
 ## Acceptance criteria
 | # | Check | Command | Expected result |
 |---|---|---|---|
-| 1 | Structural test | `pnpm --filter @wardboard/importer exec vitest run test/member-list-fixture.test.ts` | all five tests pass |
+| 1 | Structural test | `pnpm --filter @wardboard/importer exec vitest run test/member-list-fixture.test.ts` | all six tests pass |
 | 2 | Mutation | in a disposable worktree at the candidate, restore Mike's original PDF bytes under the new name (`git show 52cdc6f:fixtures/lcr-reports/member-list-anonymized.pdf > fixtures/lcr-reports/member-list.pdf`), then run check 1 | `the member list fixture is readable` fails (and the others fail or error); remove the worktree |
 | 3 | No real-looking data | the structural test, plus `grep -a -c "ReportLab" fixtures/lcr-reports/member-list.pdf` | test passes; grep prints `0` |
 | 4 | Existing tests untouched | `git diff --diff-filter=MD --name-only origin/main...HEAD -- '*.test.ts' '*.test.tsx' '*.spec.ts' '*.capture.ts'` | prints nothing |
