@@ -63,6 +63,7 @@ Existing tests that build a three-report body, choose three files, or assert thr
 No other change to an existing test. No assertion may be deleted or loosened, and no test may be skipped. The files expected to need this are:
 - `apps/server/test/import/routes.test.ts`, `first-import.test.ts`, `aaronic-links.test.ts`, `leadership-import.test.ts`, `helpers.ts`
 - `apps/web/src/shell/import-section.test.tsx`, `apps/web/src/features/import/client.test.ts`
+- `apps/web/src/features/import/plan.test.ts` (it asserts the three source cards at about lines 91 and 295), `ImportReview.test.tsx`, `review-clarity.test.tsx`, only where they list the report sources
 - `apps/web/e2e/first-import.spec.ts`, `import-review.spec.ts`, `import-settings.spec.ts`
 - `apps/web/e2e/gui/first-import.capture.ts`, `import-review.capture.ts`, `import-guidance.capture.ts`, `import-settings.capture.ts`, `tile-leaders.capture.ts`
 - `scripts/import-guide.test.mjs`
@@ -74,7 +75,7 @@ If another existing test must change, stop and report it. List every changed exi
 May change:
 - `packages/importer/src/allowlist/import.ts`, `packages/importer/src/reconcile/reconcile.ts`, `packages/importer/src/index.ts`
 - `apps/server/src/import/http.ts`
-- `apps/web/src/features/import/client.ts`, `plan.ts`, `ImportReview.tsx`
+- `apps/web/src/features/import/client.ts`, `plan.ts`, `ImportReview.tsx`, and `preview.tsx` (only if its sample data must gain the fourth source to typecheck)
 - `apps/web/src/shell/ImportSection.tsx`, `import-section.css`
 - `docs/import/guide.md`
 - `SPEC.md` (only the sentences named above)
