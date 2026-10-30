@@ -92,6 +92,7 @@ describe('planImportReview', () => {
       { name: 'Callings by Organization', detail: 'Included in this preview', status: 'Validated' },
       { name: 'Members without Callings', detail: 'Included in this preview', status: 'Validated' },
       { name: 'Out-of-Unit Callings', detail: 'Included in this preview', status: 'Validated' },
+      { name: 'Member list', detail: 'Included in this preview', status: 'Validated' },
       {
         name: 'Directory photos',
         detail: 'Optional · upload in the app or collect later',
@@ -296,6 +297,7 @@ describe('planImportReview', () => {
       'Duplicate report',
       'Validated',
       'Duplicate report',
+      'Validated',
       'Not collected yet',
     ]);
     expect(resolved.unresolved).toBe(0);

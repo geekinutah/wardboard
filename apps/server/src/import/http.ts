@@ -10,6 +10,8 @@ import { planImport } from './plan.ts';
 import type { ImportFingerprints, ImportPlan, ImportResolution, ImportResolutions } from './types.ts';
 
 const MAX_IMPORT_BYTES = 2_000_000;
+/** The four required LCR reports (SPEC §8, §15), each a base64 PDF. */
+const REPORT_KEYS = ['organizations', 'withoutCallings', 'outOfUnit', 'memberList'] as const;
 const FINGERPRINT_VERSION = /^[0-9a-f]{64}\.[0-9a-f]{64}\.[0-9a-f]{64}$/;
 /** Id of the empty Current a first-import preview plans against. Never stored. */
 const PREVIEW_BOARD_ID = 'first-import-preview';
@@ -142,11 +144,13 @@ function bundleFrom(value: Record<string, unknown>): ImportBundle | null {
   const organizations = decodePdf(value.organizations);
   const withoutCallings = decodePdf(value.withoutCallings);
   const outOfUnit = decodePdf(value.outOfUnit);
-  if (organizations === null || withoutCallings === null || outOfUnit === null) return null;
+  const memberList = decodePdf(value.memberList);
+  if (organizations === null || withoutCallings === null || outOfUnit === null || memberList === null) return null;
   return importReports({
     organizations: extractPdf(organizations),
     withoutCallings: extractPdf(withoutCallings),
     outOfUnit: extractPdf(outOfUnit),
+    memberList: extractPdf(memberList),
   });
 }
 
@@ -324,7 +328,7 @@ export async function handleImportRequest(input: ImportHttpInput): Promise<void>
 
   try {
     if (input.pathname === '/api/import/preview') {
-      if (!exactKeys(parsed, ['organizations', 'withoutCallings', 'outOfUnit'])) {
+      if (!exactKeys(parsed, REPORT_KEYS)) {
         sendJson(input.res, 400, '{"error":"bad_request"}');
         return;
       }
@@ -339,7 +343,7 @@ export async function handleImportRequest(input: ImportHttpInput): Promise<void>
       return;
     }
 
-    if (!exactKeys(parsed, ['organizations', 'withoutCallings', 'outOfUnit', 'expectedVersion', 'resolutions'])) {
+    if (!exactKeys(parsed, [...REPORT_KEYS, 'expectedVersion', 'resolutions'])) {
       sendJson(input.res, 400, '{"error":"bad_request"}');
       return;
     }

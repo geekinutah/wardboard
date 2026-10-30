@@ -15,7 +15,7 @@ export function FirstImportGate({ children }: { children: ReactNode }): ReactEle
   return needsFirstImport ? <FirstImport /> : <>{children}</>;
 }
 
-/** The setup page: an Admin imports the three reports to create Current; an Editor is told to ask. */
+/** The setup page: an Admin imports the four reports to create Current; an Editor is told to ask. */
 export function FirstImport(): ReactElement {
   const me = useMe();
   if (me === null) {
@@ -33,7 +33,7 @@ export function FirstImport(): ReactElement {
         <h1 className="wb-first-import-title">Set up WardBoard</h1>
         {me.role === 'admin' ? (
           <>
-            <p className="wb-first-import-text">There&apos;s no Current board yet. Import the ward&apos;s three LCR reports to create it.</p>
+            <p className="wb-first-import-text">There&apos;s no Current board yet. Import the ward&apos;s four LCR reports to create it.</p>
             <ImportSection />
           </>
         ) : (

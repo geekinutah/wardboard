@@ -37,6 +37,7 @@ const fixturesDir = path.join(path.dirname(fileURLToPath(import.meta.url)), '../
 const organizationsPdf = readFileSync(path.join(fixturesDir, 'organizations-and-callings.pdf'));
 const withoutPdf = readFileSync(path.join(fixturesDir, 'members-without-callings.pdf'));
 const outPdf = readFileSync(path.join(fixturesDir, 'out-of-unit-callings.pdf'));
+const memberListPdf = readFileSync(path.join(fixturesDir, 'member-list.pdf'));
 
 const REFERENCE_TITLES = [
   'Bishop',
@@ -68,6 +69,7 @@ function fixtureBundle(): ReturnType<typeof importReports> {
     organizations: extractPdf(new Uint8Array(organizationsPdf)),
     withoutCallings: extractPdf(new Uint8Array(withoutPdf)),
     outOfUnit: extractPdf(new Uint8Array(outPdf)),
+    memberList: extractPdf(new Uint8Array(memberListPdf)),
   });
 }
 

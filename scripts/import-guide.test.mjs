@@ -12,6 +12,7 @@ const DOWNLOADS = [
   'Callings → Callings by Organization → Print → Download PDF',
   'Reports → Members without Callings → Print → Download PDF',
   'Reports → Out-of-Unit Callings → Print → Download PDF',
+  'Reports → Member Directory → Print → Download PDF',
 ];
 
 const DISCARDED = [
@@ -71,21 +72,22 @@ describe('import guide', () => {
     assert.ok(signIn.includes(CREDENTIALS), 'sign-in section omits the credentials sentence');
   });
 
-  it('the guide names the three official downloads', () => {
+  it('the guide names the four official downloads', () => {
     const guide = read('docs/import/guide.md');
     for (const path of DOWNLOADS) {
       assert.ok(guide.includes(path), `missing download path: ${path}`);
     }
   });
 
-  it('the guide previews with the three json fields', () => {
+  it('the guide previews with the four json fields', () => {
     const preview = fencedBlocks(read('docs/import/guide.md')).find(
       (block) =>
         (block.includes('POST') || block.includes('-X POST')) &&
         block.includes('/api/import/preview') &&
         block.includes('organizations') &&
         block.includes('withoutCallings') &&
-        block.includes('outOfUnit'),
+        block.includes('outOfUnit') &&
+        block.includes('memberList'),
     );
     assert.ok(preview, 'missing preview command');
     assert.equal(preview.includes('data:'), false, 'preview command uses a data URL');

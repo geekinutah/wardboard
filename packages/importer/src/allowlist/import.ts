@@ -18,6 +18,8 @@ import {
   type WithoutCallingsCandidate,
   type WithoutCallingsReport,
 } from '../reports/without-callings.ts';
+import { parseMemberList, type MemberListReport } from '../reports/member-list.ts';
+import { allowListMemberList } from './member-list.ts';
 
 export class AllowListError extends Error {
   readonly code: 'wrong_kind' | 'invalid_value';
@@ -33,6 +35,8 @@ export interface ImportBundle {
   readonly organizations: OrganizationsReport;
   readonly withoutCallings: WithoutCallingsReport;
   readonly outOfUnit: OutOfUnitReport;
+  /** Name and youth/adult only (SPEC §15). Never adds people; it only settles categories. */
+  readonly memberList: MemberListReport;
 }
 
 function field(value: unknown, key: string): unknown {
@@ -190,6 +194,7 @@ export function allowListImport(
     readonly organizations: OrganizationsReport;
     readonly withoutCallings: WithoutCallingsReport;
     readonly outOfUnit: OutOfUnitReport;
+    readonly memberList: MemberListReport;
   },
   log?: (line: string) => void,
 ): ImportBundle {
@@ -200,6 +205,8 @@ export function allowListImport(
   const organizations = copyOrganizationsReport(input.organizations);
   const withoutCallings = copyWithoutCallingsReport(input.withoutCallings);
   const outOfUnit = copyOutOfUnitReport(input.outOfUnit);
+  // No log callback: the existing allow-list line stays the only one.
+  const memberList = allowListMemberList(input.memberList);
 
   if (log !== undefined) {
     log(
@@ -207,7 +214,7 @@ export function allowListImport(
     );
   }
 
-  return { organizations, withoutCallings, outOfUnit };
+  return { organizations, withoutCallings, outOfUnit, memberList };
 }
 
 export function importReports(
@@ -215,14 +222,16 @@ export function importReports(
     readonly organizations: PdfDocument;
     readonly withoutCallings: PdfDocument;
     readonly outOfUnit: PdfDocument;
+    readonly memberList: PdfDocument;
   },
   log?: (line: string) => void,
 ): ImportBundle {
   const organizations = parseOrganizationsReport(docs.organizations);
   const withoutCallings = parseWithoutCallingsReport(docs.withoutCallings);
   const outOfUnit = parseOutOfUnitReport(docs.outOfUnit);
+  const memberList = parseMemberList(docs.memberList);
   if (log === undefined) {
-    return allowListImport({ organizations, withoutCallings, outOfUnit });
+    return allowListImport({ organizations, withoutCallings, outOfUnit, memberList });
   }
-  return allowListImport({ organizations, withoutCallings, outOfUnit }, log);
+  return allowListImport({ organizations, withoutCallings, outOfUnit, memberList }, log);
 }

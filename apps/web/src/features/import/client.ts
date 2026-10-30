@@ -23,6 +23,7 @@ export type ImportReportFiles = {
   organizations: string;
   withoutCallings: string;
   outOfUnit: string;
+  memberList: string;
 };
 
 const REPLACE_CONFLICTS = ['duplicate_report', 'inconsistent_reports', 'unresolved', 'stale'] as const;
@@ -135,11 +136,13 @@ export async function readReportFiles(files: {
   organizations: File;
   withoutCallings: File;
   outOfUnit: File;
+  memberList: File;
 }): Promise<ImportReportFiles> {
-  const [organizations, withoutCallings, outOfUnit] = await Promise.all([
+  const [organizations, withoutCallings, outOfUnit, memberList] = await Promise.all([
     fileToBase64(files.organizations),
     fileToBase64(files.withoutCallings),
     fileToBase64(files.outOfUnit),
+    fileToBase64(files.memberList),
   ]);
-  return { organizations, withoutCallings, outOfUnit };
+  return { organizations, withoutCallings, outOfUnit, memberList };
 }

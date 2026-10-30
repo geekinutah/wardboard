@@ -39,6 +39,7 @@ const fixturesDir = path.join(path.dirname(fileURLToPath(import.meta.url)), '../
 const organizationsPdf = readFileSync(path.join(fixturesDir, 'organizations-and-callings.pdf'));
 const withoutPdf = readFileSync(path.join(fixturesDir, 'members-without-callings.pdf'));
 const outPdf = readFileSync(path.join(fixturesDir, 'out-of-unit-callings.pdf'));
+const memberListPdf = readFileSync(path.join(fixturesDir, 'member-list.pdf'));
 
 const servers: RunningServer[] = [];
 const databases: DatabaseSync[] = [];
@@ -229,11 +230,12 @@ function openSocket(port: number): Promise<{ ws: WebSocket; inbox: Inbox }> {
   });
 }
 
-function pdfFields(): { organizations: string; withoutCallings: string; outOfUnit: string } {
+function pdfFields(): { organizations: string; withoutCallings: string; outOfUnit: string; memberList: string } {
   return {
     organizations: organizationsPdf.toString('base64'),
     withoutCallings: withoutPdf.toString('base64'),
     outOfUnit: outPdf.toString('base64'),
+    memberList: memberListPdf.toString('base64'),
   };
 }
 
@@ -479,6 +481,14 @@ describe('import routes', () => {
     expect(Array.isArray(parsed.unfamiliar)).toBe(true);
     expect(Array.isArray(parsed.needsCategory)).toBe(true);
     expect(Array.isArray(parsed.returning)).toBe(true);
+
+    // The Member List is required: the old three-report body is refused.
+    const { organizations, withoutCallings, outOfUnit } = pdfFields();
+    const three = Buffer.from(JSON.stringify({ organizations, withoutCallings, outOfUnit }));
+    const refused = await call(started.server.port, 'POST', '/api/import/preview', jsonHeaders(three, BASE_ORIGIN), three);
+    expect(refused.status).toBe(400);
+    expect(refused.body.toString('utf8')).toBe('{"error":"bad_request"}');
+    expect(store.loadCurrent()).toEqual(before);
   });
 
   it('replace announces the new ward and board', async () => {
@@ -623,6 +633,7 @@ describe('import routes', () => {
         organizations: Buffer.from('not a pdf').toString('base64'),
         withoutCallings: Buffer.from('not a pdf').toString('base64'),
         outOfUnit: Buffer.from('not a pdf').toString('base64'),
+        memberList: Buffer.from('not a pdf').toString('base64'),
       }),
     );
     const pdfResult = await call(
@@ -640,6 +651,7 @@ describe('import routes', () => {
         organizations: `data:application/pdf;base64,${organizationsPdf.toString('base64')}`,
         withoutCallings: withoutPdf.toString('base64'),
         outOfUnit: outPdf.toString('base64'),
+        memberList: memberListPdf.toString('base64'),
       }),
     );
     const urlResult = await call(

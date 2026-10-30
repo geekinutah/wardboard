@@ -48,6 +48,7 @@ test('with no Current the app opens the import workflow and the first import cre
   await expect(page.getByLabel('Organizations and callings')).toBeVisible();
   await expect(page.getByLabel('Members without callings')).toBeVisible();
   await expect(page.getByLabel('Out-of-unit callings')).toBeVisible();
+  await expect(page.getByLabel('Member list')).toBeVisible();
   await expect(page.getByRole('tablist', { name: 'Boards' })).toHaveCount(0);
   await expect(page.getByRole('navigation', { name: 'Board sections' })).toHaveCount(0);
   await checkOverflow();
@@ -55,6 +56,7 @@ test('with no Current the app opens the import workflow and the first import cre
   await page.getByLabel('Organizations and callings').setInputFiles(path.join(REPORTS, 'organizations-and-callings.pdf'));
   await page.getByLabel('Members without callings').setInputFiles(path.join(REPORTS, 'members-without-callings.pdf'));
   await page.getByLabel('Out-of-unit callings').setInputFiles(path.join(REPORTS, 'out-of-unit-callings.pdf'));
+  await page.getByLabel('Member list').setInputFiles(path.join(REPORTS, 'member-list.pdf'));
   await expect(page.getByText('out-of-unit-callings.pdf')).toBeVisible();
   await checkOverflow();
   await page.getByRole('button', { name: 'Preview import' }).click();

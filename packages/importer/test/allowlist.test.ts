@@ -37,11 +37,13 @@ function loadDocs(): {
   organizations: PdfDocument;
   withoutCallings: PdfDocument;
   outOfUnit: PdfDocument;
+  memberList: PdfDocument;
 } {
   return {
     organizations: extractPdf(loadFixture('organizations-and-callings.pdf')),
     withoutCallings: extractPdf(loadFixture('members-without-callings.pdf')),
     outOfUnit: extractPdf(loadFixture('out-of-unit-callings.pdf')),
+    memberList: extractPdf(loadFixture('member-list.pdf')),
   };
 }
 
@@ -157,6 +159,14 @@ function bundleOf(input: ValidInput): Parameters<typeof allowListImport>[0] {
     organizations: input.organizations,
     withoutCallings: input.withoutCallings,
     outOfUnit: input.outOfUnit,
+    memberList: {
+      kind: 'member-list',
+      unitName: 'Cedar 14th Ward',
+      reportDate: '2026-10-25',
+      listedCount: 0,
+      excludedUnder11: 0,
+      entries: [],
+    },
   };
 }
 
@@ -554,6 +564,7 @@ describe('T-056: allow-list and leakage checks', () => {
         organizations: fixtureDocs.organizations,
         withoutCallings,
         outOfUnit: fixtureDocs.outOfUnit,
+        memberList: fixtureDocs.memberList,
       },
       (line) => {
         logs.push(line);
@@ -581,6 +592,7 @@ describe('T-056: allow-list and leakage checks', () => {
             organizations,
             withoutCallings: fixtureDocs.withoutCallings,
             outOfUnit: fixtureDocs.outOfUnit,
+            memberList: fixtureDocs.memberList,
           },
           (line) => {
             logs.push(line);

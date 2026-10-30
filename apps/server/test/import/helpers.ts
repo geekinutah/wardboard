@@ -249,6 +249,14 @@ export function bundle(input: {
         servingUnit: calling.servingUnit,
       })),
     },
+    memberList: {
+      kind: 'member-list',
+      unitName,
+      reportDate: orgDate,
+      listedCount: 0,
+      excludedUnder11: 0,
+      entries: [],
+    },
   };
 }
 

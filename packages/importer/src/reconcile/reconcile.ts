@@ -143,6 +143,40 @@ function categoryOf(person: PersonDraft): MemberCategory | null {
   return category ?? null;
 }
 
+/**
+ * Categories from the Member List, by canonical name. A name printed more than once
+ * (namesakes) maps to null: the list can't say which person is which. Children under 11
+ * have no entry, so they get nothing here.
+ */
+function memberListCategories(imported: ImportBundle): Map<string, MemberCategory | null> {
+  const byKey = new Map<string, MemberCategory | null>();
+  for (const entry of imported.memberList.entries) {
+    const key = canonicalName(entry.name);
+    byKey.set(key, byKey.has(key) ? null : entry.category);
+  }
+  return byKey;
+}
+
+/**
+ * Settles an unknown category from the Member List. A Members without Callings age is kept;
+ * if the Member List disagrees, the category becomes null so the review asks. A report
+ * conflict stays null. The Member List never changes matching.
+ */
+function settledCategory(person: PersonDraft, listed: ReadonlyMap<string, MemberCategory | null>): MemberCategory | null {
+  const derived = categoryOf(person);
+  if (isReportConflict(person)) {
+    return null;
+  }
+  const fromList = listed.get(person.key) ?? null;
+  if (fromList === null) {
+    return derived;
+  }
+  if (derived === null) {
+    return fromList;
+  }
+  return derived === fromList ? derived : null;
+}
+
 function sourcesOf(person: PersonDraft): ReportKind[] {
   return REPORT_KINDS.filter((kind) => person.sourceSet.has(kind));
 }
@@ -208,11 +242,12 @@ function decidePerson(
   members: readonly ExistingMember[],
   bundleKeys: ReadonlySet<string>,
   similarIds: Set<string>,
+  listed: ReadonlyMap<string, MemberCategory | null>,
 ): PersonDecision {
   const header = {
     name: person.name,
     key: person.key,
-    category: categoryOf(person),
+    category: settledCategory(person, listed),
     sources: sourcesOf(person),
     externalCallings: person.externalCallings,
   };
@@ -282,6 +317,8 @@ function reportsDisagree(imported: ImportBundle): boolean {
     canonicalName(imported.organizations.unitName),
     canonicalName(imported.withoutCallings.unitName),
     canonicalName(imported.outOfUnit.unitName),
+    // The Member List's unit counts; its date doesn't (its footer may print none).
+    canonicalName(imported.memberList.unitName),
   ];
   const dates = [
     imported.organizations.reportDate,
@@ -324,9 +361,10 @@ export function reconcile(input: {
   const people = readPeople(input.bundle);
   const bundleKeys = new Set(people.map((person) => person.key));
   const similarIds = new Set<string>();
+  const listed = memberListCategories(input.bundle);
   const decisions: PersonDecision[] = [];
   for (const person of people) {
-    decisions.push(decidePerson(person, members, bundleKeys, similarIds));
+    decisions.push(decidePerson(person, members, bundleKeys, similarIds, listed));
   }
   const conflictKeys = people.filter(isReportConflict).map((person) => person.key);
   const result: ReconcileResult = {
