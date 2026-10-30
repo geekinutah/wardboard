@@ -43,6 +43,7 @@ Preview and replace require four PDFs: the existing three plus the LCR Member Li
   - Add a fourth required picker, labeled `Member list`, after `Out-of-unit callings`.
   - Its hint reads: `In LCR: Reports → Member Directory → Print → Download PDF. The printed report is titled "Member List".`
   - Preview stays disabled until all four reports are chosen.
+  - **`shell/FirstImport.tsx`:** its copy becomes `There's no Current board yet. Import the ward's four LCR reports to create it.`, and its JSDoc says "four reports". Nothing else changes there. (Added in round 2, from the round 1 implementer's finding.)
   - Every "three" in the section's copy becomes "four" (for example `Create Current from the four LCR reports. …`, `Download the four reports above …`, and the read-failure message `Those files couldn't be read as the four LCR reports.`).
 - **`features/import/plan.ts` / `ImportReview.tsx`:** the sources row shows a fourth card, `Member list`, with the same validated status as the other three. No other review change.
 
@@ -63,6 +64,8 @@ Existing tests that build a three-report body, choose three files, or assert thr
 No other change to an existing test. No assertion may be deleted or loosened, and no test may be skipped. The files expected to need this are:
 - `apps/server/test/import/routes.test.ts`, `first-import.test.ts`, `aaronic-links.test.ts`, `leadership-import.test.ts`, `helpers.ts`
 - `apps/web/src/shell/import-section.test.tsx`, `apps/web/src/features/import/client.test.ts`
+- `apps/web/src/shell/import-guidance.test.tsx` (the three-report strings at about lines 147, 155 and 161; its `HINTS` table may add the `Member list` row)
+- `apps/web/src/shell/first-import.test.tsx` (the string at about line 123; its `LABELS` may add `Member list`)
 - `apps/web/src/features/import/plan.test.ts` (it asserts the three source cards at about lines 91 and 295), `ImportReview.test.tsx`, `review-clarity.test.tsx`, only where they list the report sources
 - `apps/web/e2e/first-import.spec.ts`, `import-review.spec.ts`, `import-settings.spec.ts`
 - `apps/web/e2e/gui/first-import.capture.ts`, `import-review.capture.ts`, `import-guidance.capture.ts`, `import-settings.capture.ts`, `tile-leaders.capture.ts`
@@ -77,6 +80,7 @@ May change:
 - `apps/server/src/import/http.ts`
 - `apps/web/src/features/import/client.ts`, `plan.ts`, `ImportReview.tsx`, and `preview.tsx` (only if its sample data must gain the fourth source to typecheck)
 - `apps/web/src/shell/ImportSection.tsx`, `import-section.css`
+- `apps/web/src/shell/FirstImport.tsx` (only "three" → "four" in its copy and its JSDoc)
 - `docs/import/guide.md`
 - `SPEC.md` (only the sentences named above)
 - The existing test files listed under "Existing tests", within that rule.
