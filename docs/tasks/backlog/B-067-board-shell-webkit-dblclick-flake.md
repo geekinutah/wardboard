@@ -18,6 +18,8 @@ Other unrelated e2e/capture specs also failed once while several worktrees ran t
 
 - `scripts/e2e-slot.test.mjs:180` "runs the command with --workers appended" (empty stderr), from the T-107 verifier
 
+- desktop-chromium `tags-in-app.spec.ts:95` (still "Ward" after a double-click) and `canvas.spec.ts:41` (30 s timeout on /__gallery), from T-113's implementer and verifier
+
 This may be a broader load-sensitivity problem rather than one WebKit double-click.
 
 ## Risk

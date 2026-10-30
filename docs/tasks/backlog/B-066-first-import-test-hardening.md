@@ -12,6 +12,8 @@
 - No committed test proves that an unresolved in-report conflict blocks the first replace with 409 `unresolved`. The verifier's probe showed the behavior is correct today.
 - The early `expectedVersion !== 0` check in `http.ts` is redundant with `applyImport`'s stale check.
 
+- (T-113 verifier) `packages/importer/test/member-list-fixture.test.ts` doesn't pin Member List gender against the other fixtures, and doesn't prove that rows outside the fixtures are under-11 children. Consider both when T-111/T-112 start relying on the file.
+
 ## Risk
 
 A later change to the planner or the fixtures could quietly stop exercising the namesake path on a first import.
