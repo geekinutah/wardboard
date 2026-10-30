@@ -1,7 +1,7 @@
 # T-111: Parse the LCR Member List report for youth/adult
 
 **Milestone:** 6 — Import and photos
-**Depends on:** an anonymized Member List fixture PDF supplied by Mike (`HUMAN_BACKLOG.md`, "Refreshed report fixtures"), committed as `fixtures/lcr-reports/member-list.pdf`. **Do not start until it is on `main`.** Also T-053–T-056 (the existing parsers and allow-list), which are done.
+**Depends on:** the fictional Member List fixture `fixtures/lcr-reports/member-list.pdf`, supplied by Mike and made consistent with the other fixtures by T-113 (done, on `main`). It has 293 rows on 7 pages, including two namesake pairs: `Westdale, Gus` (11 and 39) and `Fairwell, Sage Casey Kendall Reagan` (14 and 16). Both rows of each pair must be kept. Also T-053–T-056 (the existing parsers and allow-list), which are done.
 - Promoted from B-069. Mike decided on 2026-10-29 to add a full ward directory report, option (a): a fourth report used only for youth/adult. On 2026-10-30 Mike made it required, not optional (T-112). The LCR path is Reports → Member Directory → Print; the printed title is `Member List`.
 - T-112 wires this parser into the import. It depends on this task.
 
@@ -60,7 +60,7 @@ May change:
 Must not change:
 - every existing test file
 - the other parsers
-- `fixtures/**`, which Mike supplies
+- `fixtures/**`
 - `apps/**`
 - anything else
 
