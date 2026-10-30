@@ -110,21 +110,80 @@ function readMemberList(): MemberList {
   return { doc, rows, reportDate };
 }
 
-function fixturePeople(): Set<string> {
-  const names = new Set<string>();
-  const organizations = parseOrganizationsReport(extractPdf(loadFixture('organizations-and-callings.pdf')));
-  for (const organization of organizations.organizations) {
-    for (const group of organization.groups) {
-      for (const position of group.positions) {
-        if (position.occupant !== null) names.add(position.occupant);
+interface FixturePerson {
+  readonly name: string;
+  readonly age: string;
+}
+
+function personKey(name: string, age: string): string {
+  return `${name} (${age})`;
+}
+
+/**
+ * Reads every roster row (a table whose header has Name and Age columns) from a
+ * fixture, by the x-positions of its header row. Callings and out-of-unit tables
+ * have no Age column, so they are skipped.
+ */
+function rosterPeople(doc: PdfDocument): FixturePerson[] {
+  const people: FixturePerson[] = [];
+  let columns: { heading: string; x: number }[] | null = null;
+  for (const page of doc.pages) {
+    for (const row of page.rows) {
+      const texts = row.items.map((item) => item.text);
+      if (texts.includes('Name') && (texts.includes('Calling') || texts.includes('Age'))) {
+        columns = texts.includes('Age') ? row.items.map((item) => ({ heading: item.text, x: item.x })) : null;
+        continue;
+      }
+      if (columns === null) continue;
+      const cells = new Map<string, string>();
+      for (const item of row.items) {
+        let column: { heading: string; x: number } | undefined;
+        for (const candidate of columns) {
+          if (candidate.x <= item.x + 3) column = candidate;
+        }
+        if (column) cells.set(column.heading, item.text);
+      }
+      const name = cells.get('Name');
+      const age = cells.get('Age');
+      const birthDate = cells.get('Birth Date');
+      if (name && age && /^\d{1,3}$/.test(age) && birthDate && /^\d{1,2} [A-Z][a-z]{2} \d{4}$/.test(birthDate)) {
+        people.push({ name, age });
       }
     }
   }
-  const withoutCallings = parseWithoutCallingsReport(extractPdf(loadFixture('members-without-callings.pdf')));
-  for (const candidate of withoutCallings.candidates) names.add(candidate.name);
-  const outOfUnit = parseOutOfUnitReport(extractPdf(loadFixture('out-of-unit-callings.pdf')));
-  for (const record of outOfUnit.externalCallings) names.add(record.name);
-  return names;
+  return people;
+}
+
+interface FixturePeople {
+  /** Names the existing parsers report (calling occupants, candidates, out-of-unit records). */
+  readonly parsedNames: ReadonlySet<string>;
+  /** Distinct people (name plus printed age) from the roster tables. */
+  readonly people: ReadonlyMap<string, FixturePerson>;
+}
+
+function fixturePeople(): FixturePeople {
+  const parsedNames = new Set<string>();
+  const organizationsDoc = extractPdf(loadFixture('organizations-and-callings.pdf'));
+  const organizations = parseOrganizationsReport(organizationsDoc);
+  for (const organization of organizations.organizations) {
+    for (const group of organization.groups) {
+      for (const position of group.positions) {
+        if (position.occupant !== null) parsedNames.add(position.occupant);
+      }
+    }
+  }
+  const withoutCallingsDoc = extractPdf(loadFixture('members-without-callings.pdf'));
+  const withoutCallings = parseWithoutCallingsReport(withoutCallingsDoc);
+  for (const candidate of withoutCallings.candidates) parsedNames.add(candidate.name);
+  const outOfUnitDoc = extractPdf(loadFixture('out-of-unit-callings.pdf'));
+  const outOfUnit = parseOutOfUnitReport(outOfUnitDoc);
+  for (const record of outOfUnit.externalCallings) parsedNames.add(record.name);
+
+  const people = new Map<string, FixturePerson>();
+  for (const doc of [organizationsDoc, withoutCallingsDoc, outOfUnitDoc]) {
+    for (const person of rosterPeople(doc)) people.set(personKey(person.name, person.age), person);
+  }
+  return { parsedNames, people };
 }
 
 function ageOn(birth: readonly [number, number, number], on: readonly [number, number, number]): number {
@@ -153,26 +212,57 @@ describe('T-113: Member List fixture', () => {
   it('every fixture person appears exactly once', () => {
     const { rows } = readMemberList();
     const counts = new Map<string, number>();
-    for (const row of rows) counts.set(row.name, (counts.get(row.name) ?? 0) + 1);
+    for (const row of rows) {
+      const key = personKey(row.name, row.age);
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
 
-    const people = fixturePeople();
-    assert.ok(people.size > 200, `expected the fixtures to name over 200 people, got ${String(people.size)}`);
-    const wrong = [...people]
-      .filter((name) => counts.get(name) !== 1)
-      .map((name) => `${name}: ${String(counts.get(name) ?? 0)}`);
+    const { parsedNames, people } = fixturePeople();
+    assert.ok(parsedNames.size > 200, `expected the parsers to name over 200 people, got ${String(parsedNames.size)}`);
+    const rosterNames = new Set([...people.values()].map((person) => person.name));
+    const unaged = [...parsedNames].filter((name) => !rosterNames.has(name));
+    assert.deepEqual(unaged, [], 'parsed fixture names with no roster age');
+
+    const wrong = [...people.keys()]
+      .filter((key) => counts.get(key) !== 1)
+      .map((key) => `${key}: ${String(counts.get(key) ?? 0)}`);
     assert.deepEqual(wrong, [], 'fixture people missing from or repeated in the Member List');
+
+    const strays = rows
+      .filter((row) => rosterNames.has(row.name) && !people.has(personKey(row.name, row.age)))
+      .map((row) => personKey(row.name, row.age));
+    assert.deepEqual(strays, [], 'Member List rows that reuse a fixture name with an age no fixture prints');
+  });
+
+  it('namesakes keep separate rows', () => {
+    const { rows } = readMemberList();
+    const agesOf = (name: string): number[] =>
+      rows
+        .filter((row) => row.name === name)
+        .map((row) => Number(row.age))
+        .sort((a, b) => a - b);
+
+    const gus = agesOf('Westdale, Gus');
+    assert.equal(gus.length, 2, `Westdale, Gus rows: ${JSON.stringify(gus)}`);
+    assert.equal(gus[0], 11, 'Westdale, Gus: expected an 11-year-old');
+    assert.equal(categoryForAge(gus[1] ?? 0), 'adult', 'Westdale, Gus: expected an adult');
+
+    const sage = agesOf('Fairwell, Sage Casey Kendall Reagan');
+    assert.equal(sage.length, 2, `Fairwell, Sage Casey Kendall Reagan rows: ${JSON.stringify(sage)}`);
+    assert.notEqual(sage[0], sage[1], 'Fairwell, Sage Casey Kendall Reagan: expected two different ages');
   });
 
   it('ages agree with members without callings', () => {
     const { rows } = readMemberList();
-    const byName = new Map(rows.map((row) => [row.name, row]));
     const report = parseWithoutCallingsReport(extractPdf(loadFixture('members-without-callings.pdf')));
     assert.ok(report.candidates.length > 0);
     const wrong: string[] = [];
     for (const candidate of report.candidates) {
-      const row = byName.get(candidate.name);
-      const category = row ? categoryForAge(Number(row.age)) : 'missing';
-      if (category !== candidate.category) wrong.push(`${candidate.name}: ${candidate.category} vs ${category}`);
+      // A namesake has more than one row; one of them must be this candidate.
+      const categories = rows.filter((row) => row.name === candidate.name).map((row) => categoryForAge(Number(row.age)));
+      if (!categories.includes(candidate.category)) {
+        wrong.push(`${candidate.name}: ${candidate.category} vs ${categories.join(', ') || 'missing'}`);
+      }
     }
     assert.deepEqual(wrong, []);
   });

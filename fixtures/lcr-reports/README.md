@@ -14,10 +14,9 @@ Generated October 25, 2026 from one ward's reports and reviewed by Mike before c
 ### `member-list.pdf` provenance
 
 - Mike supplied the layout on 2026-10-29 (title, unit line, columns, repeated header, footer, 45 rows on page 1 and 48 on later pages, final `Count:` row).
-- The rows were rewritten by hand to the existing fictional identities: one row for every person printed in the other three files (including the under-11 children those files print), alphabetical by printed name. Age, birth date, gender, phone and email are copied from those files; birth dates use the `DD Mon YYYY` form and agree with the age as of the footer date, 25 Oct 2026.
+- The rows were rewritten by hand to the existing fictional identities: 293 rows, one for every distinct person (printed name plus age) in the other three files, including the under-11 children those files print, alphabetical by printed name. Age, birth date, gender, phone and email are copied from those files; birth dates use the `DD Mon YYYY` form and agree with the age as of the footer date, 25 Oct 2026.
 - The content streams were re-encoded with `FlateDecode` only, so the importer's reader can read them; ReportLab metadata was removed.
-- `Westdale, Gus` is printed twice in the existing fixtures: as a 39-year-old in Members without Callings and the Elders Quorum roster, and as an 11-year-old Teachers Quorum President in Callings by Organization. Real reports can't do this. The Member List has exactly one row for him, with the age 39 printed in Members without Callings. The other fixtures are unchanged.
-- `Fairwell, Sage Casey Kendall Reagan` is also printed with two different ages (16 and 14) in Callings by Organization; the Member List uses the age 14 row.
+- Namesakes: the other files print two different people as `Westdale, Gus` (a 39-year-old in Members without Callings and the Elders Quorum roster, and an 11-year-old Teachers Quorum President), and two different people as `Fairwell, Sage Casey Kendall Reagan` (ages 16 and 14). Each person has their own row, so both names appear twice in the Member List.
 
 ## What is fictional
 
@@ -34,4 +33,4 @@ Report structure: page layout, fonts, section and group headers, calling titles,
 ## Rules
 
 - These are the only report-shaped fixtures that may be committed. Never add real reports, real names, or other harvested data (AGENTS.md security rules).
-- Don't edit these PDFs by hand. If LCR's layout changes, Mike provides new reports and they are re-anonymized the same way.
+- Don't edit the three report PDFs anonymized from LCR (`organizations-and-callings.pdf`, `members-without-callings.pdf`, `out-of-unit-callings.pdf`) by hand. If LCR's layout changes, Mike provides new reports and they are re-anonymized the same way. `member-list.pdf` is the exception: its rows were rewritten by hand, as described in [its provenance note](#member-listpdf-provenance).
