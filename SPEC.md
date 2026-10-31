@@ -145,6 +145,11 @@ Examples:
 
 **CONFIRMED:** Releasing a president in a proposal also releases that presidency's counselors (Handbook 30.6) and its secretary. Their other callings are preserved; each enters the dugout only if left with no callings. **CONFIRMED:** No confirmation is shown; these releases happen in the same atomic change as the president's release. **PROPOSED:** The rule also applies to a bishop and the bishopric counselors, and to replacing a president through Release occupant. **CONFIRMED (v0.21):** The secretary of that same presidency is released with the counselors. Clerks and the executive secretary are support roles outside the bishopric and are not released when the bishop is released.
 
+**CONFIRMED (2026-10-30):** Some callings are limited by gender per the General Handbook Chart of Callings (30.8.1; see `docs/handbook-calling-gender.md`):
+- Imported callings get their default gender rule (`M`, `F`, `any`, or `presidency_aligned` for the Sunday School presidency and secretary under Handbook 13.2.2.1) from their organization and title.
+- When an Editor adds a custom position, they may choose `Any`, `Men only (M)`, or `Women only (F)` (defaulting to the Handbook rule for that organization and title).
+- Placing, moving, swapping, or replacing a member with a known gender (`M` or `F`) into a calling whose gender rule does not match is refused (`gender_mismatch`). For `presidency_aligned` positions (Sunday School President, Counselors, and Secretary), all occupied seats in that presidency group after the operation must share the same gender. Phone Move and Fill sheets omit incompatible destinations and candidates.
+
 **OPEN edge case:** A person dragged from the dugout has no source calling for a swap. **PROPOSED:** Offer release-and-replace or cancel in that case. For a list source, swapping moves the displaced occupant into that list. A swap must respect the destination types and must not duplicate an existing list member.
 
 ### Dugout
@@ -187,10 +192,10 @@ Examples include strengths and availability constraints. Separately from tags, a
 
 Implementation details may change, but preserve these distinctions:
 
-- **Member:** Local ID, name, optional photo, youth/adult category, brief note, tags, `needs_approval` (boolean), optional external calling context, and `removed_date` (null while the member is in Current; set by an import that no longer contains them). No contact details, address, date of birth, or underlying sensitive restriction history.
+- **Member:** Local ID, name, optional photo, youth/adult category, optional gender (`M` or `F`), brief note, tags, `needs_approval` (boolean), optional external calling context, and `removed_date` (null while the member is in Current; set by an import that no longer contains them). No contact details, address, date of birth, or underlying sensitive restriction history.
 - **BoardGroup:** Named overview area with order and visibility. A convenient display grouping, not an assertion of ecclesiastical authority.
 - **CallingGroup:** Nested structure within a board group, such as presidency, quorum, class, or committee. Contains calling slots or further groups. Does not contain participant rosters.
-- **CallingAssignment:** Board-version-owned named destination with `single` or `list` type, group, ordering, enabled state, overview prominence, and standard/custom origin. Single assignments have one position; lists expose a collection of positions.
+- **CallingAssignment:** Board-version-owned named destination with `single` or `list` type, group, ordering, enabled state, overview prominence, standard/custom origin, and optional gender rule (`M`, `F`, `any`, or `presidency_aligned`). Single assignments have one position; lists expose a collection of positions.
 - **CallingSlot / RosterPosition:** Board-version-owned persistent position within an assignment, occupied or vacant. A proposal position whose lineage no longer exists in Current is flagged as removed; the proposal's own position is not deleted. List positions are an internal way to preserve vacancy counts; the UI presents a list rather than numbered individual teacher/adviser boxes.
 - **Oversight:** Board-version-owned assignment of a bishopric position to a quorum, class, or organization. Not a calling. Bishop → priests quorum is fixed; all others are editable.
 - **CurrentBoard:** Imported roster, slot structure, placements, import date/version. Read-only to ordinary edits.
@@ -502,7 +507,7 @@ The app must provide a maintained, versioned guide matching the released collect
 6. Confirm current-board replacement. Existing proposals keep their own baselines and show divergence notices. Review every existing-photo replacement side by side and choose Keep Current, Use New Photo, or Cancel.
 7. Verify the completion summary and staging cleanup. Keep original source PDFs only if you intentionally choose to retain your own copies; the app does not archive them automatically. Sign out or close the Church browser session when you choose.
 
-**CONFIRMED (2026-10-30):** The Member List is a required fourth report. It supplies youth/adult for people the other reports don't age. Only name and the derived category are kept; gender, age, birth date, phone and email are discarded before storage.
+**CONFIRMED (2026-10-30):** The Member List is a required fourth report. It supplies youth/adult and gender (`M` or `F`) for people the other reports don't age or classify. Members without Callings also supplies gender (`M` or `F`). Only name, the derived youth/adult category, and gender (`M` or `F`) are kept from those reports; numeric age, birth date, phone and email are discarded before storage. If an unmatched import row resolved as a new member has no unique gender from the reports, the import review requires choosing `M` or `F` alongside `Adult` or `Youth`.
 
 ### Reusable prompt for an optional AI operator
 

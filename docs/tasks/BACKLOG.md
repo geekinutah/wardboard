@@ -97,8 +97,8 @@ observation / review finding
 | B-065 | P3 | web phone / e2e | candidate | Small wording and capture follow-ups from the T-094/T-097/T-100 wave |
 | B-066 | P3 | server import tests | candidate | Harden the first-import server tests |
 | B-067 | P2 | e2e / web canvas | candidate | board-shell e2e can miss the group double-click on phone-webkit under load |
-| B-068 | P1 | data model / import / rules | candidate | WardBoard doesn't store gender, but some callings are limited by it |
+| B-068 | P1 | data model / import / rules | accepted | WardBoard doesn't store gender, but some callings are limited by it |
 | B-069 | P2 | import | resolved | Members who hold callings arrive without youth/adult |
 | B-070 | P1 | import | resolved | The import creates duplicate bishopric seats under the Aaronic Priesthood |
 | B-071 | P2 | import | declined | A report-conflict seat stays vacant even after the conflict is resolved |
-| B-072 | P2 | web import review | candidate | The import review's discarded-fields list doesn't mention gender |
+| B-072 | P2 | web import review | accepted | The import review's discarded-fields list doesn't mention gender |

@@ -2,9 +2,9 @@
 
 **Priority:** P2  
 **Area:** web import review  
-**State:** candidate  
+**State:** accepted  
 **Found:** 2026-10-30, T-112 round 2 implementer report  
-**Promoted to:** —
+**Promoted to:** T-117
 
 ## Finding
 

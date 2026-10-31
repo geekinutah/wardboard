@@ -2,9 +2,9 @@
 
 **Priority:** P1  
 **Area:** data model / import / rules  
-**State:** candidate  
+**State:** accepted  
 **Found:** 2026-10-29, Mike, first-import walkthrough  
-**Promoted to:** —
+**Promoted to:** T-114, T-115, T-116, T-117
 
 ## Finding
 
@@ -29,3 +29,4 @@ Then a SPEC update. Core rules, importer, server and web tasks follow from those
 
 - SPEC.md §7 Member fields, §15 allow-list; `apps/web/src/features/import/ImportReview.tsx` KEPT/DISCARDED lists
 - `fixtures/lcr-reports/README.md`
+- `docs/handbook-calling-gender.md` (General Handbook 30.8.1 Chart of Callings and organization chapters cross-referenced with LCR calling titles)
