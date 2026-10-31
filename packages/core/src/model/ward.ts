@@ -1,6 +1,14 @@
 import { deepFreeze } from './freeze.ts';
 import type { Result } from './result.ts';
-import { MAX_NOTE_LENGTH, MEMBER_CATEGORIES, type Member, type Tag, type Ward, type WardInput } from './types.ts';
+import {
+  MAX_NOTE_LENGTH,
+  MEMBER_CATEGORIES,
+  MEMBER_GENDERS,
+  type Member,
+  type Tag,
+  type Ward,
+  type WardInput,
+} from './types.ts';
 import {
   characterCount,
   checkIdList,
@@ -21,6 +29,7 @@ function copyMember(input: Member): Member {
     id: input.id,
     name: trimmed(input.name),
     category: input.category,
+    ...(input.gender !== undefined ? { gender: input.gender } : {}),
     photoRef: input.photoRef,
     note: input.note,
     tagIds: copyArray(input.tagIds),
@@ -43,6 +52,9 @@ function validateMember(key: string, member: Member, tags: ReadonlySet<string>, 
   }
   if (!isOneOf(MEMBER_CATEGORIES, member.category)) {
     errors.add('invalid_field', `${path}.category`, `category must be one of ${MEMBER_CATEGORIES.join(', ')}`);
+  }
+  if (member.gender !== undefined && !isOneOf(MEMBER_GENDERS, member.gender)) {
+    errors.add('invalid_field', `${path}.gender`, `gender must be one of ${MEMBER_GENDERS.join(', ')}`);
   }
   if (member.photoRef !== null && !isNonEmptyString(member.photoRef)) {
     errors.add('invalid_field', `${path}.photoRef`, 'photoRef must be null or a non-empty string');

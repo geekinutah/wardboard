@@ -75,6 +75,7 @@ describe('operation conventions', () => {
       'not_placed',
       'assignment_disabled',
       'wrong_assignment_type',
+      'gender_mismatch',
     ]);
   });
 

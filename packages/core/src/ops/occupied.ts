@@ -13,6 +13,7 @@ import {
   type OperationResult,
   type SharedOperationErrorCode,
 } from './types.ts';
+import { canPlaceMemberInAssignment } from '../rules/gender.ts';
 import { applyPresidencyRelease } from './presidency.ts';
 
 /*
@@ -33,6 +34,8 @@ export const OCCUPIED_ERROR_CODES = [
   'assignment_disabled',
   /** The displaced occupant already holds another position in the source list. */
   'already_in_list',
+  /** A member's gender does not satisfy a calling's gender rule. */
+  'gender_mismatch',
 ] as const;
 export type OccupiedSpecificErrorCode = (typeof OCCUPIED_ERROR_CODES)[number];
 export type OccupiedErrorCode = SharedOperationErrorCode | OccupiedSpecificErrorCode;
@@ -168,9 +171,19 @@ function finish(
   ctx: OperationContext,
   placements: Board['placements'],
   dugoutInclusions: readonly MemberId[],
+  checks: readonly { readonly memberId: MemberId; readonly assignmentId: AssignmentId }[],
 ): OperationResult<OccupiedErrorCode> {
   const drafted = { ...board, placements, dugoutInclusions };
-  return operationOk(finalizeBoard(dropStaleApprovals(applyPresidencyRelease(board, drafted)), ctx.ward));
+  // Checked after presidency release so replacing a Sunday School president
+  // does not conflict with counselors and the secretary vacated in that change.
+  const released = applyPresidencyRelease(board, drafted);
+  for (const check of checks) {
+    const gender = canPlaceMemberInAssignment(released, ctx.ward, check.memberId, check.assignmentId);
+    if (!gender.ok) {
+      return operationError('gender_mismatch', gender.message);
+    }
+  }
+  return operationOk(finalizeBoard(dropStaleApprovals(released), ctx.ward));
 }
 
 /**
@@ -189,9 +202,17 @@ export function swap(board: Board, ctx: OperationContext, request: SwapRequest):
     return operationError(checked.error.code, checked.error.message);
   }
   const displaced = checked.displaced;
+  const source = findPosition(board, from);
+  const destination = findPosition(board, to);
+  if (source === undefined || destination === undefined) {
+    throw new Error(`swap positions ${from} and ${to} disappeared after validation`);
+  }
   const placements: Record<PositionId, MemberId> = { ...board.placements, [to]: memberId, [from]: displaced };
   const dugoutInclusions = board.dugoutInclusions.filter((id) => id !== memberId && id !== displaced);
-  return finish(board, ctx, placements, dugoutInclusions);
+  return finish(board, ctx, placements, dugoutInclusions, [
+    { memberId, assignmentId: requireAssignment(board, destination).id },
+    { memberId: displaced, assignmentId: requireAssignment(board, source).id },
+  ]);
 }
 
 /**
@@ -216,13 +237,19 @@ export function releaseOccupant(
   if (!checked.ok) {
     return operationError(checked.error.code, checked.error.message);
   }
+  const destination = findPosition(board, to);
+  if (destination === undefined) {
+    throw new Error(`release occupant destination ${to} disappeared after validation`);
+  }
   const placements: Record<PositionId, MemberId> = Object.fromEntries(
     Object.entries(board.placements).filter(([position]) => position !== from && position !== to),
   );
   placements[to] = memberId;
   // No-calling dugout membership is derived. Do not record an explicit inclusion for the displaced member.
   const dugoutInclusions = board.dugoutInclusions.filter((id) => id !== memberId);
-  return finish(board, ctx, placements, dugoutInclusions);
+  return finish(board, ctx, placements, dugoutInclusions, [
+    { memberId, assignmentId: requireAssignment(board, destination).id },
+  ]);
 }
 
 /**

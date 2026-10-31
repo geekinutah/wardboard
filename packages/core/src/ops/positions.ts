@@ -10,16 +10,19 @@ import {
   type PositionId,
 } from '../model/ids.ts';
 import {
+  CALLING_GENDER_RULES,
   CALLING_GROUP_KINDS,
   type AssignmentType,
   type Board,
   type BoardGroup,
   type CallingAssignment,
+  type CallingGenderRule,
   type CallingGroup,
   type CallingGroupKind,
   type CallingGroupParent,
   type Position,
 } from '../model/types.ts';
+import { isOneOf } from '../model/validate.ts';
 import {
   checkEditable,
   dropStaleApprovals,
@@ -87,6 +90,8 @@ export interface AddAssignmentRequest {
   readonly type: AssignmentType;
   /** `1` for a single. An integer `0..50` for a list. */
   readonly positionCount: number;
+  /** Omitted assignments stay unrestricted. Invalid values are `invalid_operation`. */
+  readonly genderRule?: CallingGenderRule;
 }
 
 export interface AddListPositionRequest {
@@ -510,6 +515,14 @@ export function addAssignment(
   if (countMessage !== null) {
     return operationError(INVALID_OPERATION, countMessage);
   }
+  let genderRule: CallingGenderRule | undefined;
+  if (request.genderRule !== undefined) {
+    const supplied: unknown = request.genderRule;
+    if (!isOneOf(CALLING_GENDER_RULES, supplied)) {
+      return operationError(INVALID_OPERATION, 'genderRule must be M, F, any, or presidency_aligned');
+    }
+    genderRule = supplied;
+  }
   const take = allocator(ctx);
   const id = assignmentId(take('assignment', (candidate) => Object.hasOwn(board.assignments, candidate)));
   const positions: Record<PositionId, Position> = { ...board.positions };
@@ -533,6 +546,7 @@ export function addAssignment(
     enabled: true,
     prominent: false,
     origin: 'custom',
+    ...(genderRule !== undefined ? { genderRule } : {}),
     leadershipRole: null,
     callingTagIds: [],
     preferredMemberTagIds: [],
