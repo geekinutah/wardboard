@@ -115,5 +115,5 @@ Candidate and discovered work that has not yet been promoted into a task contrac
 | T-113 | Make the Member List fixture readable and consistent with the other fixtures | 6 — Import and photos | done | 1 | open `fixtures/lcr-reports/member-list.pdf` in Preview and confirm it looks like LCR's printed Member List; confirm the menu path (Member List vs Member Directory) |
 | T-114 | Core calling gender classification and placement rules | 1 — Core domain | done | 1 | none |
 | T-115 | Parse and reconcile member gender from LCR reports | 2 — Importer | done | 2 | none |
-| T-116 | Persist member and calling gender on server import and operations | 6 — Import and photos | in progress | 2 | none |
+| T-116 | Persist member and calling gender on server import and operations | 6 — Import and photos | done | 2 | none |
 | T-117 | Gender requirement and mismatch controls in web UI | 4 — Desktop board | todo | 0 | in `pnpm dev`, try dragging a male member onto a Relief Society seat (blocked), open Level 3 Add position and verify the Gender requirement selector, and on a phone viewport check that Move and Fill sheets list only gender-compatible destinations and candidates |
