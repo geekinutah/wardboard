@@ -4,9 +4,11 @@ import {
   ASSIGNMENT_TYPES,
   BOARD_GROUP_KEYS,
   BOARD_KINDS,
+  CALLING_GENDER_RULES,
   CALLING_GROUP_KINDS,
   LEADERSHIP_ROLES,
   MEMBER_CATEGORIES,
+  MEMBER_GENDERS,
   OVERSEERS,
   PROPOSAL_STATUSES,
   assignmentId,
@@ -155,16 +157,19 @@ export function readWard(db: DatabaseSync): Ward {
   const members: Record<MemberId, Member> = {};
   for (const row of db
     .prepare(
-      `SELECT id, name, photo_ref, category, note, needs_approval, removed_date
+      `SELECT id, name, photo_ref, category, gender, note, needs_approval, removed_date
        FROM members`,
     )
     .all()) {
     const id = memberId(text(row, 'id'));
+    const rawGender = textOrNull(row, 'gender');
+    const gender = rawGender === null ? undefined : oneOf(MEMBER_GENDERS, rawGender, 'member gender');
     members[id] = {
       id,
       name: text(row, 'name'),
       category: oneOf(MEMBER_CATEGORIES, text(row, 'category'), 'member category'),
       photoRef: textOrNull(row, 'photo_ref'),
+      ...(gender !== undefined ? { gender } : {}),
       note: textOrNull(row, 'note'),
       tagIds: tagIdsByMember.get(id) ?? [],
       needsApproval: flag(row, 'needs_approval'),
@@ -343,13 +348,13 @@ export function writeCurrentReplacement(
   for (const member of db.prepare('SELECT id FROM members').all()) existing.add(text(member, 'id'));
   const updateMember = db.prepare(
     `UPDATE members
-     SET name = ?, photo_ref = ?, category = ?, note = ?, needs_approval = ?, removed_date = ?, updated_at = ?
+     SET name = ?, photo_ref = ?, category = ?, gender = ?, note = ?, needs_approval = ?, removed_date = ?, updated_at = ?
      WHERE id = ?`,
   );
   const insertMember = db.prepare(
     `INSERT INTO members (
-       id, name, photo_ref, category, note, needs_approval, removed_date, created_at, updated_at
-     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       id, name, photo_ref, category, gender, note, needs_approval, removed_date, created_at, updated_at
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   );
   const deleteTags = db.prepare('DELETE FROM member_tags WHERE member_id = ?');
   const insertTagLink = db.prepare(
@@ -365,6 +370,7 @@ export function writeCurrentReplacement(
         member.name,
         member.photoRef,
         member.category,
+        member.gender ?? null,
         member.note,
         bit(member.needsApproval),
         member.removedDate,
@@ -380,6 +386,7 @@ export function writeCurrentReplacement(
         member.name,
         member.photoRef,
         member.category,
+        member.gender ?? null,
         member.note,
         bit(member.needsApproval),
         member.removedDate,
@@ -607,8 +614,8 @@ function writeWard(db: DatabaseSync, ward: Ward, stamp: string): void {
   const insertTag = db.prepare('INSERT INTO tags (id, name) VALUES (?, ?)');
   const insertMember = db.prepare(
     `INSERT INTO members (
-       id, name, photo_ref, category, note, needs_approval, removed_date, created_at, updated_at
-     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       id, name, photo_ref, category, gender, note, needs_approval, removed_date, created_at, updated_at
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   );
   const insertMemberTag = db.prepare(
     'INSERT INTO member_tags (member_id, tag_id, sort_order) VALUES (?, ?, ?)',
@@ -625,6 +632,7 @@ function writeWard(db: DatabaseSync, ward: Ward, stamp: string): void {
       member.name,
       member.photoRef,
       member.category,
+      member.gender ?? null,
       member.note,
       bit(member.needsApproval),
       member.removedDate,
@@ -732,8 +740,8 @@ function insertBoardContents(db: DatabaseSync, board: Board): void {
 
   const insertAssignment = db.prepare(
     `INSERT INTO calling_assignments (
-       id, board_id, calling_group_id, title, type, sort_order, enabled, prominence, origin, leadership_role
-     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       id, board_id, calling_group_id, title, type, sort_order, enabled, prominence, origin, leadership_role, gender_rule
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   );
   const insertCallingTag = db.prepare(
     'INSERT INTO calling_tags (board_id, assignment_id, tag_id, sort_order) VALUES (?, ?, ?, ?)',
@@ -754,6 +762,7 @@ function insertBoardContents(db: DatabaseSync, board: Board): void {
       bit(assignment.prominent),
       assignment.origin,
       assignment.leadershipRole,
+      assignment.genderRule ?? null,
     );
     writeTagLinks(insertCallingTag, board.id, assignmentRowId, assignment.callingTagIds);
     writeTagLinks(insertAffinity, board.id, assignmentRowId, assignment.preferredMemberTagIds);
@@ -983,12 +992,17 @@ function readAssignments(
   const assignments: Record<AssignmentId, CallingAssignment> = {};
   for (const row of db
     .prepare(
-      `SELECT id, calling_group_id, title, type, sort_order, enabled, prominence, origin, leadership_role
+      `SELECT id, calling_group_id, title, type, sort_order, enabled, prominence, origin, leadership_role, gender_rule
        FROM calling_assignments WHERE board_id = ? ORDER BY sort_order, id`,
     )
     .all(ownerBoardId)) {
     const storedId = text(row, 'id');
     const id = assignmentId(unscope(storedId, ownerBoardId));
+    const rawGenderRule = textOrNull(row, 'gender_rule');
+    const genderRule =
+      rawGenderRule === null
+        ? undefined
+        : oneOf(CALLING_GENDER_RULES, rawGenderRule, 'calling gender rule');
     assign(assignments, id, {
       id,
       groupId: callingGroupId(unscope(text(row, 'calling_group_id'), ownerBoardId)),
@@ -999,6 +1013,7 @@ function readAssignments(
       prominent: flag(row, 'prominence'),
       origin: oneOf(ASSIGNMENT_ORIGINS, text(row, 'origin'), 'assignment origin'),
       leadershipRole: oneOfOrNull(LEADERSHIP_ROLES, textOrNull(row, 'leadership_role'), 'leadership role'),
+      ...(genderRule !== undefined ? { genderRule } : {}),
       callingTagIds: callingTags.get(storedId) ?? [],
       preferredMemberTagIds: affinities.get(storedId) ?? [],
     });

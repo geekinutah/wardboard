@@ -300,8 +300,17 @@ describe('member list route', () => {
     expect(logText.length).toBeGreaterThan(0);
     for (const text of [...stored, logText]) {
       for (const value of values) expect(text.includes(value), value).toBe(false);
-      expect(/gender/i.test(text)).toBe(false);
-      for (const gender of genders) expect(text.includes(`"${gender}"`), gender).toBe(false);
+    }
+
+    const checkDb = openDatabase(databasePath(started.dataDir));
+    try {
+      const storedGenders = checkDb
+        .prepare('SELECT DISTINCT gender FROM members WHERE gender IS NOT NULL ORDER BY gender')
+        .all()
+        .map((row) => row['gender']);
+      expect(storedGenders).toEqual(['F', 'M']);
+    } finally {
+      checkDb.close();
     }
   });
 });

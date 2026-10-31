@@ -2,6 +2,7 @@ import {
   assignmentId,
   boardGroupId,
   callingGroupId,
+  classifyCallingGender,
   createBoard,
   createWard,
   lineageId,
@@ -26,7 +27,12 @@ import type { ApplyImportInput, ApplyImportResult, ImportResolution, StructureRe
 
 type Choice =
   | { readonly kind: 'existing'; readonly memberId: string; readonly decision: PersonDecision }
-  | { readonly kind: 'new'; readonly category: 'adult' | 'youth'; readonly decision: PersonDecision };
+  | {
+      readonly kind: 'new';
+      readonly category: 'adult' | 'youth';
+      readonly gender?: 'M' | 'F';
+      readonly decision: PersonDecision;
+    };
 
 function failureMessage(errors: readonly { path: string; message: string }[]): string {
   return errors.map((error) => `${error.path}: ${error.message}`).join('; ');
@@ -54,6 +60,19 @@ function categoryForNew(
   return resolution.category ?? null;
 }
 
+function genderForNew(
+  decision: PersonDecision,
+  resolution: { readonly gender?: 'M' | 'F' } | undefined,
+): { readonly ok: true; readonly gender?: 'M' | 'F' } | { readonly ok: false } {
+  if (decision.gender !== null) {
+    if (resolution?.gender !== undefined && resolution.gender !== decision.gender) {
+      return { ok: false };
+    }
+    return { ok: true, gender: decision.gender };
+  }
+  return resolution?.gender !== undefined ? { ok: true, gender: resolution.gender } : { ok: true };
+}
+
 function memberOf(ward: Ward, id: string): Member | undefined {
   return ward.members[memberId(id)];
 }
@@ -79,26 +98,54 @@ function choose(decision: PersonDecision, resolution: ImportResolution | undefin
     if (resolution?.action === 'new') {
       const category = categoryForNew(decision, resolution);
       if (category === null) return null;
-      return { kind: 'new', category, decision };
+      const genderResult = genderForNew(decision, resolution);
+      if (!genderResult.ok) return null;
+      return {
+        kind: 'new',
+        category,
+        ...(genderResult.gender !== undefined ? { gender: genderResult.gender } : {}),
+        decision,
+      };
     }
     return null;
   }
 
   if (decision.kind === 'new') {
     if (decision.category !== null && resolution === undefined) {
-      return { kind: 'new', category: decision.category, decision };
+      const genderResult = genderForNew(decision, undefined);
+      if (!genderResult.ok) return null;
+      return {
+        kind: 'new',
+        category: decision.category,
+        ...(genderResult.gender !== undefined ? { gender: genderResult.gender } : {}),
+        decision,
+      };
     }
     if (resolution?.action !== 'new') return null;
     const category = categoryForNew(decision, resolution);
     if (category === null) return null;
-    return { kind: 'new', category, decision };
+    const genderResult = genderForNew(decision, resolution);
+    if (!genderResult.ok) return null;
+    return {
+      kind: 'new',
+      category,
+      ...(genderResult.gender !== undefined ? { gender: genderResult.gender } : {}),
+      decision,
+    };
   }
 
   if (decision.reason === 'report_conflict') {
     if (resolution?.action !== 'new') return null;
     const category = categoryForNew(decision, resolution);
     if (category === null) return null;
-    return { kind: 'new', category, decision };
+    const genderResult = genderForNew(decision, resolution);
+    if (!genderResult.ok) return null;
+    return {
+      kind: 'new',
+      category,
+      ...(genderResult.gender !== undefined ? { gender: genderResult.gender } : {}),
+      decision,
+    };
   }
 
   if (resolution?.action === 'match') {
@@ -109,7 +156,14 @@ function choose(decision: PersonDecision, resolution: ImportResolution | undefin
   if (resolution?.action === 'new') {
     const category = categoryForNew(decision, resolution);
     if (category === null) return null;
-    return { kind: 'new', category, decision };
+    const genderResult = genderForNew(decision, resolution);
+    if (!genderResult.ok) return null;
+    return {
+      kind: 'new',
+      category,
+      ...(genderResult.gender !== undefined ? { gender: genderResult.gender } : {}),
+      decision,
+    };
   }
   return null;
 }
@@ -173,10 +227,12 @@ export function applyImport(input: ApplyImportInput): ApplyImportResult {
     if (choice.kind === 'existing') {
       const existing = members[memberId(choice.memberId)];
       if (existing === undefined) return { ok: false, error: 'unresolved' };
+      const nextGender = choice.decision.gender ?? existing.gender;
       const updated: Member = {
         ...existing,
         name: choice.decision.name,
         category: choice.decision.category ?? existing.category,
+        ...(nextGender !== undefined ? { gender: nextGender } : {}),
         externalCallings: externalOf(choice.decision),
         removedDate: null,
       };
@@ -190,6 +246,7 @@ export function applyImport(input: ApplyImportInput): ApplyImportResult {
       id,
       name: choice.decision.name,
       category: choice.category,
+      ...(choice.gender !== undefined ? { gender: choice.gender } : {}),
       photoRef: null,
       note: null,
       tagIds: [],
@@ -245,6 +302,7 @@ export function applyImport(input: ApplyImportInput): ApplyImportResult {
         prominent,
         origin: 'standard',
         leadershipRole,
+        genderRule: classifyCallingGender(creation.organization, creation.title),
         callingTagIds: [],
         preferredMemberTagIds: [],
       };

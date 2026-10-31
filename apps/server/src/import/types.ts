@@ -3,7 +3,7 @@ import type { PersonDecision, ReportKind } from '@wardboard/importer';
 
 export type ImportResolution =
   | { readonly action: 'match'; readonly memberId: string; readonly confirmReturn?: true }
-  | { readonly action: 'new'; readonly category?: 'adult' | 'youth' };
+  | { readonly action: 'new'; readonly category?: 'adult' | 'youth'; readonly gender?: 'M' | 'F' };
 
 export type ImportResolutions = Readonly<Record<string, ImportResolution>>;
 
@@ -36,6 +36,7 @@ export type PlannedCreation =
       readonly kind: 'assignment';
       readonly tempId: string;
       readonly title: string;
+      readonly organization: string;
       readonly type: 'single' | 'list';
       readonly group: StructureRef;
       readonly order: number;
@@ -66,6 +67,7 @@ export type ImportPlan = {
   readonly inconsistentReports: boolean;
   readonly returning: readonly { readonly key: string; readonly memberId: string }[];
   readonly needsCategory: readonly string[];
+  readonly needsGender: readonly string[];
   readonly unfamiliar: readonly { readonly organization: string; readonly group: string; readonly title: string; readonly vacant: boolean }[];
   readonly keptPositions: number;
   readonly matchedPositions: number;

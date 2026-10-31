@@ -183,10 +183,30 @@ function parseResolution(value: unknown): ImportResolution | null {
     return null;
   }
   if (value.action === 'new') {
-    if (!exactKeys(value, Object.hasOwn(value, 'category') ? ['action', 'category'] : ['action'])) return null;
-    if (!Object.hasOwn(value, 'category')) return { action: 'new' };
-    if (value.category !== 'adult' && value.category !== 'youth') return null;
-    return { action: 'new', category: value.category };
+    const hasCategory = Object.hasOwn(value, 'category');
+    const hasGender = Object.hasOwn(value, 'gender');
+    const expectedKeys = ['action'];
+    if (hasCategory) expectedKeys.push('category');
+    if (hasGender) expectedKeys.push('gender');
+    if (!exactKeys(value, expectedKeys)) return null;
+
+    let category: 'adult' | 'youth' | undefined;
+    if (hasCategory) {
+      if (value.category !== 'adult' && value.category !== 'youth') return null;
+      category = value.category;
+    }
+
+    let gender: 'M' | 'F' | undefined;
+    if (hasGender) {
+      if (value.gender !== 'M' && value.gender !== 'F') return null;
+      gender = value.gender;
+    }
+
+    return {
+      action: 'new',
+      ...(category !== undefined ? { category } : {}),
+      ...(gender !== undefined ? { gender } : {}),
+    };
   }
   return null;
 }
@@ -210,6 +230,7 @@ function previewJson(plan: ImportPlan): string {
     inconsistentReports: plan.inconsistentReports,
     returning: plan.returning,
     needsCategory: plan.needsCategory,
+    needsGender: plan.needsGender,
     unfamiliar: plan.unfamiliar,
     keptPositions: plan.keptPositions,
     matchedPositions: plan.matchedPositions,

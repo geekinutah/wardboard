@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { migrate, openDatabase } from '../../src/db/index.ts';
 
 const NOW = '2026-04-01T00:00:00.000Z';
-const FORBIDDEN_MEMBER_COLUMN = /email|phone|address|birth|age|gender|record|mrn|church_id/i;
+const FORBIDDEN_MEMBER_COLUMN = /email|phone|address|birth|age|record|mrn|church_id/i;
 
 const BOARD_TABLES = [
   'board_groups',
@@ -220,6 +220,7 @@ describe('schema', () => {
         'name',
         'photo_ref',
         'category',
+        'gender',
         'note',
         'needs_approval',
         'removed_date',

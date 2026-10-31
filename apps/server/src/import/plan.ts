@@ -175,6 +175,7 @@ export function planImport(input: {
 
   const returning: { key: string; memberId: string }[] = [];
   const needsCategory: string[] = [];
+  const needsGender: string[] = [];
   for (const decision of reconciled.decisions) {
     if (decision.kind === 'matched') {
       const member = input.ward.members[memberId(decision.memberId)];
@@ -183,8 +184,10 @@ export function planImport(input: {
       }
     } else if (decision.kind === 'new') {
       if (decision.category === null) needsCategory.push(decision.key);
+      if (decision.gender === null) needsGender.push(decision.key);
     } else {
       needsCategory.push(decision.key);
+      if (decision.gender === null) needsGender.push(decision.key);
     }
   }
 
@@ -360,7 +363,12 @@ export function planImport(input: {
     return { kind: 'new', tempId: id };
   };
 
-  const pushAssignment = (callingRef: StructureRef, title: string, type: AssignmentType): StructureRef => {
+  const pushAssignment = (
+    callingRef: StructureRef,
+    organization: string,
+    title: string,
+    type: AssignmentType,
+  ): StructureRef => {
     const orders = assignmentOrders.get(refKey(callingRef)) ?? [];
     assignmentOrders.set(refKey(callingRef), orders);
     const id = tempId('as');
@@ -368,6 +376,7 @@ export function planImport(input: {
       kind: 'assignment',
       tempId: id,
       title,
+      organization,
       type,
       group: callingRef,
       order: takeOrder(orders),
@@ -434,10 +443,10 @@ export function planImport(input: {
         }
         if (assignment === undefined) {
           if (singles.length > 0 || (unmatchedCounts.get(key) ?? 0) > 1) {
-            assignment = pushAssignment(callingRef, row.title, 'list');
+            assignment = pushAssignment(callingRef, row.organization, row.title, 'list');
             createdLists.set(key, assignment);
           } else {
-            assignment = pushAssignment(callingRef, row.title, 'single');
+            assignment = pushAssignment(callingRef, row.organization, row.title, 'single');
             assignmentType = 'single';
           }
         }
@@ -479,6 +488,7 @@ export function planImport(input: {
     inconsistentReports: reconciled.inconsistentReports || referencesDisagree(rows),
     returning,
     needsCategory,
+    needsGender,
     unfamiliar,
     keptPositions: Object.keys(input.current.positions).length - usedExisting,
     matchedPositions: usedExisting,

@@ -8,6 +8,7 @@ import {
   assignmentId,
   boardGroupId,
   callingGroupId,
+  CALLING_GENDER_RULES,
   clearOversight as applyClearOversight,
   memberId,
   moveGroup,
@@ -30,6 +31,7 @@ import {
   type AssignmentId,
   type AssignmentType,
   type Board,
+  type CallingGenderRule,
   type CallingGroupParent,
   type IdGenerator,
   type MemberId,
@@ -300,7 +302,10 @@ export const operationRegistry = {
     return coreOp(moveGroup, { target, toIndex });
   }),
   addAssignment: entry((request) => {
-    const parsed = unwrap(request, ['groupId', 'title', 'type', 'positionCount']);
+    const keys = isRecord(request) && Object.hasOwn(request, 'genderRule')
+      ? ['groupId', 'title', 'type', 'positionCount', 'genderRule']
+      : ['groupId', 'title', 'type', 'positionCount'];
+    const parsed = unwrap(request, keys);
     if (!parsed.matched) return parsed.prepared;
     const group = text(parsed.body.groupId);
     const title = text(parsed.body.title);
@@ -309,11 +314,20 @@ export const operationRegistry = {
     if (group === undefined || title === undefined || type === undefined || positionCount === undefined) {
       return refuse('addAssignment requires groupId, title, type, and positionCount');
     }
+    let genderRule: CallingGenderRule | undefined;
+    if (Object.hasOwn(parsed.body, 'genderRule')) {
+      const rawGender = parsed.body.genderRule;
+      if (typeof rawGender !== 'string' || !CALLING_GENDER_RULES.includes(rawGender as CallingGenderRule)) {
+        return refuse(`genderRule must be one of ${CALLING_GENDER_RULES.join(', ')}`);
+      }
+      genderRule = rawGender as CallingGenderRule;
+    }
     return coreOp(addAssignment, {
       groupId: callingGroupId(group),
       title,
       type,
       positionCount,
+      ...(genderRule !== undefined ? { genderRule } : {}),
     });
   }),
   addListPosition: entry((request) => {
