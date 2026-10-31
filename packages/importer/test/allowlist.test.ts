@@ -75,6 +75,7 @@ interface OrganizationsReportInput {
 interface Candidate {
   name: string;
   category: 'adult' | 'youth';
+  gender: 'M' | 'F';
 }
 
 interface WithoutCallingsReportInput {
@@ -121,7 +122,7 @@ function validInput(): ValidInput {
     reportDate: '2026-10-25',
     organizations: [organization],
   };
-  const candidate: Candidate = { name: 'Kelley, Kaia', category: 'adult' };
+  const candidate: Candidate = { name: 'Kelley, Kaia', category: 'adult', gender: 'F' };
   const withoutCallings: WithoutCallingsReportInput = {
     kind: 'without-callings',
     unitName: 'Cedar 14th Ward',
@@ -303,7 +304,7 @@ describe('T-056: allow-list and leakage checks', () => {
     ]);
     const candidate = bundle.withoutCallings.candidates[0];
     assert.ok(candidate);
-    assert.deepEqual(Object.keys(candidate), ['name', 'category']);
+    assert.deepEqual(Object.keys(candidate), ['name', 'category', 'gender']);
     assert.deepEqual(Object.keys(bundle.outOfUnit), ['kind', 'unitName', 'reportDate', 'externalCallings']);
     const externalCalling = bundle.outOfUnit.externalCallings[0];
     assert.ok(externalCalling);
@@ -318,7 +319,7 @@ describe('T-056: allow-list and leakage checks', () => {
     assert.equal(position.occupant, null);
     assert.equal(bundle.withoutCallings.listedCount, 1);
     assert.equal(bundle.withoutCallings.excludedUnder11, 0);
-    assert.deepEqual(candidate, { name: 'Kelley, Kaia', category: 'adult' });
+    assert.deepEqual(candidate, { name: 'Kelley, Kaia', category: 'adult', gender: 'F' });
     assert.equal(externalCalling.servingUnit, null);
   });
 
@@ -468,7 +469,7 @@ describe('T-056: allow-list and leakage checks', () => {
       custom: false,
       occupant: null,
     });
-    assert.deepEqual(bundle.withoutCallings.candidates[0], { name: 'Kelley, Kaia', category: 'adult' });
+    assert.deepEqual(bundle.withoutCallings.candidates[0], { name: 'Kelley, Kaia', category: 'adult', gender: 'F' });
     assert.deepEqual(bundle.outOfUnit.externalCallings[0], {
       section: 'stake',
       name: 'Melford, Leo',

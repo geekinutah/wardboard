@@ -41,7 +41,7 @@ function collectMatches(texts: readonly string[], pattern: RegExp): Set<string> 
 describe('T-111: Member List allow-list', () => {
   const doc = extractPdf(loadFixture('member-list.pdf'));
 
-  it('the allow-list keeps only name and category', () => {
+  it('the allow-list keeps only name, category and gender', () => {
     const parsed = parseMemberList(doc);
     const texts = textItems(doc);
     const phones = collectMatches(texts, PHONE_RE);
@@ -113,7 +113,7 @@ describe('T-111: Member List allow-list', () => {
     assert.equal(cleaned.entries.length, parsed.entries.length);
     assert.ok(cleaned.entries.length > 200);
     for (const entry of cleaned.entries) {
-      assert.deepEqual(Object.keys(entry).sort(), ['category', 'name']);
+      assert.deepEqual(Object.keys(entry).sort(), ['category', 'gender', 'name']);
     }
     assert.deepEqual(cleaned.entries, parsed.entries);
     assert.notEqual(cleaned, tainted);
@@ -141,7 +141,7 @@ describe('T-111: Member List allow-list', () => {
       assert.equal(logText.includes(birth), false, birth);
     }
     for (const gender of genders) {
-      assert.equal(json.includes(`"${gender}"`), false, gender);
+      assert.equal(json.includes(`"${gender}"`), true, gender);
       assert.equal(logText.includes(gender), false, gender);
     }
     for (const age of ages) {

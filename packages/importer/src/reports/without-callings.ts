@@ -15,11 +15,13 @@ export class WithoutCallingsReportError extends Error {
 }
 
 export type MemberCategory = 'adult' | 'youth';
+export type MemberGender = 'M' | 'F';
 
 export interface WithoutCallingsCandidate {
   /** Display name exactly as printed, e.g. 'Kelley, Kaia'. */
   readonly name: string;
   readonly category: MemberCategory;
+  readonly gender: MemberGender;
 }
 
 export interface WithoutCallingsReport {
@@ -254,7 +256,7 @@ export function parseWithoutCallingsReport(doc: PdfDocument): WithoutCallingsRep
         break;
       }
 
-      // Member row: locate name items and age item by column bounds
+      // Member row: locate name items, gender, and age item by column bounds
       const nameItems = row.items.filter((it) => it.x < boundNameGender);
       const name = nameItems.map((it) => it.text).join(' ').trim();
       if (!name) {
@@ -264,6 +266,17 @@ export function parseWithoutCallingsReport(doc: PdfDocument): WithoutCallingsRep
           `Missing name in member row on page ${String(pageNum)}`,
         );
       }
+
+      const genderItems = row.items.filter((it) => it.x >= boundNameGender && it.x < boundGenderAge);
+      const genderText = genderItems.map((it) => it.text).join(' ').trim();
+      if (genderText !== 'M' && genderText !== 'F') {
+        throw new WithoutCallingsReportError(
+          'UNRECOGNIZED_LAYOUT',
+          pageNum,
+          `Missing or invalid gender in member row on page ${String(pageNum)}`,
+        );
+      }
+      const gender: MemberGender = genderText;
 
       const ageItems = row.items.filter((it) => it.x >= boundGenderAge && it.x < boundAgeBirth);
       const ageText = ageItems.map((it) => it.text).join(' ').trim();
@@ -280,7 +293,7 @@ export function parseWithoutCallingsReport(doc: PdfDocument): WithoutCallingsRep
       if (category === 'excluded') {
         excludedUnder11++;
       } else {
-        candidates.push({ name, category });
+        candidates.push({ name, category, gender });
       }
       totalMemberRows++;
     }

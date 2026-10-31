@@ -1,4 +1,4 @@
-import type { MemberCategory } from '../reports/without-callings.ts';
+import type { MemberCategory, MemberGender } from '../reports/without-callings.ts';
 import type { MemberListEntry, MemberListReport } from '../reports/member-list.ts';
 import { AllowListError } from './import.ts';
 
@@ -40,6 +40,13 @@ function requireCategory(value: unknown): MemberCategory {
   return value;
 }
 
+function requireGender(value: unknown): MemberGender {
+  if (value !== 'M' && value !== 'F') {
+    throw new AllowListError('invalid_value', 'allow-list gender is not M or F');
+  }
+  return value;
+}
+
 function assertKind(report: unknown, kind: string, message: string): void {
   if (field(report, 'kind') !== kind) {
     throw new AllowListError('wrong_kind', message);
@@ -50,6 +57,7 @@ function copyEntry(raw: unknown): MemberListEntry {
   return {
     name: requireString(field(raw, 'name')),
     category: requireCategory(field(raw, 'category')),
+    gender: requireGender(field(raw, 'gender')),
   };
 }
 

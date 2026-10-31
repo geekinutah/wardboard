@@ -62,12 +62,13 @@ describe('T-054: Members without Callings parser', () => {
     const doc = extractPdf(withoutCallingsBytes);
     const report = parseWithoutCallingsReport(doc);
 
-    assert.deepEqual(report.candidates[0], { name: 'Kelley, Kaia', category: 'adult' });
-    assert.deepEqual(report.candidates[1], { name: 'Kelley, Talia', category: 'adult' });
-    assert.deepEqual(report.candidates[2], { name: 'Lynton, Joy', category: 'adult' });
+    assert.deepEqual(report.candidates[0], { name: 'Kelley, Kaia', category: 'adult', gender: 'F' });
+    assert.deepEqual(report.candidates[1], { name: 'Kelley, Talia', category: 'adult', gender: 'F' });
+    assert.deepEqual(report.candidates[2], { name: 'Lynton, Joy', category: 'adult', gender: 'F' });
     assert.deepEqual(report.candidates[report.candidates.length - 1], {
       name: 'Dalton, Hal',
       category: 'adult',
+      gender: 'M',
     });
 
     const gilleyKyIdx = report.candidates.findIndex((c) => c.name === 'Gilley, Ky Lila');
@@ -76,7 +77,7 @@ describe('T-054: Members without Callings parser', () => {
 
     const nextCandidate = report.candidates[gilleyKyIdx + 1];
     assert.ok(nextCandidate, 'next candidate must exist');
-    assert.deepEqual(nextCandidate, { name: 'Birchwood, Hallie', category: 'adult' });
+    assert.deepEqual(nextCandidate, { name: 'Birchwood, Hallie', category: 'adult', gender: 'F' });
 
     const iris = report.candidates.find((c) => c.name === 'Gilley, Iris Velma');
     assert.equal(iris, undefined, 'Gilley, Iris Velma (7) must be absent');
@@ -90,13 +91,13 @@ describe('T-054: Members without Callings parser', () => {
     assert.equal(harley, undefined, 'Harley (10) must be excluded');
 
     const holwood = report.candidates.find((c) => c.name === 'Holwood, Opal');
-    assert.deepEqual(holwood, { name: 'Holwood, Opal', category: 'youth' });
+    assert.deepEqual(holwood, { name: 'Holwood, Opal', category: 'youth', gender: 'F' });
 
     const fairfield = report.candidates.find((c) => c.name === 'Fairfield, Neal Dean');
-    assert.deepEqual(fairfield, { name: 'Fairfield, Neal Dean', category: 'youth' });
+    assert.deepEqual(fairfield, { name: 'Fairfield, Neal Dean', category: 'youth', gender: 'M' });
 
     const fairby = report.candidates.find((c) => c.name === 'Fairby, Kent');
-    assert.deepEqual(fairby, { name: 'Fairby, Kent', category: 'adult' });
+    assert.deepEqual(fairby, { name: 'Fairby, Kent', category: 'adult', gender: 'M' });
   });
 
   it('categoryForAge maps the SPEC boundaries and rejects bad ages', () => {
@@ -114,12 +115,12 @@ describe('T-054: Members without Callings parser', () => {
     assert.throws(() => categoryForAge(-Infinity), RangeError);
   });
 
-  it('candidate objects carry only name and category', () => {
+  it('candidate objects carry only name, category and gender', () => {
     const doc = extractPdf(withoutCallingsBytes);
     const report = parseWithoutCallingsReport(doc);
 
     for (const c of report.candidates) {
-      assert.deepEqual(Object.keys(c).sort(), ['category', 'name']);
+      assert.deepEqual(Object.keys(c).sort(), ['category', 'gender', 'name']);
     }
     assert.deepEqual(
       Object.keys(report).sort(),
@@ -127,18 +128,17 @@ describe('T-054: Members without Callings parser', () => {
     );
   });
 
-  it('never emits gender, age, birth date or phone values', () => {
+  it('never emits age, birth date or phone values', () => {
     const doc = extractPdf(withoutCallingsBytes);
     const report = parseWithoutCallingsReport(doc);
     const json = JSON.stringify(report);
 
     assert.ok(!json.includes('555'), 'must not contain phone 555');
     assert.ok(!json.includes('Birth'), 'must not contain Birth');
-    assert.ok(!json.includes('Gender'), 'must not contain Gender');
     assert.ok(!json.includes('1974'), 'must not contain birth year 1974');
     assert.ok(!json.includes('31 Jan 1974'), 'must not contain birth date 31 Jan 1974');
-    assert.ok(!json.includes('"F"'), 'must not contain gender "F"');
-    assert.ok(!json.includes('"M"'), 'must not contain gender "M"');
+    assert.ok(json.includes('"F"'), 'must contain gender "F"');
+    assert.ok(json.includes('"M"'), 'must contain gender "M"');
     assert.ok(!json.includes('Harley, Brielle Bea'), 'must not contain excluded member Brielle Bea');
     assert.ok(!json.includes('Elmfield, Paige Ida'), 'must not contain excluded member Paige Ida');
   });

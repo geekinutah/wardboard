@@ -12,6 +12,7 @@ import {
   parseMemberList,
   reconcile,
   type ImportBundle,
+  type MemberGender,
   type MemberListEntry,
   type PdfDocument,
   type PersonDecision,
@@ -37,7 +38,7 @@ const fixtureDocs = {
 
 interface Options {
   readonly occupants?: readonly string[];
-  readonly candidates?: readonly { readonly name: string; readonly category: 'adult' | 'youth' }[];
+  readonly candidates?: readonly { readonly name: string; readonly category: 'adult' | 'youth'; readonly gender?: MemberGender }[];
   readonly entries?: readonly MemberListEntry[];
   readonly memberListUnitName?: string;
   readonly memberListDate?: string | null;
@@ -72,7 +73,7 @@ function bundle(options: Options = {}): ImportBundle {
       reportDate: DATE,
       listedCount: candidates.length,
       excludedUnder11: 0,
-      candidates: candidates.map((candidate) => ({ ...candidate })),
+      candidates: candidates.map((candidate) => ({ gender: 'F' as const, ...candidate })),
     },
     outOfUnit: { kind: 'out-of-unit', unitName: UNIT, reportDate: DATE, externalCallings: [] },
     memberList: {
@@ -120,9 +121,9 @@ describe('member list in reconcile', () => {
       bundle: bundle({
         occupants: ['Ashdown, Noor', 'Brightwater, Elm', 'Zoë Calder'],
         entries: [
-          { name: 'Ashdown, Noor', category: 'adult' },
-          { name: 'Brightwater, Elm', category: 'youth' },
-          { name: 'Zoe Calder', category: 'youth' },
+          { name: 'Ashdown, Noor', category: 'adult', gender: 'F' },
+          { name: 'Brightwater, Elm', category: 'youth', gender: 'M' },
+          { name: 'Zoe Calder', category: 'youth', gender: 'F' },
         ],
       }),
       members: [{ id: 'm-1', name: 'Brightwater, Elm' }],
@@ -144,11 +145,11 @@ describe('member list in reconcile', () => {
         occupants: ['Westbrook, Gil', 'Ashdown, Noor'],
         candidates: [{ name: 'Fennick, Rue', category: 'adult' }],
         entries: [
-          { name: 'Westbrook, Gil', category: 'adult' },
-          { name: 'Westbrook, Gil', category: 'adult' },
-          { name: 'Ashdown, Noor', category: 'youth' },
-          { name: 'Fennick, Rue', category: 'adult' },
-          { name: 'Fennick, Rue', category: 'youth' },
+          { name: 'Westbrook, Gil', category: 'adult', gender: 'M' },
+          { name: 'Westbrook, Gil', category: 'adult', gender: 'M' },
+          { name: 'Ashdown, Noor', category: 'youth', gender: 'F' },
+          { name: 'Fennick, Rue', category: 'adult', gender: 'F' },
+          { name: 'Fennick, Rue', category: 'youth', gender: 'F' },
         ],
       }),
       members: [],
@@ -191,19 +192,19 @@ describe('member list in reconcile', () => {
       bundle: bundle({
         ...reports,
         entries: [
-          { name: 'Ashdown, Noor', category: 'adult' },
-          { name: 'Calder, Ivy', category: 'adult' },
-          { name: 'Brightwater, Elm', category: 'adult' },
-          { name: 'Fennick, Rue', category: 'youth' },
-          { name: 'Dunmore, Pell', category: 'adult' },
-          { name: 'Eastly, Wren', category: 'youth' },
+          { name: 'Ashdown, Noor', category: 'adult', gender: 'F' },
+          { name: 'Calder, Ivy', category: 'adult', gender: 'F' },
+          { name: 'Brightwater, Elm', category: 'adult', gender: 'M' },
+          { name: 'Fennick, Rue', category: 'youth', gender: 'F' },
+          { name: 'Dunmore, Pell', category: 'adult', gender: 'M' },
+          { name: 'Eastly, Wren', category: 'youth', gender: 'F' },
         ],
       }),
       members,
     });
 
     const shape = (decisions: readonly PersonDecision[]): unknown[] =>
-      decisions.map((decision) => ({ ...decision, category: 'ignored' }));
+      decisions.map((decision) => ({ ...decision, category: 'ignored', gender: 'ignored' }));
     expect(shape(withList.decisions)).toEqual(shape(without.decisions));
     expect(withList.decisions.map((decision) => decision.key)).toEqual([
       'ashdown, noor',
@@ -225,8 +226,8 @@ describe('member list in reconcile', () => {
           { name: 'Garrow, Lark', category: 'youth' },
         ],
         entries: [
-          { name: 'Fennick, Rue', category: 'adult' },
-          { name: 'Garrow, Lark', category: 'youth' },
+          { name: 'Fennick, Rue', category: 'adult', gender: 'F' },
+          { name: 'Garrow, Lark', category: 'youth', gender: 'F' },
         ],
       }),
       members: [],
@@ -279,7 +280,7 @@ describe('member list in importReports', () => {
     expect(imported.memberList.excludedUnder11).toBe(33);
     expect(imported.memberList.entries).toHaveLength(260);
     for (const entry of imported.memberList.entries) {
-      expect(Object.keys(entry).sort()).toEqual(['category', 'name']);
+      expect(Object.keys(entry).sort()).toEqual(['category', 'gender', 'name']);
     }
     // No new log line, and the existing line names no person.
     expect(logs).toEqual(['allow-list organizations=244 candidates=112 external=37']);
@@ -301,18 +302,18 @@ describe('member list in importReports', () => {
     expect(() => allowListImport(wrong as unknown as Parameters<typeof allowListImport>[0])).toThrow(AllowListError);
   });
 
-  it('allowListImport keeps only name and category from member list entries', () => {
+  it('allowListImport keeps only name, category and gender from member list entries', () => {
     const imported = importReports(fixtureDocs);
     const planted = {
       ...imported,
       memberList: {
         ...imported.memberList,
         gender: 'CANARY-GENDER',
-        entries: [{ name: 'Ashdown, Noor', category: 'adult', phone: 'CANARY-PHONE-555-0199' }],
+        entries: [{ name: 'Ashdown, Noor', category: 'adult', gender: 'F' as const, phone: 'CANARY-PHONE-555-0199' }],
       },
     };
     const copied = allowListImport(planted as unknown as Parameters<typeof allowListImport>[0]);
-    expect(copied.memberList.entries).toEqual([{ name: 'Ashdown, Noor', category: 'adult' }]);
+    expect(copied.memberList.entries).toEqual([{ name: 'Ashdown, Noor', category: 'adult', gender: 'F' }]);
     expect(JSON.stringify(copied).includes('CANARY')).toBe(false);
   });
 });

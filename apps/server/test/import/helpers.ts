@@ -198,7 +198,7 @@ type ReportOrg = { name: string; groups: readonly ReportGroup[] };
 
 export function bundle(input: {
   organizations?: readonly ReportOrg[];
-  candidates?: readonly { name: string; category: MemberCategory }[];
+  candidates?: readonly { name: string; category: MemberCategory; gender?: 'M' | 'F' }[];
   externalCallings?: readonly {
     section: OutOfUnitSection;
     name: string;
@@ -236,7 +236,11 @@ export function bundle(input: {
       reportDate: input.withoutDate ?? orgDate,
       listedCount: candidates.length,
       excludedUnder11: 0,
-      candidates: candidates.map((candidate) => ({ name: candidate.name, category: candidate.category })),
+      candidates: candidates.map((candidate) => ({
+        name: candidate.name,
+        category: candidate.category,
+        gender: candidate.gender ?? 'F',
+      })),
     },
     outOfUnit: {
       kind: 'out-of-unit',

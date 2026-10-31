@@ -36,7 +36,11 @@ const fixtureDocs = {
 
 interface BundleOptions {
   readonly occupants?: readonly (string | null)[];
-  readonly candidates?: readonly { readonly name: string; readonly category: 'adult' | 'youth' }[];
+  readonly candidates?: readonly {
+    readonly name: string;
+    readonly category: 'adult' | 'youth';
+    readonly gender?: 'M' | 'F';
+  }[];
   readonly externalCallings?: readonly {
     readonly section: OutOfUnitSection;
     readonly name: string;
@@ -87,7 +91,7 @@ function bundle(options: BundleOptions = {}): ImportBundle {
       reportDate: options.withoutCallingsDate ?? DATE,
       listedCount: candidates.length,
       excludedUnder11: 0,
-      candidates: candidates.map((candidate) => ({ ...candidate })),
+      candidates: candidates.map((candidate) => ({ gender: 'M' as const, ...candidate })),
     },
     outOfUnit: {
       kind: 'out-of-unit',
@@ -182,6 +186,7 @@ describe('T-057 identity reconciliation', () => {
         name: 'Stanley, Zed',
         key: 'stanley, zed',
         category: null,
+        gender: null,
         sources: ['organizations'],
         externalCallings: [],
         kind: 'matched',
@@ -206,6 +211,7 @@ describe('T-057 identity reconciliation', () => {
       name: 'Stanley, Zed',
       key: 'stanley, zed',
       category: null,
+      gender: null,
       sources: ['organizations'],
       externalCallings: [],
       kind: 'ambiguous',
@@ -249,6 +255,7 @@ describe('T-057 identity reconciliation', () => {
         name: 'Stanley, Zed',
         key: 'stanley, zed',
         category: null,
+        gender: null,
         sources: ['organizations'],
         externalCallings: [],
         kind: 'ambiguous',
@@ -267,6 +274,7 @@ describe('T-057 identity reconciliation', () => {
         name: 'Stanley, Zed',
         key: 'stanley, zed',
         category: null,
+        gender: null,
         sources: ['organizations'],
         externalCallings: [],
         kind: 'matched',
@@ -276,6 +284,7 @@ describe('T-057 identity reconciliation', () => {
         name: 'Zed Stanley',
         key: 'zed stanley',
         category: null,
+        gender: null,
         sources: ['organizations'],
         externalCallings: [],
         kind: 'new',
@@ -297,6 +306,7 @@ describe('T-057 identity reconciliation', () => {
         name: 'Stanley, Zed',
         key: 'stanley, zed',
         category: null,
+        gender: null,
         sources: ['organizations'],
         externalCallings: [],
         kind: 'ambiguous',
@@ -320,6 +330,7 @@ describe('T-057 identity reconciliation', () => {
         name: 'Stanley, Zed',
         key: 'stanley, zed',
         category: null,
+        gender: null,
         sources: ['organizations'],
         externalCallings: [],
         kind: 'new',
@@ -352,6 +363,7 @@ describe('T-057 identity reconciliation', () => {
         name: 'Stanley, Zed',
         key: 'stanley, zed',
         category: null,
+        gender: null,
         sources: ['organizations'],
         externalCallings: [],
         kind: 'ambiguous',
@@ -397,6 +409,7 @@ describe('T-057 identity reconciliation', () => {
         name: 'Stanley, Zed',
         key: 'stanley, zed',
         category: null,
+        gender: null,
         sources: ['organizations', 'without-callings'],
         externalCallings: [],
         kind: 'ambiguous',
@@ -423,6 +436,7 @@ describe('T-057 identity reconciliation', () => {
         name: 'Ada Fictional',
         key: 'ada fictional',
         category: null,
+        gender: null,
         sources: ['without-callings'],
         externalCallings: [],
         kind: 'ambiguous',
@@ -446,6 +460,7 @@ describe('T-057 identity reconciliation', () => {
         name: 'Kelley, Kaia',
         key: 'kelley, kaia',
         category: 'youth',
+        gender: 'M',
         sources: ['without-callings'],
         externalCallings: [],
         kind: 'matched',
@@ -467,6 +482,7 @@ describe('T-057 identity reconciliation', () => {
         name: 'Melford, Leo',
         key: 'melford, leo',
         category: 'adult',
+        gender: 'M',
         sources: ['without-callings', 'out-of-unit'],
         externalCallings: [{ section: 'stake', calling: 'Stake Clerk', servingUnit: null }],
         kind: 'new',
@@ -500,6 +516,7 @@ describe('T-057 identity reconciliation', () => {
         name: 'Melford, Leo',
         key: 'melford, leo',
         category: null,
+        gender: null,
         sources: ['organizations', 'out-of-unit'],
         externalCallings: [
           { section: 'stake', calling: 'Stake Sports Specialist', servingUnit: null },
@@ -572,6 +589,7 @@ describe('T-057 identity reconciliation', () => {
         name: 'Stanley, Zed',
         key: 'stanley, zed',
         category: null,
+        gender: null,
         sources: ['organizations'],
         externalCallings: [],
         kind: 'new',
@@ -604,6 +622,7 @@ describe('T-057 identity reconciliation', () => {
         name: 'Stanley, Zed',
         key: 'stanley, zed',
         category: null,
+        gender: null,
         sources: ['organizations'],
         externalCallings: [],
         kind: 'new',

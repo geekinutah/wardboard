@@ -172,8 +172,8 @@ function assertNoPersonalValues(json: string, rows: readonly FixtureRow[]): void
     assert.equal(json.includes(`"age":${row.age}`), false, row.age);
     assert.equal(json.includes(`"age":"${row.age}"`), false, row.age);
   }
-  assert.equal(json.includes('"F"'), false);
-  assert.equal(json.includes('"M"'), false);
+  assert.equal(json.includes('"F"'), true);
+  assert.equal(json.includes('"M"'), true);
   assert.equal(json.includes('Gender'), false);
   assert.equal(json.includes('Birth'), false);
   assert.equal(json.includes('Phone'), false);
@@ -204,16 +204,16 @@ describe('T-111: Member List parser', () => {
     assert.equal(json.includes('200002'), false);
 
     // Ashby, Ella is 48 (adult). Ashby, Piper is 17 (youth). Ashby, Wyatt Roy is 18 (adult).
-    assert.deepEqual(report.entries[0], { name: 'Ashby, Ella', category: 'adult' });
-    assert.deepEqual(report.entries[1], { name: 'Ashby, Piper', category: 'youth' });
-    assert.deepEqual(report.entries[2], { name: 'Ashby, Wyatt Roy', category: 'adult' });
+    assert.deepEqual(report.entries[0], { name: 'Ashby, Ella', category: 'adult', gender: 'F' });
+    assert.deepEqual(report.entries[1], { name: 'Ashby, Piper', category: 'youth', gender: 'F' });
+    assert.deepEqual(report.entries[2], { name: 'Ashby, Wyatt Roy', category: 'adult', gender: 'M' });
 
     // Westdale, Gus is 11 (youth) and 39 (adult). Both rows are different people.
     assert.deepEqual(
       report.entries.filter((entry) => entry.name === 'Westdale, Gus'),
       [
-        { name: 'Westdale, Gus', category: 'youth' },
-        { name: 'Westdale, Gus', category: 'adult' },
+        { name: 'Westdale, Gus', category: 'youth', gender: 'M' },
+        { name: 'Westdale, Gus', category: 'adult', gender: 'M' },
       ],
     );
 
@@ -221,24 +221,25 @@ describe('T-111: Member List parser', () => {
     assert.deepEqual(
       report.entries.filter((entry) => entry.name === 'Fairwell, Sage Casey Kendall Reagan'),
       [
-        { name: 'Fairwell, Sage Casey Kendall Reagan', category: 'youth' },
-        { name: 'Fairwell, Sage Casey Kendall Reagan', category: 'youth' },
+        { name: 'Fairwell, Sage Casey Kendall Reagan', category: 'youth', gender: 'M' },
+        { name: 'Fairwell, Sage Casey Kendall Reagan', category: 'youth', gender: 'M' },
       ],
     );
 
     // Holwood, Opal is 11 (youth). Fairby, Kent is 18 (adult).
     assert.deepEqual(
       report.entries.find((entry) => entry.name === 'Holwood, Opal'),
-      { name: 'Holwood, Opal', category: 'youth' },
+      { name: 'Holwood, Opal', category: 'youth', gender: 'F' },
     );
     assert.deepEqual(
       report.entries.find((entry) => entry.name === 'Fairby, Kent'),
-      { name: 'Fairby, Kent', category: 'adult' },
+      { name: 'Fairby, Kent', category: 'adult', gender: 'M' },
     );
 
     assert.deepEqual(report.entries[report.entries.length - 1], {
       name: 'Yardton, Tina Ivy',
       category: 'adult',
+      gender: 'F',
     });
   });
 
@@ -282,9 +283,9 @@ describe('T-111: Member List parser', () => {
     assert.equal(report.listedCount, 4);
     assert.equal(report.excludedUnder11, 1);
     assert.deepEqual(report.entries, [
-      { name: 'Bound, Eleven', category: 'youth' },
-      { name: 'Bound, Seventeen', category: 'youth' },
-      { name: 'Bound, Eighteen', category: 'adult' },
+      { name: 'Bound, Eleven', category: 'youth', gender: 'M' },
+      { name: 'Bound, Seventeen', category: 'youth', gender: 'F' },
+      { name: 'Bound, Eighteen', category: 'adult', gender: 'M' },
     ]);
     assert.equal(
       report.entries.some((entry) => entry.name === 'Bound, Ten'),
@@ -303,15 +304,15 @@ describe('T-111: Member List parser', () => {
     // Page 1 ends with Elmby, Vi (71, adult). Page 2 starts with Elmby, Wes T. (77, adult).
     const vi = report.entries.findIndex((entry) => entry.name === 'Elmby, Vi');
     assert.ok(vi >= 0);
-    assert.deepEqual(report.entries[vi], { name: 'Elmby, Vi', category: 'adult' });
-    assert.deepEqual(report.entries[vi + 1], { name: 'Elmby, Wes T.', category: 'adult' });
+    assert.deepEqual(report.entries[vi], { name: 'Elmby, Vi', category: 'adult', gender: 'F' });
+    assert.deepEqual(report.entries[vi + 1], { name: 'Elmby, Wes T.', category: 'adult', gender: 'M' });
     assert.equal(report.entries.filter((entry) => entry.name === 'Elmby, Vi').length, 1);
     assert.equal(report.entries.filter((entry) => entry.name === 'Elmby, Wes T.').length, 1);
 
     // Page 6 ends with Yardby, Jo (57, adult). Page 7 starts with Yardby, Ned (61, adult).
     const jo = report.entries.findIndex((entry) => entry.name === 'Yardby, Jo');
     assert.ok(jo >= 0);
-    assert.deepEqual(report.entries[jo + 1], { name: 'Yardby, Ned', category: 'adult' });
+    assert.deepEqual(report.entries[jo + 1], { name: 'Yardby, Ned', category: 'adult', gender: 'M' });
 
     // The long fixture name is one entry, not a split or a duplicate.
     const longName = 'Fairwell, Cameron Sage Bailey Dakota Skyler';
@@ -332,7 +333,7 @@ describe('T-111: Member List parser', () => {
     );
     const wrappedReport = parseMemberList(wrapped);
     assert.deepEqual(wrappedReport.entries, [
-      { name: 'Wrapped, First Second Line', category: 'youth' },
+      { name: 'Wrapped, First Second Line', category: 'youth', gender: 'F' },
     ]);
     assert.equal(wrappedReport.entries.length, 1);
   });
@@ -410,16 +411,18 @@ describe('T-111: Member List parser', () => {
     );
   });
 
-  it('the output keeps only name and category', () => {
+  it('the output keeps only name, category and gender', () => {
     const report = parseMemberList(doc);
     assert.deepEqual(
       Object.keys(report).sort(),
       ['entries', 'excludedUnder11', 'kind', 'listedCount', 'reportDate', 'unitName'],
     );
     for (const entry of report.entries) {
-      assert.deepEqual(Object.keys(entry).sort(), ['category', 'name']);
+      assert.deepEqual(Object.keys(entry).sort(), ['category', 'gender', 'name']);
       const category: string = entry.category;
       assert.ok(category === 'adult' || category === 'youth');
+      const gender: string = entry.gender;
+      assert.ok(gender === 'M' || gender === 'F');
     }
 
     const json = JSON.stringify(report);

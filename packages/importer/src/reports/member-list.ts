@@ -1,9 +1,10 @@
 import type { PdfDocument, PdfPage, PdfRow, PdfTextItem } from '../pdf/index.ts';
-import { categoryForAge, type MemberCategory } from './without-callings.ts';
+import { categoryForAge, type MemberCategory, type MemberGender } from './without-callings.ts';
 
 export interface MemberListEntry {
   readonly name: string;
   readonly category: MemberCategory;
+  readonly gender: MemberGender;
 }
 
 export interface MemberListReport {
@@ -256,8 +257,9 @@ export function parseMemberList(doc: PdfDocument): MemberListReport {
         continue;
       }
 
-      // Gender, birth date, phone, and email are column positions only. Their text is not kept.
+      // Birth date, phone, and email are column positions only. Their text is not kept.
       const name = cellText(row, Number.NEGATIVE_INFINITY, header.nameEnd);
+      const genderText = cellText(row, header.nameEnd, header.genderEnd);
       const ageText = cellText(row, header.genderEnd, header.ageEnd);
       if (name.length === 0 && ageText.length === 0) {
         throw layoutError(page.pageNumber, `Unrecognized row on page ${String(page.pageNumber)}`);
@@ -265,12 +267,19 @@ export function parseMemberList(doc: PdfDocument): MemberListReport {
       if (name.length === 0) {
         throw layoutError(page.pageNumber, `Missing name on page ${String(page.pageNumber)}`);
       }
+      if (genderText !== 'M' && genderText !== 'F') {
+        throw layoutError(
+          page.pageNumber,
+          `Invalid gender in the Gender column on page ${String(page.pageNumber)}`,
+        );
+      }
+      const gender: MemberGender = genderText;
       const category = categoryFromAgeText(ageText, page.pageNumber);
       totalMemberRows += 1;
       if (category === 'excluded') {
         excludedUnder11 += 1;
       } else {
-        entries.push({ name, category });
+        entries.push({ name, category, gender });
       }
     }
   }

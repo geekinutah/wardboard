@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import type { ImportBundle } from '../allowlist/import.ts';
 import type { OrganizationsReport } from '../reports/organizations.ts';
 import type { OutOfUnitReport, OutOfUnitSection } from '../reports/out-of-unit.ts';
-import type { MemberCategory, WithoutCallingsReport } from '../reports/without-callings.ts';
+import type { MemberCategory, MemberGender, WithoutCallingsReport } from '../reports/without-callings.ts';
 
 export class ReconcileError extends Error {
   readonly code: 'invalid_name';
@@ -26,6 +26,7 @@ export type PersonDecision = {
   readonly name: string;
   readonly key: string;
   readonly category: 'adult' | 'youth' | null;
+  readonly gender: MemberGender | null;
   readonly sources: readonly ReportKind[];
   readonly externalCallings: readonly ExternalCallingRef[];
 } & (
@@ -64,6 +65,7 @@ interface PersonDraft {
   readonly name: string;
   readonly key: string;
   readonly categories: MemberCategory[];
+  readonly genders: MemberGender[];
   readonly sourceSet: Set<ReportKind>;
   readonly externalCallings: ExternalCallingRef[];
 }
@@ -128,6 +130,9 @@ function isReportConflict(person: PersonDraft): boolean {
   if (new Set(person.categories).size > 1) {
     return true;
   }
+  if (new Set(person.genders).size > 1) {
+    return true;
+  }
   return person.sourceSet.has('organizations') && person.sourceSet.has('without-callings');
 }
 
@@ -177,6 +182,34 @@ function settledCategory(person: PersonDraft, listed: ReadonlyMap<string, Member
   return derived === fromList ? derived : null;
 }
 
+function memberListGenders(imported: ImportBundle): Map<string, MemberGender | null> {
+  const byKey = new Map<string, MemberGender | null>();
+  for (const entry of imported.memberList.entries) {
+    const key = canonicalName(entry.name);
+    byKey.set(key, byKey.has(key) ? null : entry.gender);
+  }
+  return byKey;
+}
+
+function settledGender(
+  person: PersonDraft,
+  listed: ReadonlyMap<string, MemberGender | null>,
+): MemberGender | null {
+  if (isReportConflict(person)) {
+    return null;
+  }
+  const genders = new Set(person.genders);
+  const derived = genders.size === 1 ? (person.genders[0] ?? null) : null;
+  const fromList = listed.get(person.key) ?? null;
+  if (fromList === null) {
+    return derived;
+  }
+  if (derived === null) {
+    return fromList;
+  }
+  return derived === fromList ? derived : null;
+}
+
 function sourcesOf(person: PersonDraft): ReportKind[] {
   return REPORT_KINDS.filter((kind) => person.sourceSet.has(kind));
 }
@@ -202,6 +235,7 @@ function readPeople(imported: ImportBundle): PersonDraft[] {
       name: printed,
       key,
       categories: [],
+      genders: [],
       sourceSet: new Set(),
       externalCallings: [],
     };
@@ -224,6 +258,7 @@ function readPeople(imported: ImportBundle): PersonDraft[] {
     const person = add(candidate.name);
     person.sourceSet.add('without-callings');
     person.categories.push(candidate.category);
+    person.genders.push(candidate.gender);
   }
   for (const calling of imported.outOfUnit.externalCallings) {
     const person = add(calling.name);
@@ -242,12 +277,14 @@ function decidePerson(
   members: readonly ExistingMember[],
   bundleKeys: ReadonlySet<string>,
   similarIds: Set<string>,
-  listed: ReadonlyMap<string, MemberCategory | null>,
+  listedCategories: ReadonlyMap<string, MemberCategory | null>,
+  listedGenders: ReadonlyMap<string, MemberGender | null>,
 ): PersonDecision {
   const header = {
     name: person.name,
     key: person.key,
-    category: settledCategory(person, listed),
+    category: settledCategory(person, listedCategories),
+    gender: settledGender(person, listedGenders),
     sources: sourcesOf(person),
     externalCallings: person.externalCallings,
   };
@@ -361,10 +398,11 @@ export function reconcile(input: {
   const people = readPeople(input.bundle);
   const bundleKeys = new Set(people.map((person) => person.key));
   const similarIds = new Set<string>();
-  const listed = memberListCategories(input.bundle);
+  const listedCategories = memberListCategories(input.bundle);
+  const listedGenders = memberListGenders(input.bundle);
   const decisions: PersonDecision[] = [];
   for (const person of people) {
-    decisions.push(decidePerson(person, members, bundleKeys, similarIds, listed));
+    decisions.push(decidePerson(person, members, bundleKeys, similarIds, listedCategories, listedGenders));
   }
   const conflictKeys = people.filter(isReportConflict).map((person) => person.key);
   const result: ReconcileResult = {

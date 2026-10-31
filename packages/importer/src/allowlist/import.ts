@@ -15,6 +15,7 @@ import {
 import {
   parseWithoutCallingsReport,
   type MemberCategory,
+  type MemberGender,
   type WithoutCallingsCandidate,
   type WithoutCallingsReport,
 } from '../reports/without-callings.ts';
@@ -91,6 +92,13 @@ function requireCategory(value: unknown): MemberCategory {
   return value;
 }
 
+function requireGender(value: unknown): MemberGender {
+  if (value !== 'M' && value !== 'F') {
+    throw new AllowListError('invalid_value', 'allow-list gender is not M or F');
+  }
+  return value;
+}
+
 function requireSection(value: unknown): OutOfUnitSection {
   if (value !== 'stake' && value !== 'serving-outside-unit' && value !== 'living-outside-unit') {
     throw new AllowListError('invalid_value', 'allow-list section is not a known section');
@@ -147,6 +155,7 @@ function copyCandidate(raw: unknown): WithoutCallingsCandidate {
   return {
     name: requireString(field(raw, 'name')),
     category: requireCategory(field(raw, 'category')),
+    gender: requireGender(field(raw, 'gender')),
   };
 }
 
