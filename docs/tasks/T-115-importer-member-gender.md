@@ -45,12 +45,13 @@ export type MemberGender = 'M' | 'F';
 
 ## Existing tests
 Because T-056 and T-111 tested the pre-B-068 rule where `gender` was discarded, only these existing test files in `packages/importer/test/` may be updated, and **only** to move `gender` from the "discarded" assertion to a "kept `'M' | 'F'`" assertion (and add `gender` to hand-built `WithoutCallingsCandidate` / `MemberListEntry` literals in test inputs):
-- `packages/importer/test/without-callings.test.ts`
+- `packages/importer/test/without-callings-report.test.ts`
 - `packages/importer/test/allowlist.test.ts`
 - `packages/importer/test/member-list-report.test.ts`
 - `packages/importer/test/member-list-allowlist.test.ts`
 - `packages/importer/test/member-list-reconcile.test.ts`
 - `packages/importer/test/reconcile.test.ts`
+- `apps/server/test/import/helpers.ts` (default `gender: 'F'` on synthetic `WithoutCallingsCandidate` fixtures in `bundle()` so repo-wide `pnpm -r typecheck` compiles)
 
 No assertion on numeric age, birth date, phone number, email, or record number may be removed or weakened.
 
@@ -59,11 +60,12 @@ May change:
 - `packages/importer/src/reports/without-callings.ts`, `packages/importer/src/reports/member-list.ts`
 - `packages/importer/src/allowlist/import.ts`, `packages/importer/src/allowlist/member-list.ts`
 - `packages/importer/src/reconcile/reconcile.ts`, `packages/importer/src/index.ts`
+- `apps/server/test/import/helpers.ts` (synthetic `WithoutCallingsCandidate` `gender` default only)
 - The existing test files listed under "Existing tests" above, within that rule.
 - `packages/importer/test/gender-import.test.ts` (new)
 
 Must not change:
-- `packages/core/**`, `apps/**`, `fixtures/**`, `docs/**`, `SPEC.md`
+- `packages/core/**`, `apps/server/src/**`, `apps/web/**`, `fixtures/**`, `docs/**`, `SPEC.md`
 - anything else
 
 New dependencies allowed: none.
