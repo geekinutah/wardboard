@@ -48,8 +48,9 @@ ALTER TABLE calling_assignments ADD COLUMN gender_rule TEXT CHECK (gender_rule I
 - Placement operations (`placeInPosition`, `addToList`, `swap`, `releaseOccupant`) already call core and forward `{ ok: false, error }`, so `gender_mismatch` is automatically returned over the channel.
 
 ## Existing tests
-Only these existing test files may be updated for the B-068 / SPEC §15 change promoting `gender` from discarded to kept:
+Only these existing test files may be updated for the B-068 / SPEC §15 change promoting `gender` from discarded to kept and adding migration 3:
 - `apps/server/test/db/schema.test.ts` (remove `gender` from `FORBIDDEN_MEMBER_COLUMN` and include `'gender'` in the expected `members` columns)
+- `apps/server/test/backup/routes.test.ts` (update hardcoded `schemaVersion: 2` to `schemaVersion: 3` after adding migration 3)
 - `apps/server/test/import/member-list-route.test.ts` (in `the member list leaves no discarded fields behind`, keep the check that all numeric age, birth date, phone, and email `values` are absent from disk and logs, and update the `gender` check to assert `gender` is stored on `members` rather than absent)
 - `apps/server/test/import/routes.test.ts` (only if an assertion checks the exact key list of `/api/import/preview` JSON)
 
