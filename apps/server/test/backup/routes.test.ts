@@ -341,7 +341,7 @@ describe('backup routes', () => {
     );
     expect(dry.status).toBe(200);
     const body = asRecord(JSON.parse(dry.body.toString('utf8')) as unknown);
-    expect(body.summary).toMatchObject({ schemaVersion: 2, hasCurrent: false, photos: 0 });
+    expect(body.summary).toMatchObject({ schemaVersion: 3, hasCurrent: false, photos: 0 });
   });
 
   it('restore with foreign or missing Origin → 403 and nothing changes', async () => {
