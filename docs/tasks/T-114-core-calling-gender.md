@@ -1,5 +1,7 @@
 # T-114: Core model, Handbook calling gender rules, and placement refusal
 
+**Amended 2026-10-30 (round 1):** `MOVE_ERROR_CODES` and `OCCUPIED_ERROR_CODES` are locked by existing tests. Those two assertions may append `'gender_mismatch'` and nothing else. See `docs/tasks/evidence/T-114.md`.
+
 **Milestone:** 2 — Board domain
 **Depends on:** none (promoted from B-068; Mike's decisions on 2026-10-30, documented in `HUMAN_BACKLOG.md` item 8 and `docs/handbook-calling-gender.md`).
 - Runs in parallel with T-115 (`packages/importer`). Neither touches the other's files.
@@ -95,10 +97,12 @@ May change:
 - `packages/core/src/ops/move.ts`, `packages/core/src/ops/occupied.ts`, `packages/core/src/ops/positions.ts`
 - `packages/core/src/index.ts`
 - `packages/core/test/rules/gender.test.ts` (new)
+- `packages/core/test/ops/move.test.ts` — only append `'gender_mismatch'` to the `MOVE_ERROR_CODES` array in `error code lists are exported`
+- `packages/core/test/ops/occupied.test.ts` — only append `'gender_mismatch'` to the `OCCUPIED_ERROR_CODES` array in `exports occupied error codes`
 
 Must not change:
 - `packages/core/src/fixtures/ward.ts`
-- every existing test file
+- every existing test file, except the two assertions named above. No other line in those files may change.
 - `packages/importer/**`, `apps/**`, `docs/**`, `SPEC.md`
 - anything else
 
@@ -108,10 +112,10 @@ New dependencies allowed: none.
 | # | Check | Command | Expected result |
 |---|---|---|---|
 | 1 | New gender tests | `pnpm --filter @wardboard/core exec vitest run test/rules/gender.test.ts` | all new tests pass |
-| 2 | Full core suite | `pnpm --filter @wardboard/core test` | all tests pass; existing tests pass unmodified |
+| 2 | Full core suite | `pnpm --filter @wardboard/core test` | all tests pass. The only existing-test edits are the two catalog assertions named in Scope. |
 | 3 | Mutation A | in a disposable worktree at the candidate, make `classifyCallingGender` return `'any'` for Primary Presidency titles, then run check 1 | `classifies Primary presidency and secretary as F and other Primary callings as any` fails; remove the worktree |
 | 4 | Mutation B | in a disposable worktree at the candidate, skip the gender check in `placeInPosition`, then run check 1 | `refuses placing a member into a mismatched M or F calling` fails; remove the worktree |
-| 5 | Existing tests untouched | `git diff --diff-filter=MD --name-only origin/main...HEAD -- '*.test.ts' '*.test.tsx' '*.spec.ts' '*.capture.ts'` | prints nothing |
+| 5 | Existing-test edits | `git diff --diff-filter=MD --name-only origin/main...HEAD -- '*.test.ts' '*.test.tsx' '*.spec.ts' '*.capture.ts'` | prints only `packages/core/test/ops/move.test.ts` and `packages/core/test/ops/occupied.test.ts`. Each diff only appends `'gender_mismatch'` to the catalog array named in Scope. |
 | 6 | Scope | `git diff --name-only origin/main...HEAD` | only paths under May change |
 | 7 | Quality gate | `./scripts/verify.sh` | exits 0 |
 
