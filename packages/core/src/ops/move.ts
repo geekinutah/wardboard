@@ -13,6 +13,7 @@ import {
   type OperationResult,
   type SharedOperationErrorCode,
 } from './types.ts';
+import { canPlaceMemberInAssignment } from '../rules/gender.ts';
 import { applyPresidencyRelease } from './presidency.ts';
 
 /*
@@ -34,6 +35,8 @@ export const MOVE_ERROR_CODES = [
   'assignment_disabled',
   /** `addToList` was given a single assignment. */
   'wrong_assignment_type',
+  /** The member's gender does not satisfy the calling's gender rule. */
+  'gender_mismatch',
 ] as const;
 export type MoveSpecificErrorCode = (typeof MOVE_ERROR_CODES)[number];
 export type MoveErrorCode = SharedOperationErrorCode | MoveSpecificErrorCode;
@@ -118,7 +121,18 @@ function commitPlacement(
     placements,
     dugoutInclusions: board.dugoutInclusions.filter((id) => id !== memberId),
   };
-  return operationOk(finalizeBoard(dropStaleApprovals(applyPresidencyRelease(board, drafted)), ctx.ward));
+  // Checked after presidency release so a new Sunday School president is not
+  // compared with counselors and the secretary this same change vacates.
+  const released = applyPresidencyRelease(board, drafted);
+  const destination = positions[to];
+  if (destination === undefined) {
+    throw new Error(`position ${to} is missing`);
+  }
+  const gender = canPlaceMemberInAssignment(released, ctx.ward, memberId, destination.assignmentId);
+  if (!gender.ok) {
+    return operationError('gender_mismatch', gender.message);
+  }
+  return operationOk(finalizeBoard(dropStaleApprovals(released), ctx.ward));
 }
 
 /**

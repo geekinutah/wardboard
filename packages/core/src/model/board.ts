@@ -5,6 +5,7 @@ import {
   ASSIGNMENT_TYPES,
   BOARD_GROUP_KEYS,
   BOARD_KINDS,
+  CALLING_GENDER_RULES,
   CALLING_GROUP_KINDS,
   CALLING_GROUP_PARENT_KINDS,
   LEADERSHIP_ROLES,
@@ -80,6 +81,7 @@ function copyBoard(input: BoardInput): Board {
       enabled: a.enabled,
       prominent: a.prominent,
       origin: a.origin,
+      ...(a.genderRule !== undefined ? { genderRule: a.genderRule } : {}),
       leadershipRole: a.leadershipRole,
       callingTagIds: copyArray(a.callingTagIds),
       preferredMemberTagIds: copyArray(a.preferredMemberTagIds),
@@ -236,6 +238,13 @@ function validateAssignments(board: Board, ward: Ward, errors: ErrorCollector): 
     }
     if (!isOneOf(ASSIGNMENT_ORIGINS, assignment.origin)) {
       errors.add('invalid_field', `${path}.origin`, `origin must be one of ${ASSIGNMENT_ORIGINS.join(', ')}`);
+    }
+    if (assignment.genderRule !== undefined && !isOneOf(CALLING_GENDER_RULES, assignment.genderRule)) {
+      errors.add(
+        'invalid_field',
+        `${path}.genderRule`,
+        `genderRule must be one of ${CALLING_GENDER_RULES.join(', ')}`,
+      );
     }
     if (assignment.leadershipRole !== null && !isOneOf(LEADERSHIP_ROLES, assignment.leadershipRole)) {
       errors.add('invalid_field', `${path}.leadershipRole`, `leadershipRole must be null or one of ${LEADERSHIP_ROLES.join(', ')}`);

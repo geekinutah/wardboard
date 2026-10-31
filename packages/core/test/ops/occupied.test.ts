@@ -64,7 +64,7 @@ function refusal(board: Board, attempt: () => OperationResult): OperationError {
 
 describe('occupied error codes', () => {
   it('exports occupied error codes', () => {
-    expect(OCCUPIED_ERROR_CODES).toEqual(['position_vacant', 'not_placed', 'assignment_disabled', 'already_in_list']);
+    expect(OCCUPIED_ERROR_CODES).toEqual(['position_vacant', 'not_placed', 'assignment_disabled', 'already_in_list', 'gender_mismatch']);
   });
 });
 

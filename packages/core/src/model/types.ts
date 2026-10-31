@@ -18,6 +18,9 @@ import type {
 export const MEMBER_CATEGORIES = ['adult', 'youth'] as const;
 export type MemberCategory = (typeof MEMBER_CATEGORIES)[number];
 
+export const MEMBER_GENDERS = ['M', 'F'] as const;
+export type MemberGender = (typeof MEMBER_GENDERS)[number];
+
 export const BOARD_KINDS = ['current', 'proposal', 'baseline'] as const;
 /** `current` is the imported board; `proposal` a proposal's working board; `baseline` its saved snapshot. */
 export type BoardKind = (typeof BOARD_KINDS)[number];
@@ -47,6 +50,9 @@ export type AssignmentType = (typeof ASSIGNMENT_TYPES)[number];
 export const ASSIGNMENT_ORIGINS = ['standard', 'custom'] as const;
 export type AssignmentOrigin = (typeof ASSIGNMENT_ORIGINS)[number];
 
+export const CALLING_GENDER_RULES = ['M', 'F', 'any', 'presidency_aligned'] as const;
+export type CallingGenderRule = (typeof CALLING_GENDER_RULES)[number];
+
 export const LEADERSHIP_ROLES = ['president', 'counselor', 'secretary'] as const;
 export type LeadershipRole = (typeof LEADERSHIP_ROLES)[number];
 
@@ -75,12 +81,14 @@ export interface ExternalCalling {
 
 /**
  * A ward member. Deliberately minimal (SPEC §6, §7, §15): no contact details,
- * birth date or age, gender, or any Church identifier.
+ * birth date, age, or any Church identifier. Gender is optional.
  */
 export interface Member {
   readonly id: MemberId;
   readonly name: string;
   readonly category: MemberCategory;
+  /** Absent on legacy members, who may be placed in any calling. */
+  readonly gender?: MemberGender;
   readonly photoRef: string | null;
   readonly note: string | null;
   readonly tagIds: readonly TagId[];
@@ -136,6 +144,8 @@ export interface CallingAssignment {
   /** Overview prominence. */
   readonly prominent: boolean;
   readonly origin: AssignmentOrigin;
+  /** Absent is treated as `any`. */
+  readonly genderRule?: CallingGenderRule;
   /** The bishop is `president` of the `bishopric` group. */
   readonly leadershipRole: LeadershipRole | null;
   readonly callingTagIds: readonly TagId[];
