@@ -2,7 +2,7 @@
 
 **Priority:** P1  
 **Area:** core rules / import / UI  
-**State:** accepted  
+**State:** resolved  
 **Found:** 2026-10-28, Mike's answer while amending T-055  
 **Promoted to:** T-073, T-074
 
