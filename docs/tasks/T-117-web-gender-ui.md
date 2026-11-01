@@ -17,46 +17,54 @@ The web app:
 ## Design decisions (binding)
 
 ### 1. Import review (`apps/web/src/features/import/`)
+The server already sends the list of keys that need a gender (`needsGender: string[]` on the preview, next to `needsCategory`; `apps/server/src/import/plan.ts:177-191`, `http.ts:233`). It accepts `resolution.gender` only on a `new` resolution, and refuses one that contradicts a gender the reports settled (`apps/server/src/import/apply.ts:63-74`). The web follows the existing `needsCategory` pattern:
+
+- **`plan.ts`:**
+  - `ImportPreview` gains `readonly needsGender?: readonly string[]`. A missing field means `[]`, so existing fixtures without it keep passing.
+  - `ImportReviewRow` gains `readonly needsGender: boolean`, true when the row's key is in `preview.needsGender`. `ambiguousRow`, the new-row branch and the returning-row branch of `decisionRows` all set it.
+  - `decisionRows` emits a `kind: 'new'` row when the key is in `needsCategory` **or** `needsGender` (today it only checks `needsCategory`, so a new person who has a category but no gender would get no row). That row's `needsCategory` is set from the key's membership in `needsCategory`, not hard-coded to `true`.
+  - The `action: 'new'` variant of `ImportResolution` gains `readonly gender?: 'M' | 'F'`.
+  - `asNew`: when `row.needsGender`, it returns `null` unless `choice.gender` is `'M'` or `'F'`, and keeps that gender in the result. When the row doesn't need a gender, a supplied `choice.gender` makes it return `null`, the same way an unneeded `category` does today.
+  - `normalize`'s shortcut (`matchOptions.length === 0 && !row.needsCategory` → `{ action: 'new' }`) also requires `!row.needsGender`.
+  - A `match` resolution never carries a gender.
 - **`ImportReview.tsx`:**
-  - Add `'Gender'` to `KEPT` (`['Name', 'Adult / Youth', 'Gender', 'Organization & calling', 'Vacancies', 'Outside callings']`). `DISCARDED` stays `['Phone', 'Email', 'Address', 'Birth date', 'Age', 'Record number', 'Class rosters', 'Ministering']` (resolving B-072).
-- **`plan.ts` & `ImportReview.tsx` & `client.ts`:**
-  - `ImportPersonDecision` in `plan.ts` includes `readonly gender?: 'M' | 'F' | null` (defaulting to `'M'` or `'F'` when present, or `null` when explicitly `null`; if omitted in older unit-test fixtures, treat `undefined` as settled so existing tests that don't test `gender: null` pass untouched!).
-  - `Resolution` for `action: 'new'` gains `readonly gender?: 'M' | 'F'`.
-  - When a row's effective action is `'new'` and `decision.gender === null`, `isDecisionResolved` requires `resolution.gender === 'M' || resolution.gender === 'F'`, and `ImportReview.tsx` renders a `Male` / `Female` radio group (`aria-label={`Gender for ${decision.name}`}`) alongside the `Adult` / `Youth` radio group.
-  - Note: in `fixtures/lcr-reports/`, what are the two namesake rows (`Westdale, Gus` and `Fairwell, Sage Casey Kendall Reagan`)?
-    - Both `Westdale, Gus` rows in `member-list.pdf` are `'M'`, and both `Fairwell, Sage Casey Kendall Reagan` rows in `member-list.pdf` have genders — wait: if `reconcile` in T-115 sets `memberListGenders` to keep the gender when all Member List rows with that canonical name share the **same** gender (e.g. both `Westdale, Gus` rows are `'M'`) and only sets `null` when namesake rows in `member-list.pdf` have **different** genders (or no row), OR if `ImportReview` renders the `Male` / `Female` picker whenever `decision.gender === null`, then if a test resolves a row with `decision.gender === null`, the test clicks `Male` or `Female` as well!
-    - Even better: in `ImportReview.tsx`, when `decision.gender === null`, render the `Male` / `Female` picker; when `decision.gender === 'M' || decision.gender === 'F'`, `gender` is already known from the reports so no extra click is needed!
+  - `KEPT` stays a string and becomes `'Names · youth/adult · gender · callings and positions · vacancies · outside-ward callings'`. `DISCARDED` doesn't change (this resolves B-072).
+  - When a row needs a gender and the current choice is `new` (or the row has no match options), render `Male` and `Female` `ChoiceButton`s inside a `role="group"` element with `aria-label={`Gender for ${row.name}`}`, next to the `Adult` / `Youth` buttons. They follow the same visibility rule as `showCategory`.
+  - Choosing `Adult`/`Youth` keeps any gender already chosen for that row, and choosing `Male`/`Female` keeps any category already chosen. Today `choose(row.key, { action: 'new', category })` replaces the whole choice, so it must merge instead.
+  - The row detail text for a new row that needs a gender says so. For example, a row needing both says `Not in WardBoard yet. Choose adult or youth, and male or female.`; exact wording is up to the implementer.
+  - A row where `needsGender` is false shows no Male/Female buttons.
+- **`client.ts`:** change it only if it reshapes the preview or the resolutions. It must pass `needsGender` and `resolution.gender` through unchanged.
+- **Fixture effect on e2e:** in the four fixture PDFs, `Westdale, Gus` is a report conflict, which T-115 settles as `gender: null`. `Fairwell, Sage Casey Kendall Reagan` appears twice in the Member List, so `memberListGenders` also yields `null` for it (`packages/importer/src/reconcile/reconcile.ts:186-205`). Any e2e or GUI flow that resolves one of those rows, or any other row in `needsGender`, as a new person must now also click `Male` or `Female`. Change only the specs and captures that fail for this reason, and change nothing else in them.
 
-### 2. Add position gender rule (`apps/web/src/features/group-detail/GroupDetailView.tsx`)
-- In the "+ Add position" form in `GroupDetailView.tsx`:
-  - Add a `Gender requirement` select or radio control (`aria-label="Gender requirement"`) with options:
-    - `Any` (`'any'`)
-    - `Men only` (`'M'`)
-    - `Women only` (`'F'`)
-  - When the form opens (or as the user types the title before manually changing the control), default the selection using `classifyCallingGender(boardGroupName, title)` (mapping `'presidency_aligned'` to `'any'`).
-  - Pass the chosen `genderRule` in `onAddAssignment({ groupId, title, type, positionCount, genderRule })` and forward it through `EditingLayer.tsx` / `sync` client to the server's `addAssignment` operation.
+### 2. Add position gender rule (`apps/web/src/features/group-view/GroupDetail.tsx`)
+- `AddAssignmentRequest` (from `@wardboard/core`, `packages/core/src/ops/positions.ts:94`) already has an optional `genderRule`. `BoardShell.tsx:170` sends the request object as it is, so the sync layer needs no change.
+- The Add position form (`GroupDetail.tsx:~245-370`) gains a `<select aria-label="Gender requirement">` with options `Any` (`any`), `Men only` (`M`) and `Women only` (`F`).
+- The form receives the organization's name (the board group's `name`, already looked up at `GroupDetail.tsx:511`) as a new prop. Until the Editor changes the select, its value follows `classifyCallingGender(organizationName, title.trim())` as they type. `presidency_aligned` shows as `Any`. Once the Editor changes the select, typing no longer resets it.
+- `onAddPosition` is called with `genderRule` set to the selected value (`'any' | 'M' | 'F'`).
 
-### 3. Desktop drag-and-drop & Phone Move/Fill sheets
-- **Desktop (`apps/web/src/features/dnd/resolve.ts`):**
-  - When dropping onto an occupied single position (`choices.length === 0` at line ~138), if `releaseOccupant` failed with `refusal.error.code === 'gender_mismatch'`, return `{ kind: 'blocked', message: refusal.error.message }` (just like `board_not_editable`), so the user sees the specific gender requirement refusal instead of the generic `FILLED_NO_OPTIONS` message.
+### 3. Desktop drag-and-drop and the phone Move/Fill sheets
+- **Desktop (`apps/web/src/features/dnd/resolve.ts:138-145`):** in the `choices.length === 0` branch, if `refusal.error.code === 'gender_mismatch'`, return `{ kind: 'blocked', message: refusal.error.message }`, as the `board_not_editable` case already does. Vacant single and list drops already go through `checked(...)` and get the core refusal.
 - **Phone (`apps/web/src/features/phone-person/model.ts`):**
-  - In `buildVacantDestinations(board, ward, memberId, query)`: filter out any destination where `canPlaceMemberInAssignment(board, ward, memberId as MemberId, assignment.id)` returns `{ ok: false }`.
-  - In `buildFillCandidates(board, ward, positionId, query)`: look up the position's assignment and filter out any candidate where `canPlaceMemberInAssignment(board, ward, candidate.id, assignment.id)` returns `{ ok: false }`.
+  - `buildVacantDestinations(board, ward, memberId, query)` (line 92) leaves out every destination where `canPlaceMemberInAssignment(board, ward, memberId as MemberId, assignmentId)` returns `{ ok: false }`.
+  - `buildFillCandidates(board, ward, positionId, query)` (line 179) uses the position's `assignmentId` and leaves out every candidate where `canPlaceMemberInAssignment(board, ward, candidateId, assignmentId)` returns `{ ok: false }`.
 
 ## Scope
 May change:
-- `apps/web/src/features/import/plan.ts`, `apps/web/src/features/import/ImportReview.tsx`, `apps/web/src/features/import/client.ts`
-- `apps/web/src/features/group-detail/GroupDetailView.tsx`
-- `apps/web/src/shell/EditingLayer.tsx`, `apps/web/src/sync/protocol.ts`, `apps/web/src/sync/client.ts` (only to forward optional `genderRule` on `addAssignment`)
+- `apps/web/src/features/import/plan.ts`, `apps/web/src/features/import/ImportReview.tsx`, `apps/web/src/features/import/client.ts` (only as section 1 allows)
+- `apps/web/src/features/group-view/GroupDetail.tsx`
 - `apps/web/src/features/dnd/resolve.ts`
 - `apps/web/src/features/phone-person/model.ts`
-- Existing tests that list the `KEPT` chips in `ImportReview.test.tsx` (adding `'Gender'`) or resolve a `new` row with `gender: null` in e2e (`first-import.spec.ts`, `import-review.spec.ts`, `import-settings.spec.ts`, `member-list-import.spec.ts`, and their `gui/*.capture.ts` equivalents, only if a fixture namesake has `gender: null`).
+- Existing tests, changed only by adding cases:
+  - `apps/web/src/features/group-view/GroupDetail.test.tsx` (add-position gender test)
+  - `apps/web/src/features/dnd/resolve.test.ts` (gender-mismatch drop test)
+- Existing tests, changed only as needed for the new `Kept` text or the new gender step: `apps/web/src/features/import/ImportReview.test.tsx`, `review-clarity.test.tsx`, `plan.test.ts`; e2e `first-import.spec.ts`, `import.spec.ts`, `import-review.spec.ts`, `import-settings.spec.ts`, `member-list-import.spec.ts`, and their `e2e/gui/*.capture.ts` counterparts. The only changes allowed are asserting the new Kept text and clicking `Male`/`Female` on rows in `needsGender`. No assertion may be removed or loosened.
 - New tests:
-  - `apps/web/src/features/import/gender-review.test.tsx` (new)
-  - `apps/web/src/features/phone-person/gender-filter.test.ts` (new)
+  - `apps/web/src/features/import/gender-review.test.tsx`
+  - `apps/web/src/features/phone-person/gender-filter.test.ts`
 
 Must not change:
 - `packages/**`, `apps/server/**`, `fixtures/**`, `docs/**`, `SPEC.md`
+- `apps/web/src/shell/**`, `apps/web/src/sync/**` (section 2 needs neither)
 - anything else
 
 New dependencies allowed: none.
@@ -64,27 +72,29 @@ New dependencies allowed: none.
 ## Acceptance criteria
 | # | Check | Command | Expected result |
 |---|---|---|---|
-| 1 | New web unit tests | `pnpm --filter web exec vitest run src/features/import/gender-review.test.tsx src/features/phone-person/gender-filter.test.ts` | all new tests pass |
+| 1 | New and extended web unit tests | `pnpm --filter web exec vitest run src/features/import/gender-review.test.tsx src/features/phone-person/gender-filter.test.ts src/features/group-view/GroupDetail.test.tsx src/features/dnd/resolve.test.ts` | all pass, including the five named tests and both edge-case tests below |
 | 2 | Full web unit suite | `pnpm --filter web test` | all pass |
 | 3 | e2e | `pnpm --filter web run test:e2e` | all pass |
-| 4 | GUI capture | `pnpm --filter web run gui:capture` | exits 0; inspect updated import/group-detail screenshots at desktop and phone viewports per `docs/gui-verification.md` |
+| 4 | GUI capture | `pnpm --filter web run gui:capture` | exits 0. Per `docs/gui-verification.md`, inspect the import review (the Gender chip text and the Male/Female buttons on the namesake rows) and the Add position form (the Gender requirement select) at the desktop and phone viewports |
 | 5 | Mutation A | in a disposable worktree at the candidate, remove the `canPlaceMemberInAssignment` filter from `buildVacantDestinations` in `phone-person/model.ts`, then run check 1 | `phone move and fill models omit gender-incompatible destinations and candidates` fails; remove the worktree |
-| 6 | Mutation B | in a disposable worktree at the candidate, allow `isDecisionResolved` in `import/plan.ts` to return `true` when `decision.gender === null` and `resolution.gender` is undefined, then run check 1 | `import review requires choosing Male or Female when a new member has null gender` fails; remove the worktree |
-| 7 | Scope | `git diff --name-only origin/main...HEAD` | only paths under May change |
-| 8 | Quality gate | `./scripts/verify.sh` | exits 0 |
+| 6 | Mutation B | in a disposable worktree at the candidate, make `asNew` in `import/plan.ts` ignore `row.needsGender` (accept a `new` choice with no gender), then run check 1 | `import review requires choosing Male or Female when a new member has null gender` fails; remove the worktree |
+| 7 | Mutation C | in a disposable worktree at the candidate, delete the `gender_mismatch` branch in `dnd/resolve.ts`, then run check 1 | `resolveDrop returns the gender_mismatch message on an occupied single position` fails; remove the worktree |
+| 8 | Mutation D | in a disposable worktree at the candidate, drop `genderRule` from the `onAddPosition` call in `GroupDetail.tsx`, then run check 1 | `add position form defaults gender requirement from Handbook and sends override` fails; remove the worktree |
+| 9 | Scope | `git diff --name-only origin/main...HEAD` | only paths under May change |
+| 10 | Quality gate | `./scripts/verify.sh` | exits 0 |
 
 ## Unit tests to write
-| Test name | Behavior it proves | A bug that would make it fail |
-|---|---|---|
-| `import review lists Gender under Kept and not Discarded` | `ImportReview` renders a `Gender` chip in the Kept list and not in Discarded | `Gender` missing from `KEPT` |
-| `import review requires choosing Male or Female when a new member has null gender` | a `new` decision with `gender: null` is unresolved until `Male` or `Female` is selected, and selecting it includes `gender: 'M' \| 'F'` in the resolution payload | not requiring or sending `resolution.gender` |
-| `add position form defaults gender requirement from Handbook and sends override` | opening Add position in `GroupDetailView` defaults `Gender requirement` and submits the selected `genderRule` (`'any' \| 'M' \| 'F'`) | dropping `genderRule` from `onAddAssignment` |
-| `resolveDrop returns the gender_mismatch message on an occupied single position` | dropping a male member onto an occupied female-only single position returns `{ kind: 'blocked', message }` with the gender mismatch message rather than `FILLED_NO_OPTIONS` | swallowing `gender_mismatch` on occupied positions |
-| `phone move and fill models omit gender-incompatible destinations and candidates` | `buildVacantDestinations` omits `'F'` callings for an `'M'` member (and vice versa) while keeping `'any'` callings; `buildFillCandidates` omits `'M'` members when filling an `'F'` vacancy | phone sheets offering invalid placements |
+| Test name | File | Behavior it proves | A bug that would make it fail |
+|---|---|---|---|
+| `import review lists Gender under Kept and not Discarded` | `gender-review.test.tsx` | the Kept text includes `gender`; no Discarded chip says `Gender` | `KEPT` not updated |
+| `import review requires choosing Male or Female when a new member has null gender` | `gender-review.test.tsx` | a row in `needsGender` stays unresolved after Adult/Youth alone. After `Male` or `Female` it is resolved and the resolution sent is `{ action: 'new', category, gender }` | the gender isn't required, isn't sent, or is lost when Adult/Youth is chosen after it |
+| `add position form defaults gender requirement from Handbook and sends override` | `GroupDetail.test.tsx` | in Relief Society, typing `Teacher` defaults the select to `Women only`. After changing it to `Any`, the submit sends `genderRule: 'any'` | `genderRule` dropped, or the default not taken from `classifyCallingGender` |
+| `resolveDrop returns the gender_mismatch message on an occupied single position` | `resolve.test.ts` | dropping an `M` member onto an occupied `F` single position returns `{ kind: 'blocked', message }` with core's gender message, not `FILLED_NO_OPTIONS` | `gender_mismatch` swallowed |
+| `phone move and fill models omit gender-incompatible destinations and candidates` | `gender-filter.test.ts` | `buildVacantDestinations` leaves out `F` callings for an `M` member (and the reverse) and keeps `any` callings and members with no gender. `buildFillCandidates` leaves out `M` members for an `F` vacancy | the phone sheets offer placements core would refuse |
 
-## Edge cases (each needs a test)
-- `decision.gender` is `'M'` or `'F'` on a `new` row: only `Adult` / `Youth` is asked; no redundant `Male` / `Female` prompt is shown.
-- Sunday School presidency alignment in `buildVacantDestinations` and `buildFillCandidates`: when the Sunday School President is `'F'`, vacant Sunday School Counselor seats are shown only to `'F'` members.
+## Edge cases (each needs a test, in the file shown)
+- `gender-review.test.tsx`: a new row whose key is in `needsCategory` but not `needsGender` shows only `Adult` / `Youth`, with no Male/Female group, and resolves without a gender. A row in `needsGender` only (category known) gets a row with only the Male/Female group.
+- `gender-filter.test.ts`: when the Sunday School President is `F`, vacant Sunday School Counselor seats (`presidency_aligned`) appear as destinations only for `F` members, and their Fill candidates are only `F` members or members with no gender.
 
 ## Human checks
 - In `pnpm dev -- --empty --reset`, import the four fixture PDFs, start a proposal, and try dragging a brother into a Relief Society calling or a sister into an Elders Quorum calling; confirm the drop is refused. On a phone viewport, tap a brother and tap `Move…`; confirm Relief Society and Young Women callings do not appear as destinations while Primary Teacher and Sunday School Teacher do.
