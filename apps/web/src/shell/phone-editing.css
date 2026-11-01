@@ -73,7 +73,9 @@
 
 /* In-flight: the sheet's controls are disabled; show it. */
 .wb-phone-editing-sheet:disabled button,
-.wb-phone-editing-sheet:disabled input {
+.wb-phone-editing-sheet:disabled input,
+.wb-phone-editing-sheet:disabled textarea,
+.wb-phone-editing-sheet:disabled select {
   opacity: 0.6;
   cursor: progress;
 }

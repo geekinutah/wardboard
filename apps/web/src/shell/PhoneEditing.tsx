@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactElement, type ReactNode } from 'react';
 import {
+  callingGroupId,
   callingsOf,
+  groupDetail,
+  memberId as brandMemberId,
   vacancies,
+  type AddAssignmentRequest,
   type AssignmentId,
   type Board,
   type BoardId,
@@ -15,6 +19,7 @@ import { ApprovalDialog, SecondCallingDialog, type ApprovalEntry } from '../feat
 import { destinationLabel, memberName, positionLabel } from '../features/dnd/labels.ts';
 import { dropContext, preflight, runDropOp, type Preflight } from '../features/dnd/resolve.ts';
 import type { DropOp } from '../features/dnd/types.ts';
+import { PhoneAddPositionSheet } from '../features/phone-board/PhoneAddPositionSheet.tsx';
 import { PhoneBoard } from '../features/phone-board/PhoneBoard.tsx';
 import {
   buildFillCandidates,
@@ -25,20 +30,32 @@ import {
 import { PhoneFillSheet } from '../features/phone-person/PhoneFillSheet.tsx';
 import { PhoneMoveSheet } from '../features/phone-person/PhoneMoveSheet.tsx';
 import { PhonePersonSheet } from '../features/phone-person/PhonePersonSheet.tsx';
+import { PhoneProfileSheet } from '../features/phone-person/PhoneProfileSheet.tsx';
+import { assignPhoto } from '../features/photos/assignPhoto.ts';
+import { photoUrl, uploadPhoto } from '../features/photos/upload.ts';
 import type { OpOutcome } from '../sync/client.ts';
 import type { Me, ProposalView } from '../sync/protocol.ts';
-import { useSync } from '../sync/react.tsx';
+import { useSync, useSyncClient } from '../sync/react.tsx';
 import { committedListPosition } from './EditingLayer.tsx';
 import '../features/dnd/dnd.css';
 import './phone-editing.css';
 
 type MoveSheet = { readonly kind: 'move'; readonly memberId: string; readonly fromPositionId: string | null };
 type FillSheet = { readonly kind: 'fill'; readonly positionId: string };
+type AddSheet = {
+  readonly kind: 'add';
+  readonly groupId: string;
+  readonly callingGroupName: string;
+  readonly organizationName: string;
+};
 
-type Sheet = { readonly kind: 'none' } | { readonly kind: 'person'; readonly memberId: string } | MoveSheet | FillSheet;
+type Sheet = { readonly kind: 'none' } | { readonly kind: 'person'; readonly memberId: string } | MoveSheet | FillSheet | AddSheet;
 
-/** One server operation the phone sends: a drop operation or a release. */
-type PhoneOp = DropOp | { readonly kind: 'releaseCalling'; readonly request: ReleaseCallingRequest };
+/** One server operation the phone sends: a drop operation, a release, or a new position. */
+type PhoneOp =
+  | DropOp
+  | { readonly kind: 'releaseCalling'; readonly request: ReleaseCallingRequest }
+  | { readonly kind: 'addAssignment'; readonly request: AddAssignmentRequest };
 
 /** A placement from the move or fill sheet. */
 type PlacementOp = Extract<DropOp, { kind: 'placeInPosition' } | { kind: 'addToList' }>;
@@ -116,9 +133,13 @@ export interface PhoneBoardEditingProps {
  */
 export function PhoneBoardEditing({ board, baseline, ward, proposal, me, boardName }: PhoneBoardEditingProps): ReactElement {
   const { send } = useSync();
+  const client = useSyncClient();
   const editable = proposal !== null && proposal.status === 'draft' && me !== null && baseline !== null;
 
   const [sheet, setSheet] = useState<Sheet>(NONE);
+  const [profileMemberId, setProfileMemberId] = useState<string | null>(null);
+  const profileOpenRef = useRef(false);
+  profileOpenRef.current = profileMemberId !== null;
   const [confirm, setConfirm] = useState<Confirmation | null>(null);
   const [query, setQuery] = useState('');
   const [sending, setSending] = useState(false);
@@ -165,17 +186,21 @@ export function PhoneBoardEditing({ board, baseline, ward, proposal, me, boardNa
   const staleSheet =
     (sheet.kind === 'person' && personModel === null) ||
     (sheet.kind === 'move' && (!editable || (sheet.fromPositionId !== null && sourceCalling === null))) ||
-    (sheet.kind === 'fill' && (!editable || fillTarget === null));
+    (sheet.kind === 'fill' && (!editable || fillTarget === null)) ||
+    (sheet.kind === 'add' && !editable);
 
   useEffect(() => {
     if (sending) return;
     if (staleSheet) {
+      setProfileMemberId(null);
       setSheet(sheet.kind === 'move' && editable ? { kind: 'person', memberId: sheet.memberId } : NONE);
       setConfirm(null);
     } else if (!editable && confirm !== null) {
       setConfirm(null);
+    } else if (sheet.kind !== 'person' && profileMemberId !== null) {
+      setProfileMemberId(null);
     }
-  }, [staleSheet, editable, confirm, sending, sheet]);
+  }, [staleSheet, editable, confirm, sending, sheet, profileMemberId]);
 
   /** Resolves with the synced board once it reaches `version`, or null if another board opens. */
   function committedBoard(boardId: BoardId, version: number): Promise<Board | null> {
@@ -289,7 +314,17 @@ export function PhoneBoardEditing({ board, baseline, ward, proposal, me, boardNa
 
   const closeSheet = useCallback(() => {
     if (sendingRef.current) return;
+    // Escape reaches the person sheet underneath the profile. Close only the profile.
+    if (profileOpenRef.current) {
+      setProfileMemberId(null);
+      return;
+    }
     setSheet(NONE);
+  }, []);
+
+  const closeProfile = useCallback(() => {
+    if (sendingRef.current) return;
+    setProfileMemberId(null);
   }, []);
 
   const cancelConfirm = useCallback(() => {
@@ -301,7 +336,46 @@ export function PhoneBoardEditing({ board, baseline, ward, proposal, me, boardNa
     if (sendingRef.current) return;
     setQuery('');
     setFailure(null);
+    setProfileMemberId(null);
     setSheet(next);
+  }
+
+  /** Opens add-position only when the calling group and its board group both exist. */
+  function openAddPosition(id: string): void {
+    if (baseline === null) return;
+    const groupKey = callingGroupId(id);
+    if (!Object.hasOwn(board.callingGroups, groupKey)) return;
+    const group = board.callingGroups[groupKey];
+    if (group === undefined) return;
+    const detail = groupDetail(board, ward, group.id, baseline);
+    const organization = board.boardGroups[detail.boardGroupId];
+    if (organization === undefined) return;
+    openSheet({
+      kind: 'add',
+      groupId: group.id,
+      callingGroupName: group.name,
+      organizationName: organization.name,
+    });
+  }
+
+  async function saveNote(note: string | null): Promise<{ readonly ok: true } | { readonly ok: false; readonly message: string }> {
+    if (profileMemberId === null) return { ok: false, message: 'That member is not on this ward.' };
+    if (sendingRef.current) return { ok: false, message: 'Please wait.' };
+    sendingRef.current = true;
+    setSending(true);
+    try {
+      const result = await client.updateMember(profileMemberId, { note });
+      if (result.ok) return { ok: true };
+      return { ok: false, message: result.message };
+    } finally {
+      sendingRef.current = false;
+      if (mountedRef.current) setSending(false);
+    }
+  }
+
+  async function assignPortrait(id: string, ref: string): Promise<void> {
+    const result = await assignPhoto(client, id, ref);
+    if (!result.ok) throw new Error(result.message);
   }
 
   let overlay: ReactNode = null;
@@ -362,6 +436,14 @@ export function PhoneBoardEditing({ board, baseline, ward, proposal, me, boardNa
           ? {
               onPlaceFromDugout: () => {
                 openSheet({ kind: 'move', memberId, fromPositionId: null });
+              },
+            }
+          : {})}
+        {...(me !== null
+          ? {
+              onOpenProfile: () => {
+                if (sendingRef.current) return;
+                setProfileMemberId(memberId);
               },
             }
           : {})}
@@ -428,7 +510,39 @@ export function PhoneBoardEditing({ board, baseline, ward, proposal, me, boardNa
         onCancel={closeSheet}
       />
     );
+  } else if (sheet.kind === 'add' && editable) {
+    const { groupId, callingGroupName, organizationName } = sheet;
+    overlay = (
+      <PhoneAddPositionSheet
+        callingGroupName={callingGroupName}
+        organizationName={organizationName}
+        groupId={groupId}
+        onSubmit={(request) => {
+          run([{ kind: 'addAssignment', request }], `Added ${request.title}`);
+        }}
+        onClose={closeSheet}
+      />
+    );
   }
+
+  const profileMember = profileMemberId === null ? undefined : ward.members[brandMemberId(profileMemberId)];
+  const profileNode =
+    sheet.kind === 'person' && me !== null && profileMember !== undefined ? (
+      <PhoneProfileSheet
+        member={{
+          id: profileMember.id,
+          name: profileMember.name,
+          photoRef: profileMember.photoRef,
+          note: profileMember.note,
+          category: profileMember.category,
+        }}
+        currentUrl={profileMember.photoRef === null ? null : photoUrl(profileMember.photoRef)}
+        onSaveNote={(note) => saveNote(note)}
+        upload={uploadPhoto}
+        assign={(id, ref) => assignPortrait(id, ref)}
+        onClose={closeProfile}
+      />
+    ) : null;
 
   return (
     <div className="wb-phone-editing">
@@ -462,10 +576,12 @@ export function PhoneBoardEditing({ board, baseline, ward, proposal, me, boardNa
         onOpenVacancy={(positionId) => {
           if (editable) openSheet({ kind: 'fill', positionId });
         }}
+        {...(editable ? { onAddPosition: (id: string) => { openAddPosition(id); } } : {})}
       />
-      {overlay === null ? null : (
+      {overlay === null && profileNode === null ? null : (
         <fieldset className="wb-phone-editing-sheet" disabled={sending} aria-busy={sending}>
           {overlay}
+          {profileNode}
         </fieldset>
       )}
     </div>

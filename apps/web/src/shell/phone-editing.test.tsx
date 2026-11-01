@@ -24,6 +24,7 @@ import { SyncClient, type SyncDeps, type WebSocketLike } from '../sync/client.ts
 import type { CurrentInfo, ProposalView } from '../sync/protocol.ts';
 import { SyncProvider } from '../sync/react.tsx';
 import { PhoneApp } from './PhoneApp.tsx';
+import { PhoneBoardEditing } from './PhoneEditing.tsx';
 
 /*
  * Fixture (buildPreviewData, Draft "Spring adjustments"):
@@ -235,6 +236,12 @@ function heldPosition(board: Board, member: MemberId): PositionId {
   return first.positionId;
 }
 
+function callingGroupNamed(board: Board, name: string): string {
+  const found = Object.values(board.callingGroups).find((group) => group.name === name);
+  if (found === undefined) throw new Error(`missing calling group ${name}`);
+  return found.id;
+}
+
 function assignmentNamed(board: Board, groupName: string, title: string): AssignmentId {
   const group = Object.values(board.callingGroups).find((item) => item.name === groupName);
   const found = Object.values(board.assignments).find((item) => item.groupId === group?.id && item.title === title);
@@ -296,7 +303,7 @@ describe('phone board editing', () => {
     expect(within(sheet).getByRole('button', { name: 'Move from Primary Teacher' })).toBeInTheDocument();
     expect(within(sheet).getByRole('button', { name: 'Release from Primary Teacher' })).toBeInTheDocument();
     expect(within(sheet).getByRole('button', { name: /Add to dugout/ })).toBeInTheDocument();
-    expect(within(sheet).queryByRole('button', { name: 'Profile, note & photo' })).not.toBeInTheDocument();
+    expect(within(sheet).getByRole('button', { name: 'Profile, note & photo' })).toBeInTheDocument();
   });
 
   it('Current shows the person sheet read-only', async () => {
@@ -307,9 +314,10 @@ describe('phone board editing', () => {
     const sheet = screen.getByRole('dialog', { name: /^Bea Placeholder/ });
     expect(sheet).toHaveTextContent('Callings in Current');
     expect(sheet).toHaveTextContent('Primary Teacher');
-    for (const name of [/^Move/, /^Release/, /Add to dugout/, /Profile, note & photo/]) {
+    for (const name of [/^Move/, /^Release/, /Add to dugout/]) {
       expect(within(sheet).queryByRole('button', { name })).not.toBeInTheDocument();
     }
+    expect(within(sheet).getByRole('button', { name: 'Profile, note & photo' })).toBeInTheDocument();
     expect(opFrames(harness)).toHaveLength(0);
   });
 
@@ -322,9 +330,10 @@ describe('phone board editing', () => {
     const sheet = screen.getByRole('dialog', { name: /^Bea Placeholder/ });
     expect(sheet).toHaveTextContent(`Callings in ${data.proposal.name}`);
     expect(sheet).toHaveTextContent('Primary Teacher');
-    for (const name of [/^Move/, /^Release/, /Add to dugout/, /Profile, note & photo/]) {
+    for (const name of [/^Move/, /^Release/, /Add to dugout/]) {
       expect(within(sheet).queryByRole('button', { name })).not.toBeInTheDocument();
     }
+    expect(within(sheet).getByRole('button', { name: 'Profile, note & photo' })).toBeInTheDocument();
   });
 
   it('move to a vacant single position sends placeInPosition', async () => {
@@ -664,5 +673,214 @@ describe('phone board editing', () => {
     await user.click(screen.getByRole('button', { name: /Switch board/ }));
     await user.click(within(screen.getByRole('dialog', { name: 'Boards' })).getByRole('button', { name: /^Current/ }));
     expect(screen.queryByRole('dialog', { name: /^Bea Placeholder/ })).not.toBeInTheDocument();
+  });
+
+  it('a draft person sheet opens the profile sheet', async () => {
+    const { user } = await openDraft();
+    const sheet = await openPerson(user, 'Primary', 'Bea Placeholder, Primary Teacher');
+    await user.click(within(sheet).getByRole('button', { name: 'Profile, note & photo' }));
+    const profile = screen.getByRole('dialog', { name: 'Profile · Bea Placeholder' });
+    expect(within(profile).getByRole('textbox', { name: 'Note' })).toBeInTheDocument();
+    expect(within(profile).getByLabelText('Upload photo for Bea Placeholder')).toBeInTheDocument();
+  });
+
+  it('saving a profile note sends updateMember with the trimmed note', async () => {
+    const { user, harness, socket } = await openDraft();
+    const sheet = await openPerson(user, 'Primary', 'Bea Placeholder, Primary Teacher');
+    await user.click(within(sheet).getByRole('button', { name: 'Profile, note & photo' }));
+    const profile = screen.getByRole('dialog', { name: 'Profile · Bea Placeholder' });
+    await user.type(within(profile).getByRole('textbox', { name: 'Note' }), '  Prefers mornings  ');
+    await user.click(within(profile).getByRole('button', { name: 'Save' }));
+
+    const frames = typedFrames(harness.sockets, 'updateMember');
+    expect(frames).toHaveLength(1);
+    expect(frames[0]).toMatchObject({ memberId: BEA, patch: { note: 'Prefers mornings' } });
+    expect(opFrames(harness)).toHaveLength(0);
+    act(() => {
+      socket.receive({ type: 'memberUpdated', requestId: frames[0]?.requestId });
+    });
+    await settle();
+    expect(screen.queryByRole('dialog', { name: 'Profile · Bea Placeholder' })).not.toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: /^Bea Placeholder/ })).toBeInTheDocument();
+  });
+
+  it('a refused profile note stays on the sheet', async () => {
+    const { user, harness, socket } = await openDraft();
+    const sheet = await openPerson(user, 'Primary', 'Bea Placeholder, Primary Teacher');
+    await user.click(within(sheet).getByRole('button', { name: 'Profile, note & photo' }));
+    const profile = screen.getByRole('dialog', { name: 'Profile · Bea Placeholder' });
+    await user.type(within(profile).getByRole('textbox', { name: 'Note' }), 'A planning note');
+    await user.click(within(profile).getByRole('button', { name: 'Save' }));
+    const frames = typedFrames(harness.sockets, 'updateMember');
+    act(() => {
+      socket.receive({
+        type: 'rejected',
+        requestId: frames[0]?.requestId,
+        code: 'conflict',
+        message: 'stale member',
+      });
+    });
+    await settle();
+    expect(screen.getByRole('alert')).toHaveTextContent('Could not save the note: stale member');
+    expect(screen.getByRole('dialog', { name: 'Profile · Bea Placeholder' })).toBeInTheDocument();
+  });
+
+  it('Current opens the profile sheet and still has no move or add position', async () => {
+    const { user, harness, socket } = await openBoard(null);
+    await openOrg(user, 'Primary');
+    expect(screen.queryByRole('button', { name: /Add (a )?position/ })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Bea Placeholder, Primary Teacher' }));
+    const sheet = screen.getByRole('dialog', { name: /^Bea Placeholder/ });
+    expect(within(sheet).queryByRole('button', { name: /^Move/ })).not.toBeInTheDocument();
+    await user.click(within(sheet).getByRole('button', { name: 'Profile, note & photo' }));
+    const profile = screen.getByRole('dialog', { name: 'Profile · Bea Placeholder' });
+    await user.type(within(profile).getByRole('textbox', { name: 'Note' }), 'Current note');
+    await user.click(within(profile).getByRole('button', { name: 'Save' }));
+    const frames = typedFrames(harness.sockets, 'updateMember');
+    expect(frames).toHaveLength(1);
+    expect(frames[0]).toMatchObject({ memberId: BEA, patch: { note: 'Current note' } });
+    expect(opFrames(harness)).toHaveLength(0);
+    act(() => {
+      socket.receive({ type: 'memberUpdated', requestId: frames[0]?.requestId });
+    });
+    await settle();
+    expect(screen.queryByRole('dialog', { name: 'Profile · Bea Placeholder' })).not.toBeInTheDocument();
+  });
+
+  it('an accepted proposal opens the profile sheet without move actions', async () => {
+    const { user } = await openBoard('accepted');
+    const sheet = await openPerson(user, 'Primary', 'Bea Placeholder, Primary Teacher');
+    expect(within(sheet).getByRole('button', { name: 'Profile, note & photo' })).toBeInTheDocument();
+    expect(within(sheet).queryByRole('button', { name: /^Move/ })).not.toBeInTheDocument();
+    expect(within(sheet).queryByRole('button', { name: /^Release/ })).not.toBeInTheDocument();
+    expect(within(sheet).queryByRole('button', { name: /Add to dugout/ })).not.toBeInTheDocument();
+    await user.click(within(sheet).getByRole('button', { name: 'Profile, note & photo' }));
+    expect(screen.getByRole('dialog', { name: 'Profile · Bea Placeholder' })).toBeInTheDocument();
+  });
+
+  it('a signed-out session has no profile button', async () => {
+    const user = userEvent.setup();
+    const harness = mount();
+    render(
+      <SyncProvider client={harness.client}>
+        <PhoneBoardEditing
+          board={draft}
+          baseline={data.proposal.baseline}
+          ward={ward}
+          proposal={view('draft')}
+          me={null}
+          boardName={data.proposal.name}
+        />
+      </SyncProvider>,
+    );
+    await user.click(screen.getByRole('button', { name: /^Primary,/ }));
+    await user.click(screen.getByRole('button', { name: 'Bea Placeholder, Primary Teacher' }));
+    const sheet = screen.getByRole('dialog', { name: /^Bea Placeholder/ });
+    expect(within(sheet).queryByRole('button', { name: 'Profile, note & photo' })).not.toBeInTheDocument();
+  });
+
+  async function submitAdd(user: UserEvent, org: string, groupName: string, title: string): Promise<HTMLElement> {
+    await openOrg(user, org);
+    await user.click(screen.getByRole('button', { name: `Add a position to ${groupName}` }));
+    const dialog = screen.getByRole('dialog', { name: `Add a position to ${groupName}` });
+    if (title !== '') {
+      await user.type(within(dialog).getByRole('textbox', { name: 'Calling title' }), title);
+    }
+    await user.click(within(dialog).getByRole('button', { name: 'Add position' }));
+    return dialog;
+  }
+
+  it('add position sends addAssignment with the Handbook gender rule', async () => {
+    const { user, harness, socket } = await openDraft();
+    const dialog = await submitAdd(user, 'Relief Society', 'Relief Society Teachers', 'Teacher');
+    const frames = opFrames(harness);
+    expect(frames).toHaveLength(1);
+    expect(frames[0]).toMatchObject({
+      kind: 'addAssignment',
+      request: {
+        groupId: callingGroupNamed(draft, 'Relief Society Teachers'),
+        title: 'Teacher',
+        type: 'single',
+        positionCount: 1,
+        genderRule: 'F',
+      },
+    });
+    commit(socket, frames[0]?.requestId ?? '', draft, draft.version + 1);
+    await settle();
+    expect(screen.queryByRole('dialog', { name: 'Add a position to Relief Society Teachers' })).not.toBeInTheDocument();
+    expect(screen.getByText('Added Teacher')).toBeInTheDocument();
+    expect(dialog).not.toBeInTheDocument();
+  });
+
+  it('Sunday School presidency add sends presidency_aligned', async () => {
+    const { user, harness } = await openDraft();
+    await openOrg(user, 'Sunday School');
+    await user.click(screen.getByRole('button', { name: 'Add a position to Sunday School Presidency' }));
+    const dialog = screen.getByRole('dialog', { name: 'Add a position to Sunday School Presidency' });
+    await user.type(within(dialog).getByRole('textbox', { name: 'Calling title' }), 'Sunday School Second Counselor');
+    expect(within(dialog).getByRole('combobox', { name: 'Gender requirement' })).toHaveValue('presidency_aligned');
+    await user.click(within(dialog).getByRole('button', { name: 'Add position' }));
+    expect(opFrames(harness)).toEqual([
+      expect.objectContaining({
+        kind: 'addAssignment',
+        request: {
+          groupId: callingGroupNamed(draft, 'Sunday School Presidency'),
+          title: 'Sunday School Second Counselor',
+          type: 'single',
+          positionCount: 1,
+          genderRule: 'presidency_aligned',
+        },
+      }),
+    ]);
+  });
+
+  it('an empty add-position title sends nothing', async () => {
+    const { user, harness } = await openDraft();
+    await openOrg(user, 'Primary');
+    await user.click(screen.getByRole('button', { name: 'Add a position to Primary Teachers' }));
+    const dialog = screen.getByRole('dialog', { name: 'Add a position to Primary Teachers' });
+    await user.click(within(dialog).getByRole('button', { name: 'Add position' }));
+    expect(opFrames(harness)).toHaveLength(0);
+    expect(within(dialog).getByRole('alert')).toHaveTextContent('Enter a calling title');
+  });
+
+  it('a refused addAssignment keeps the sheet', async () => {
+    const { user, harness, socket } = await openDraft();
+    await submitAdd(user, 'Primary', 'Primary Teachers', 'Fictional Helper');
+    const frames = opFrames(harness);
+    expect(frames).toHaveLength(1);
+    act(() => {
+      socket.receive({ type: 'rejected', requestId: frames[0]?.requestId, code: 'conflict', message: 'stale board' });
+    });
+    await settle();
+    expect(changeAlert()).toHaveTextContent("Couldn't apply the change: stale board");
+    expect(screen.getByRole('dialog', { name: 'Add a position to Primary Teachers' })).toBeInTheDocument();
+    expect(screen.queryByText('Added Fictional Helper')).not.toBeInTheDocument();
+  });
+
+  it('a second add submit while sending sends once', async () => {
+    const { user, harness } = await openDraft();
+    await openOrg(user, 'Primary');
+    await user.click(screen.getByRole('button', { name: 'Add a position to Primary Teachers' }));
+    const dialog = screen.getByRole('dialog', { name: 'Add a position to Primary Teachers' });
+    await user.type(within(dialog).getByRole('textbox', { name: 'Calling title' }), 'Fictional Helper');
+    const submit = within(dialog).getByRole('button', { name: 'Add position' });
+    act(() => {
+      submit.click();
+      submit.click();
+    });
+    await settle();
+    expect(opFrames(harness)).toHaveLength(1);
+    expect(opFrames(harness)[0]?.kind).toBe('addAssignment');
+  });
+
+  it('switching boards closes the add-position sheet', async () => {
+    const { user } = await openDraft();
+    await openOrg(user, 'Primary');
+    await user.click(screen.getByRole('button', { name: 'Add a position to Primary Teachers' }));
+    expect(screen.getByRole('dialog', { name: 'Add a position to Primary Teachers' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /Switch board/ }));
+    await user.click(within(screen.getByRole('dialog', { name: 'Boards' })).getByRole('button', { name: /^Current/ }));
+    expect(screen.queryByRole('dialog', { name: 'Add a position to Primary Teachers' })).not.toBeInTheDocument();
   });
 });
