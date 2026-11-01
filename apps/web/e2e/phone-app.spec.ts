@@ -87,6 +87,9 @@ test('an edit on desktop updates the phone without reload', async ({ page, brows
   await page.keyboard.type(name);
   await dialog.getByRole('button', { name: 'Create proposal' }).click();
   await expect(page.getByRole('heading', { level: 1, name })).toBeVisible();
+  // open() clears the board until the snapshot arrives, and the tab reads
+  // "Dugout · 0" in that gap. The copied board has rendered once Primary is back.
+  await expect(page.getByRole('button', { name: /^Primary,/ })).toBeVisible();
 
   const dugoutTab = page.getByRole('navigation', SECTIONS).getByRole('button', { name: /^Dugout · \d+$/ });
   await expect(dugoutTab).toBeVisible();
