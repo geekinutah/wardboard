@@ -61,10 +61,12 @@ May change:
 - New tests:
   - `apps/web/src/features/import/gender-review.test.tsx`
   - `apps/web/src/features/phone-person/gender-filter.test.ts`
+- `apps/web/src/shell/BoardShell.test.tsx`, and only to add `genderRule` on the existing `addAssignment` expectation for the Fictional Chorister. No other assertion in that file may be removed or loosened. `BoardShell.tsx` stays unchanged.
 
 Must not change:
 - `packages/**`, `apps/server/**`, `fixtures/**`, `docs/**`, `SPEC.md`
-- `apps/web/src/shell/**`, `apps/web/src/sync/**` (section 2 needs neither)
+- `apps/web/src/shell/**` except that one expectation in `BoardShell.test.tsx`
+- `apps/web/src/sync/**` (section 2 needs neither)
 - anything else
 
 New dependencies allowed: none.
@@ -72,7 +74,7 @@ New dependencies allowed: none.
 ## Acceptance criteria
 | # | Check | Command | Expected result |
 |---|---|---|---|
-| 1 | New and extended web unit tests | `pnpm --filter web exec vitest run src/features/import/gender-review.test.tsx src/features/phone-person/gender-filter.test.ts src/features/group-view/GroupDetail.test.tsx src/features/dnd/resolve.test.ts` | all pass, including the five named tests and both edge-case tests below |
+| 1 | New and extended web unit tests | `pnpm --filter web exec vitest run src/features/import/gender-review.test.tsx src/features/phone-person/gender-filter.test.ts src/features/group-view/GroupDetail.test.tsx src/features/dnd/resolve.test.ts` | all pass, including the five named tests and the edge-case tests below |
 | 2 | Full web unit suite | `pnpm --filter web test` | all pass |
 | 3 | e2e | `pnpm --filter web run test:e2e` | all pass |
 | 4 | GUI capture | `pnpm --filter web run gui:capture` | exits 0. Per `docs/gui-verification.md`, inspect the import review (the Gender chip text and the Male/Female buttons on the namesake rows) and the Add position form (the Gender requirement select) at the desktop and phone viewports |
