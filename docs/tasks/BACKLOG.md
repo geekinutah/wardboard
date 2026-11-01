@@ -104,3 +104,4 @@ observation / review finding
 | B-072 | P2 | web import review | resolved | The import review's discarded-fields list doesn't mention gender |
 | B-073 | P2 | collector docs | candidate | Collector README still says bundle import is not available |
 | B-074 | P3 | web e2e | candidate | Start-proposal e2e matches the Current radio as a substring |
+| B-075 | P3 | web gui capture | candidate | Shared gui:capture leaves tags from earlier scenarios on later phone shots |
