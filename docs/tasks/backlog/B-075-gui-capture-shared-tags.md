@@ -2,9 +2,9 @@
 
 **Priority:** P3
 **Area:** web gui capture
-**State:** candidate
+**State:** accepted
 **Found:** 2026-10-31, T-095 verification
-**Promoted to:** —
+**Promoted to:** T-118
 
 ## Finding
 
@@ -16,7 +16,7 @@ A later phone screenshot can show tag text that the scenario under review did no
 
 ## Direction
 
-Give each capture scenario its own ward, or reset member tags between scenarios. Do not treat the stray tag text on the T-095 dugout shots as a Search or Dugout defect.
+Mike, 2026-11-01: clear data between scenarios. A multi-step scenario stays on one server and sets up its own data. Do not treat the stray tag text on the T-095 dugout shots as a Search or Dugout defect.
 
 ## Evidence
 
