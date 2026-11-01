@@ -1,5 +1,6 @@
 import path from 'node:path';
-import { expect, test, type Page } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
+import { test } from './capture-test.ts';
 import { guiArtifactsDir } from '../checkout-server.ts';
 
 async function expectNoHorizontalOverflow(page: Page): Promise<void> {

@@ -1,6 +1,7 @@
 import path from 'node:path';
 import { deflateSync } from 'node:zlib';
-import { expect, test, type Locator, type Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
+import { test } from './capture-test.ts';
 import { guiArtifactsDir } from '../checkout-server.ts';
 import { createProposal, uniqueProposalName } from '../support/proposals.ts';
 

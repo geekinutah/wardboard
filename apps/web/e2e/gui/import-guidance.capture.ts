@@ -1,19 +1,10 @@
 import path from 'node:path';
-import { expect, test, type Locator, type Page } from '@playwright/test';
-import { guiArtifactsDir, startCheckoutServer, type CheckoutServer } from '../checkout-server.ts';
+import { expect, type Locator, type Page } from '@playwright/test';
+import { test } from './capture-test.ts';
+import { guiArtifactsDir } from '../checkout-server.ts';
 
 const SCENARIO = 'import-guidance';
 const REPORTS = path.resolve(import.meta.dirname, '../../../../fixtures/lcr-reports');
-
-let server: CheckoutServer;
-
-test.beforeAll(async () => {
-  server = await startCheckoutServer();
-});
-
-test.afterAll(async () => {
-  await server.stop();
-});
 
 async function expectNoHorizontalOverflow(page: Page): Promise<void> {
   const overflow = await page.evaluate(() => ({
@@ -39,7 +30,7 @@ test('import sources guidance in settings', async ({ page }, testInfo) => {
     await page.screenshot({ path: path.join(guiArtifactsDir, SCENARIO, `${state}-${project}.png`), fullPage: true });
   };
 
-  await page.goto(`${server.url}/settings`);
+  await page.goto('/settings');
   await page.evaluate(async () => {
     await document.fonts.ready;
   });

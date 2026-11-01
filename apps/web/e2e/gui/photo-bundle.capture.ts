@@ -1,7 +1,8 @@
 import { createHash } from 'node:crypto';
 import path from 'node:path';
-import { expect, test, type Locator, type Page } from '@playwright/test';
-import { guiArtifactsDir, startCheckoutServer, type CheckoutServer } from '../checkout-server.ts';
+import { expect, type Locator, type Page } from '@playwright/test';
+import { test } from './capture-test.ts';
+import { guiArtifactsDir } from '../checkout-server.ts';
 
 const SCENARIO = 'photo-bundle';
 
@@ -22,16 +23,6 @@ const JPG = Buffer.from([
   0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0xff, 0xda, 0x00, 0x08, 0x01, 0x01, 0x00, 0x00, 0x3f,
   0x00, 0xbf, 0x80, 0xff, 0xd9,
 ]);
-
-let server: CheckoutServer;
-
-test.beforeAll(async () => {
-  server = await startCheckoutServer();
-});
-
-test.afterAll(async () => {
-  await server.stop();
-});
 
 async function expectNoHorizontalOverflow(page: Page): Promise<void> {
   const overflow = await page.evaluate(() => ({
@@ -81,7 +72,7 @@ test('photo bundle gui capture', async ({ page }, testInfo) => {
     skippedHousehold: 2,
   };
 
-  await page.goto(`${server.url}/settings`);
+  await page.goto('/settings');
   await page.evaluate(async () => {
     await document.fonts.ready;
   });

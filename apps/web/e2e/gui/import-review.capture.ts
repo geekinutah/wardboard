@@ -1,19 +1,13 @@
 import path from 'node:path';
-import { expect, test, type Page } from '@playwright/test';
-import { guiArtifactsDir, startCheckoutServer, type CheckoutServer } from '../checkout-server.ts';
+import { expect, type Page } from '@playwright/test';
+import { test } from './capture-test.ts';
+import { guiArtifactsDir } from '../checkout-server.ts';
+
+// This scenario creates Current, so it starts from an empty data directory.
+test.use({ captureSeed: false });
 
 const SCENARIO = 'import-review';
 const REPORTS = path.resolve(import.meta.dirname, '../../../../fixtures/lcr-reports');
-
-let server: CheckoutServer;
-
-test.beforeAll(async () => {
-  server = await startCheckoutServer({ seed: false });
-});
-
-test.afterAll(async () => {
-  await server.stop();
-});
 
 async function expectNoHorizontalOverflow(page: Page): Promise<void> {
   const overflow = await page.evaluate(() => ({
@@ -33,7 +27,7 @@ test('import review rows and next unresolved', async ({ page }, testInfo) => {
     await page.screenshot({ path: path.join(guiArtifactsDir, SCENARIO, `${state}-${project}.png`), fullPage });
   };
 
-  await page.goto(`${server.url}/`);
+  await page.goto('/');
   await page.getByLabel('Organizations and callings').setInputFiles(path.join(REPORTS, 'organizations-and-callings.pdf'));
   await page.getByLabel('Members without callings').setInputFiles(path.join(REPORTS, 'members-without-callings.pdf'));
   await page.getByLabel('Out-of-unit callings').setInputFiles(path.join(REPORTS, 'out-of-unit-callings.pdf'));

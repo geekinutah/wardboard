@@ -13,8 +13,12 @@ async function clearScenarioArtifacts(): Promise<void> {
   );
 }
 
-export default async function globalSetup(): Promise<() => Promise<void>> {
-  if (process.env[GUI_CAPTURE_ENV] === '1') await clearScenarioArtifacts();
+export default async function globalSetup(): Promise<(() => Promise<void>) | undefined> {
+  if (process.env[GUI_CAPTURE_ENV] === '1') {
+    // Capture tests start their own servers. Do not set WARDBOARD_E2E_BASE_URL.
+    await clearScenarioArtifacts();
+    return;
+  }
 
   const server = await startCheckoutServer();
   process.env[BASE_URL_ENV] = server.url;

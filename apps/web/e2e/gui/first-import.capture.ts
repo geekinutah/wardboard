@@ -1,20 +1,13 @@
 import path from 'node:path';
-import { expect, test, type Locator, type Page } from '@playwright/test';
-import { guiArtifactsDir, startCheckoutServer, type CheckoutServer } from '../checkout-server.ts';
+import { expect, type Locator, type Page } from '@playwright/test';
+import { test } from './capture-test.ts';
+import { guiArtifactsDir } from '../checkout-server.ts';
+
+// This scenario creates Current, so it starts from an empty data directory.
+test.use({ captureSeed: false });
 
 const SCENARIO = 'first-import';
 const REPORTS = path.resolve(import.meta.dirname, '../../../../fixtures/lcr-reports');
-
-let server: CheckoutServer;
-
-// The first import creates Current, so this scenario has its own server with no Current.
-test.beforeAll(async () => {
-  server = await startCheckoutServer({ seed: false });
-});
-
-test.afterAll(async () => {
-  await server.stop();
-});
 
 async function expectNoHorizontalOverflow(page: Page): Promise<void> {
   const overflow = await page.evaluate(() => ({
@@ -53,7 +46,7 @@ test('first import on the real server', async ({ page }, testInfo) => {
     await page.screenshot({ path: path.join(guiArtifactsDir, SCENARIO, `${state}-${project}.png`), fullPage });
   };
 
-  await page.goto(`${server.url}/`);
+  await page.goto('/');
   await page.evaluate(async () => {
     await document.fonts.ready;
   });

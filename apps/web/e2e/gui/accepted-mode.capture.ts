@@ -1,5 +1,6 @@
 import path from 'node:path';
-import { expect, test, type Page } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
+import { test } from './capture-test.ts';
 import { guiArtifactsDir } from '../checkout-server.ts';
 import { createProposal, uniqueProposalName } from '../support/proposals.ts';
 
@@ -22,6 +23,9 @@ async function addOneCalling(page: Page, name: string): Promise<void> {
       const fail = (reason: string): void => {
         socket.close();
         reject(new Error(reason));
+      };
+      socket.onopen = () => {
+        socket.send(JSON.stringify({ type: 'listBoards' }));
       };
       socket.onerror = () => {
         fail('socket error');

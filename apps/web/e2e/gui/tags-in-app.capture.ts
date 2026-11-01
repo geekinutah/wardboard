@@ -1,5 +1,6 @@
 import path from 'node:path';
-import { expect, test, type Page, type TestInfo } from '@playwright/test';
+import { expect, type Page, type TestInfo } from '@playwright/test';
+import { test } from './capture-test.ts';
 import { guiArtifactsDir } from '../checkout-server.ts';
 import { createProposal, uniqueProposalName } from '../support/proposals.ts';
 

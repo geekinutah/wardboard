@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { expect, test } from '@playwright/test';
+import { expect } from '@playwright/test';
+import { test } from './capture-test.ts';
 import { guiArtifactsDir } from '../checkout-server.ts';
 
 const SCENARIO = 'board-views';
