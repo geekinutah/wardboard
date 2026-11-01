@@ -38,9 +38,9 @@ The server already sends the list of keys that need a gender (`needsGender: stri
 
 ### 2. Add position gender rule (`apps/web/src/features/group-view/GroupDetail.tsx`)
 - `AddAssignmentRequest` (from `@wardboard/core`, `packages/core/src/ops/positions.ts:94`) already has an optional `genderRule`. `BoardShell.tsx:170` sends the request object as it is, so the sync layer needs no change.
-- The Add position form (`GroupDetail.tsx:~245-370`) gains a `<select aria-label="Gender requirement">` with options `Any` (`any`), `Men only` (`M`) and `Women only` (`F`).
-- The form receives the organization's name (the board group's `name`, already looked up at `GroupDetail.tsx:511`) as a new prop. Until the Editor changes the select, its value follows `classifyCallingGender(organizationName, title.trim())` as they type. `presidency_aligned` shows as `Any`. Once the Editor changes the select, typing no longer resets it.
-- `onAddPosition` is called with `genderRule` set to the selected value (`'any' | 'M' | 'F'`).
+- The Add position form (`GroupDetail.tsx:~245-370`) gains a `<select aria-label="Gender requirement">` with options `Any` (`any`), `Men only` (`M`) and `Women only` (`F`). While the Handbook default for the current title is `presidency_aligned`, the select also offers `Same as presidency` (`presidency_aligned`). This follows SPEC §5 as amended on 2026-10-31.
+- The form receives the organization's name (the board group's `name`, already looked up at `GroupDetail.tsx:511`) as a new prop. Until the Editor changes the select, its value follows `classifyCallingGender(organizationName, title.trim())` as they type, and `presidency_aligned` selects `Same as presidency`. Once the Editor changes the select, typing no longer resets it.
+- `onAddPosition` is called with `genderRule` set to the selected value (`'any' | 'M' | 'F' | 'presidency_aligned'`). The server already accepts all four (`apps/server/src/ws/operations.ts:317-322`).
 
 ### 3. Desktop drag-and-drop and the phone Move/Fill sheets
 - **Desktop (`apps/web/src/features/dnd/resolve.ts:138-145`):** in the `choices.length === 0` branch, if `refusal.error.code === 'gender_mismatch'`, return `{ kind: 'blocked', message: refusal.error.message }`, as the `board_not_editable` case already does. Vacant single and list drops already go through `checked(...)` and get the core refusal.
@@ -88,12 +88,13 @@ New dependencies allowed: none.
 |---|---|---|---|
 | `import review lists Gender under Kept and not Discarded` | `gender-review.test.tsx` | the Kept text includes `gender`; no Discarded chip says `Gender` | `KEPT` not updated |
 | `import review requires choosing Male or Female when a new member has null gender` | `gender-review.test.tsx` | a row in `needsGender` stays unresolved after Adult/Youth alone. After `Male` or `Female` it is resolved and the resolution sent is `{ action: 'new', category, gender }` | the gender isn't required, isn't sent, or is lost when Adult/Youth is chosen after it |
-| `add position form defaults gender requirement from Handbook and sends override` | `GroupDetail.test.tsx` | in Relief Society, typing `Teacher` defaults the select to `Women only`. After changing it to `Any`, the submit sends `genderRule: 'any'` | `genderRule` dropped, or the default not taken from `classifyCallingGender` |
+| `add position form defaults gender requirement from Handbook and sends override` | `GroupDetail.test.tsx` | in Relief Society, typing `Teacher` defaults the select to `Women only`. After changing it to `Any`, the submit sends `genderRule: 'any'`. In Sunday School, typing `Sunday School Second Counselor` and submitting without touching the select sends `genderRule: 'presidency_aligned'` | `genderRule` dropped, or the default not taken from `classifyCallingGender` |
 | `resolveDrop returns the gender_mismatch message on an occupied single position` | `resolve.test.ts` | dropping an `M` member onto an occupied `F` single position returns `{ kind: 'blocked', message }` with core's gender message, not `FILLED_NO_OPTIONS` | `gender_mismatch` swallowed |
 | `phone move and fill models omit gender-incompatible destinations and candidates` | `gender-filter.test.ts` | `buildVacantDestinations` leaves out `F` callings for an `M` member (and the reverse) and keeps `any` callings and members with no gender. `buildFillCandidates` leaves out `M` members for an `F` vacancy | the phone sheets offer placements core would refuse |
 
 ## Edge cases (each needs a test, in the file shown)
 - `gender-review.test.tsx`: a new row whose key is in `needsCategory` but not `needsGender` shows only `Adult` / `Youth`, with no Male/Female group, and resolves without a gender. A row in `needsGender` only (category known) gets a row with only the Male/Female group.
+- `GroupDetail.test.tsx`: `Same as presidency` is not offered for a title whose Handbook rule isn't `presidency_aligned` (for example `Sunday School Teacher` in Sunday School).
 - `gender-filter.test.ts`: when the Sunday School President is `F`, vacant Sunday School Counselor seats (`presidency_aligned`) appear as destinations only for `F` members, and their Fill candidates are only `F` members or members with no gender.
 
 ## Human checks

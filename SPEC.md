@@ -147,7 +147,7 @@ Examples:
 
 **CONFIRMED (2026-10-30):** Some callings are limited by gender per the General Handbook Chart of Callings (30.8.1; see `docs/handbook-calling-gender.md`):
 - Imported callings get their default gender rule (`M`, `F`, `any`, or `presidency_aligned` for the Sunday School presidency and secretary under Handbook 13.2.2.1) from their organization and title.
-- When an Editor adds a custom position, they may choose `Any`, `Men only (M)`, or `Women only (F)` (defaulting to the Handbook rule for that organization and title).
+- When an Editor adds a custom position, they may choose `Any`, `Men only (M)`, or `Women only (F)`, defaulting to the Handbook rule for that organization and title. When that rule is `presidency_aligned` (a Sunday School presidency or secretary title), the default is `Same as presidency`, and the position keeps `presidency_aligned` unless the Editor picks another option.
 - Placing, moving, swapping, or replacing a member with a known gender (`M` or `F`) into a calling whose gender rule does not match is refused (`gender_mismatch`). For `presidency_aligned` positions (Sunday School President, Counselors, and Secretary), all occupied seats in that presidency group after the operation must share the same gender. Phone Move and Fill sheets omit incompatible destinations and candidates.
 
 **OPEN edge case:** A person dragged from the dugout has no source calling for a swap. **PROPOSED:** Offer release-and-replace or cancel in that case. For a list source, swapping moves the displaced occupant into that list. A swap must respect the destination types and must not duplicate an existing list member.
