@@ -72,6 +72,7 @@ test('the member list is required and settles youth and adult', async ({ page },
 
   for (let index = 0; index < ROWS_WITH_MEMBER_LIST; index += 1) {
     await asking.nth(index).getByRole('button', { name: 'Adult', exact: true }).click();
+    await asking.nth(index).getByRole('button', { name: 'Male', exact: true }).click();
   }
   const replace = page.getByRole('button', { name: 'Replace Current' });
   await expect(replace).toBeEnabled();

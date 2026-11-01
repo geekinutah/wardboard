@@ -115,6 +115,7 @@ describe('planImportReview', () => {
         name: 'Lark, June',
         detail: 'Namesakes need a choice. Notes and tags stay with the person you match.',
         needsCategory: true,
+        needsGender: false,
         kind: 'namesake',
         matchOptions: [
           { memberId: 'm-june', label: 'June Lark' },
@@ -342,6 +343,7 @@ describe('planImportReview', () => {
         name: 'Listed, Lena',
         detail: 'Choose adult or youth. Age is not stored.',
         needsCategory: true,
+        needsGender: false,
         kind: 'new',
         matchOptions: [],
       },

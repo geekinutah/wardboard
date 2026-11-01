@@ -1,5 +1,6 @@
 import {
   callingsOf,
+  canPlaceMemberInAssignment,
   dugout,
   preferenceMatches,
   vacancies,
@@ -121,6 +122,10 @@ export function buildVacantDestinations(
     const cgName = callingGroup?.name ?? vacancy.callingGroupId;
     const orgLabel = bgName === cgName ? bgName : `${bgName} \u00B7 ${cgName}`;
 
+    if (!canPlaceMemberInAssignment(board, ward, memberId as MemberId, assignment.id).ok) {
+      continue;
+    }
+
     if (assignment.type === 'single') {
       const matchIds = preferenceMatches(board, ward, vacancy.assignmentId, memberId as MemberId);
       const matchedTagNames = matchIds
@@ -204,6 +209,9 @@ export function buildFillCandidates(
   for (const entry of dugout(board, ward)) {
     const member = ward.members[entry.memberId];
     if (member === undefined || member.removedDate !== null || inList.has(entry.memberId)) {
+      continue;
+    }
+    if (!canPlaceMemberInAssignment(board, ward, entry.memberId, assignment.id).ok) {
       continue;
     }
     const matchedTagNames = preferenceMatches(board, ward, assignment.id, entry.memberId)

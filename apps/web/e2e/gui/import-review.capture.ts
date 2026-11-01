@@ -50,9 +50,9 @@ test('import review rows and next unresolved', async ({ page }, testInfo) => {
   const firstRow = rows.first();
   await firstRow.scrollIntoViewIfNeeded();
   await expect(firstRow.getByText('Needs a choice')).toBeVisible();
-  // Adult and Youth only, at least 44px.
+  // Adult, Youth, Male, and Female, each at least 44px.
   const heights = await firstRow.getByRole('button').evaluateAll((nodes) => nodes.map((n) => n.getBoundingClientRect().height));
-  expect(heights).toHaveLength(2);
+  expect(heights).toHaveLength(4);
   for (const height of heights) expect(height).toBeGreaterThanOrEqual(44);
   await shot('first-import-rows');
 
@@ -60,6 +60,7 @@ test('import review rows and next unresolved', async ({ page }, testInfo) => {
   for (let index = 0; index < count; index += 1) {
     if (index === skipped) continue;
     await rows.nth(index).getByRole('button', { name: 'Adult', exact: true }).click();
+    await rows.nth(index).getByRole('button', { name: 'Male', exact: true }).click();
   }
   const name = (await rows.nth(skipped).locator('.wb-import-person').textContent()) ?? '';
   const next = page.getByRole('button', { name: `Go to next: ${name}` });

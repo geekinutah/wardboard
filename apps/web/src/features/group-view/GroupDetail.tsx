@@ -1,10 +1,12 @@
 import { useId, useState, type ReactElement, type ReactNode, type SubmitEvent } from 'react';
 import {
+  classifyCallingGender,
   groupDetail,
   type AddAssignmentRequest,
   type AddCallingGroupRequest,
   type AssignmentType,
   type Board,
+  type CallingGenderRule,
   type CallingGroupId,
   type DetailAssignment,
   type DetailPosition,
@@ -242,13 +244,20 @@ function helperText(count: number): string {
   return `Adds ${String(count)} vacant position(s) to this proposal only. Current and other proposals are unchanged.`;
 }
 
+function parseGenderRule(value: string): CallingGenderRule {
+  if (value === 'M' || value === 'F' || value === 'any' || value === 'presidency_aligned') return value;
+  return 'any';
+}
+
 function AddPositionForm({
   sectionName,
+  organizationName,
   groupId,
   onAddPosition,
   onClose,
 }: {
   sectionName: string;
+  organizationName: string;
   groupId: CallingGroupId;
   onAddPosition: (request: AddAssignmentRequest) => void;
   onClose: () => void;
@@ -257,8 +266,12 @@ function AddPositionForm({
   const [title, setTitle] = useState('');
   const [type, setType] = useState<AssignmentType>('single');
   const [count, setCount] = useState(DEFAULT_LIST_POSITIONS);
+  const [genderTouched, setGenderTouched] = useState(false);
+  const [genderChoice, setGenderChoice] = useState<CallingGenderRule>('any');
   const [error, setError] = useState('');
   const shownCount = type === 'single' ? 1 : count;
+  const handbook = classifyCallingGender(organizationName, title.trim());
+  const genderRule = genderTouched ? genderChoice : handbook;
 
   function submit(event: SubmitEvent<HTMLFormElement>): void {
     event.preventDefault();
@@ -272,6 +285,7 @@ function AddPositionForm({
       title: trimmed,
       type,
       positionCount: type === 'single' ? 1 : count,
+      genderRule,
     });
     onClose();
   }
@@ -287,6 +301,22 @@ function AddPositionForm({
             setError('');
           }}
         />
+      </label>
+      <label className="wb-group-field">
+        Gender requirement
+        <select
+          aria-label="Gender requirement"
+          value={genderRule}
+          onChange={(event) => {
+            setGenderTouched(true);
+            setGenderChoice(parseGenderRule(event.target.value));
+          }}
+        >
+          <option value="any">Any</option>
+          <option value="M">Men only</option>
+          <option value="F">Women only</option>
+          {handbook === 'presidency_aligned' ? <option value="presidency_aligned">Same as presidency</option> : null}
+        </select>
       </label>
       <fieldset className="wb-group-fieldset">
         <legend>Type</legend>
@@ -370,12 +400,14 @@ function AddPositionForm({
 
 function SectionBlock({
   section,
+  organizationName,
   ward,
   readOnly,
   onAddPosition,
   removed,
 }: {
   section: DetailSection;
+  organizationName: string;
   ward: Ward;
   readOnly: boolean;
   onAddPosition: (request: AddAssignmentRequest) => void;
@@ -412,6 +444,7 @@ function SectionBlock({
       {readOnly || !formOpen ? null : (
         <AddPositionForm
           sectionName={section.name}
+          organizationName={organizationName}
           groupId={section.callingGroupId}
           onAddPosition={onAddPosition}
           onClose={() => {
@@ -533,6 +566,7 @@ export function GroupDetail({
         <SectionBlock
           key={section.callingGroupId}
           section={section}
+          organizationName={organization.name}
           ward={ward}
           readOnly={readOnly}
           onAddPosition={onAddPosition}

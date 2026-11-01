@@ -133,6 +133,7 @@ describe('GroupDetail', () => {
       title: 'Pianist',
       type: 'single',
       positionCount: 1,
+      genderRule: 'any',
     });
     expect(screen.queryByRole('textbox', { name: 'Calling title' })).toBeNull();
   });
@@ -179,6 +180,7 @@ describe('GroupDetail', () => {
       title: 'Advisers',
       type: 'list',
       positionCount: 3,
+      genderRule: 'any',
     });
   });
 
@@ -351,5 +353,56 @@ describe('GroupDetail', () => {
     expect(screen.getByRole('heading', { name: 'Gospel Doctrine', level: 2 })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Class Committee', level: 2 })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Helpers', level: 2 })).toBeInTheDocument();
+  });
+
+  it('add position form defaults gender requirement from Handbook and sends override', async () => {
+    const user = userEvent.setup();
+    const relief = renderGroup('Relief Society Teachers');
+
+    await user.click(screen.getByRole('button', { name: 'Add position to Relief Society Teachers' }));
+    await user.type(screen.getByRole('textbox', { name: 'Calling title' }), 'Teacher');
+    const reliefGender = screen.getByRole('combobox', { name: 'Gender requirement' });
+    expect(reliefGender).toHaveValue('F');
+    expect(within(reliefGender).getByRole('option', { name: 'Women only' })).toBeInTheDocument();
+    await user.selectOptions(reliefGender, 'any');
+    await user.click(screen.getByRole('button', { name: /^Add position$/u }));
+
+    expect(relief.onAddPosition).toHaveBeenCalledWith({
+      groupId: relief.callingGroupId,
+      title: 'Teacher',
+      type: 'single',
+      positionCount: 1,
+      genderRule: 'any',
+    });
+
+    relief.unmount();
+    const sunday = renderGroup('Sunday School Presidency');
+    await user.click(screen.getByRole('button', { name: 'Add position to Sunday School Presidency' }));
+    await user.type(screen.getByRole('textbox', { name: 'Calling title' }), 'Sunday School Second Counselor');
+    const sundayGender = screen.getByRole('combobox', { name: 'Gender requirement' });
+    expect(sundayGender).toHaveValue('presidency_aligned');
+    expect(within(sundayGender).getByRole('option', { name: 'Same as presidency' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /^Add position$/u }));
+
+    expect(sunday.onAddPosition).toHaveBeenCalledWith({
+      groupId: sunday.callingGroupId,
+      title: 'Sunday School Second Counselor',
+      type: 'single',
+      positionCount: 1,
+      genderRule: 'presidency_aligned',
+    });
+  });
+
+  it('does not offer Same as presidency when the Handbook rule is not presidency aligned', async () => {
+    const user = userEvent.setup();
+    renderGroup('Sunday School Presidency');
+    await user.click(screen.getByRole('button', { name: 'Add position to Sunday School Presidency' }));
+    await user.type(screen.getByRole('textbox', { name: 'Calling title' }), 'Sunday School Teacher');
+    const gender = screen.getByRole('combobox', { name: 'Gender requirement' });
+    expect(gender).toHaveValue('any');
+    expect(within(gender).queryByRole('option', { name: 'Same as presidency' })).not.toBeInTheDocument();
+    expect(within(gender).getByRole('option', { name: 'Any' })).toBeInTheDocument();
+    expect(within(gender).getByRole('option', { name: 'Men only' })).toBeInTheDocument();
+    expect(within(gender).getByRole('option', { name: 'Women only' })).toBeInTheDocument();
   });
 });

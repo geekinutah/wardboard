@@ -58,6 +58,7 @@ test('a first import names the unresolved row and jumps to it', async ({ page },
     if (index === skipped) continue;
     const label = index % 3 === 0 ? 'Youth' : 'Adult';
     await rows.nth(index).getByRole('button', { name: label, exact: true }).click();
+    await rows.nth(index).getByRole('button', { name: 'Male', exact: true }).click();
   }
 
   // 3. Replace is off, the next button names the row, and pressing it focuses and shows that row.
@@ -81,6 +82,7 @@ test('a first import names the unresolved row and jumps to it', async ({ page },
 
   // 4. Resolve it, then replace.
   await target.getByRole('button', { name: 'Adult', exact: true }).click();
+  await target.getByRole('button', { name: 'Male', exact: true }).click();
   await expect(page.getByRole('button', { name: /Go to next/ })).toHaveCount(0);
   const replace = page.getByRole('button', { name: 'Replace Current' });
   await expect(replace).toBeEnabled();

@@ -138,7 +138,7 @@ export function resolveDrop(board: Board, ward: Ward, source: DragSource, target
   if (choices.length === 0) {
     // A read-only board refuses every option; say so instead of the generic text.
     const refusal = releaseOccupant(board, dropContext(board, ward), { memberId, from, to });
-    if (!refusal.ok && refusal.error.code === 'board_not_editable') {
+    if (!refusal.ok && (refusal.error.code === 'board_not_editable' || refusal.error.code === 'gender_mismatch')) {
       return { kind: 'blocked', message: refusal.error.message };
     }
     return { kind: 'blocked', message: FILLED_NO_OPTIONS };

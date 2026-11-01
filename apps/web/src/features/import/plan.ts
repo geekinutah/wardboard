@@ -27,6 +27,8 @@ export type ImportPreview = {
   readonly inconsistentReports: boolean;
   readonly returning: readonly { readonly key: string; readonly memberId: string }[];
   readonly needsCategory: readonly string[];
+  /** Missing means no row needs a gender choice. */
+  readonly needsGender?: readonly string[];
   readonly unfamiliar: readonly {
     readonly organization: string;
     readonly group: string;
@@ -39,7 +41,7 @@ export type ImportPreview = {
 
 export type ImportResolution =
   | { readonly action: 'match'; readonly memberId: string; readonly confirmReturn?: true }
-  | { readonly action: 'new'; readonly category?: 'adult' | 'youth' };
+  | { readonly action: 'new'; readonly category?: 'adult' | 'youth'; readonly gender?: 'M' | 'F' };
 
 export type ImportRowKind = 'namesake' | 'resembles' | 'report_conflict' | 'returning' | 'new';
 
@@ -53,6 +55,7 @@ export type ImportReviewRow = {
   readonly name: string;
   readonly detail: string;
   readonly needsCategory: boolean;
+  readonly needsGender: boolean;
   readonly kind: ImportRowKind;
   readonly matchOptions: readonly ImportMatchOption[];
 };
@@ -126,13 +129,17 @@ function candidateOptions(
   return candidates.map((candidate) => ({ memberId: candidate.memberId, label: candidate.name }));
 }
 
-function ambiguousRow(decision: PersonDecision & { readonly kind: 'ambiguous' }): ImportReviewRow {
+function ambiguousRow(
+  decision: PersonDecision & { readonly kind: 'ambiguous' },
+  needsGender: boolean,
+): ImportReviewRow {
   if (decision.reason === 'namesake') {
     return {
       key: decision.key,
       name: decision.name,
       detail: NAMESAKE_DETAIL,
       needsCategory: decision.category === null,
+      needsGender,
       kind: 'namesake',
       matchOptions: candidateOptions(decision.candidates),
     };
@@ -143,6 +150,7 @@ function ambiguousRow(decision: PersonDecision & { readonly kind: 'ambiguous' })
       name: decision.name,
       detail: RESEMBLES_DETAIL,
       needsCategory: decision.category === null,
+      needsGender,
       kind: 'resembles',
       matchOptions: candidateOptions(decision.candidates),
     };
@@ -152,6 +160,7 @@ function ambiguousRow(decision: PersonDecision & { readonly kind: 'ambiguous' })
     name: decision.name,
     detail: CONFLICT_DETAIL,
     needsCategory: true,
+    needsGender,
     kind: 'report_conflict',
     matchOptions: [],
   };
@@ -160,22 +169,24 @@ function ambiguousRow(decision: PersonDecision & { readonly kind: 'ambiguous' })
 // Ambiguous and category-only rows follow decision order. Returning rows come after, unless that key already has a row.
 function decisionRows(preview: ImportPreview): ImportReviewRow[] {
   const needsCategory = new Set(preview.needsCategory);
+  const needsGender = new Set(preview.needsGender ?? []);
   const rows: ImportReviewRow[] = [];
   const seen = new Set<string>();
 
   for (const decision of preview.decisions) {
     if (seen.has(decision.key)) continue;
     if (decision.kind === 'ambiguous') {
-      rows.push(ambiguousRow(decision));
+      rows.push(ambiguousRow(decision, needsGender.has(decision.key)));
       seen.add(decision.key);
       continue;
     }
-    if (decision.kind === 'new' && needsCategory.has(decision.key)) {
+    if (decision.kind === 'new' && (needsCategory.has(decision.key) || needsGender.has(decision.key))) {
       rows.push({
         key: decision.key,
         name: decision.name,
         detail: CATEGORY_DETAIL,
-        needsCategory: true,
+        needsCategory: needsCategory.has(decision.key),
+        needsGender: needsGender.has(decision.key),
         kind: 'new',
         matchOptions: [],
       });
@@ -193,6 +204,7 @@ function decisionRows(preview: ImportPreview): ImportReviewRow[] {
       name: decision.name,
       detail: RETURNING_DETAIL,
       needsCategory: decision.category === null,
+      needsGender: needsGender.has(decision.key),
       kind: 'returning',
       matchOptions: [{ memberId: item.memberId, label: 'Same person returning' }],
     });
@@ -221,19 +233,32 @@ function isCategory(value: string | undefined): value is 'adult' | 'youth' {
   return value === 'adult' || value === 'youth';
 }
 
+function isGender(value: string | undefined): value is 'M' | 'F' {
+  return value === 'M' || value === 'F';
+}
+
 function asNew(row: ImportReviewRow, choice: ImportResolution): ImportResolution | null {
   if (choice.action !== 'new') return null;
+  let gender: 'M' | 'F' | undefined;
+  if (row.needsGender) {
+    if (!isGender(choice.gender)) return null;
+    gender = choice.gender;
+  } else if (choice.gender !== undefined) {
+    return null;
+  }
   if (row.needsCategory) {
     if (!isCategory(choice.category)) return null;
-    return { action: 'new', category: choice.category };
+    return gender === undefined
+      ? { action: 'new', category: choice.category }
+      : { action: 'new', category: choice.category, gender };
   }
   if (choice.category !== undefined) return null;
-  return { action: 'new' };
+  return gender === undefined ? { action: 'new' } : { action: 'new', gender };
 }
 
 function normalize(row: ImportReviewRow, choice: ImportResolution | undefined): ImportResolution | null {
-  // A row with nothing to match and no category to pick is already new.
-  if (row.matchOptions.length === 0 && !row.needsCategory) return { action: 'new' };
+  // A row with nothing to match and no category or gender to pick is already new.
+  if (row.matchOptions.length === 0 && !row.needsCategory && !row.needsGender) return { action: 'new' };
   if (choice === undefined) return null;
   switch (row.kind) {
     case 'namesake':

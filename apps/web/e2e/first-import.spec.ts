@@ -70,6 +70,7 @@ test('with no Current the app opens the import workflow and the first import cre
   for (let index = 0; index < count; index += 1) {
     const row = rows.nth(index);
     await row.getByRole('button', { name: 'Adult', exact: true }).click();
+    await row.getByRole('button', { name: 'Male', exact: true }).click();
   }
   const replace = page.getByRole('button', { name: 'Replace Current' });
   await expect(replace).toBeEnabled();

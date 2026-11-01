@@ -519,6 +519,7 @@ describe('BoardShell', () => {
             title: 'Fictional Chorister',
             type: 'single',
             positionCount: 1,
+            genderRule: 'F',
           },
         },
       },

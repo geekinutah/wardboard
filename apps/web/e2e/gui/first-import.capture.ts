@@ -84,6 +84,7 @@ test('first import on the real server', async ({ page }, testInfo) => {
   for (let index = 0; index < count; index += 1) {
     const row = rows.nth(index);
     await row.getByRole('button', { name: 'Adult', exact: true }).click();
+    await row.getByRole('button', { name: 'Male', exact: true }).click();
   }
   await page.getByRole('button', { name: 'Replace Current' }).click();
   await expect(page.getByRole('heading', { name: 'Set up WardBoard' })).toHaveCount(0);

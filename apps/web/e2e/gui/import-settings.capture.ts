@@ -87,6 +87,7 @@ test('import in settings on the real server', async ({ page }, testInfo) => {
   for (let index = 0; index < count; index += 1) {
     const row = rows.nth(index);
     await row.getByRole('button', { name: 'Adult', exact: true }).click();
+    await row.getByRole('button', { name: 'Male', exact: true }).click();
   }
   await section.getByRole('button', { name: 'Replace Current' }).click();
   const done = section.getByText(/^Replaced Current\. Matched \d+, created \d+, removed \d+\./);

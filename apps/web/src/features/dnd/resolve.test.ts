@@ -247,6 +247,40 @@ describe('resolveDrop', () => {
     ).toEqual({ kind: 'blocked', message: "That calling is filled and can't be swapped or released here." });
   });
 
+  it('resolveDrop returns the gender_mismatch message on an occupied single position', () => {
+    const f = setup();
+    const ivy = memberNamed(f.ward, 'Ivy Notreal');
+    const wardResult = createWard({
+      members: { ...f.ward.members, [ivy.id]: { ...ivy, gender: 'M' } },
+      tags: f.ward.tags,
+    });
+    if (!wardResult.ok) {
+      throw new Error(JSON.stringify(wardResult.errors));
+    }
+    const hanaAssignment = f.board.positions[f.hanaPos]?.assignmentId;
+    const assignment = hanaAssignment === undefined ? undefined : f.board.assignments[hanaAssignment];
+    if (hanaAssignment === undefined || assignment === undefined) {
+      throw new Error('missing Hana assignment');
+    }
+    const boardResult = createBoard(
+      {
+        ...f.board,
+        assignments: {
+          ...f.board.assignments,
+          [hanaAssignment]: { ...assignment, genderRule: 'F' },
+        },
+      },
+      wardResult.value,
+    );
+    if (!boardResult.ok) {
+      throw new Error(JSON.stringify(boardResult.errors));
+    }
+
+    expect(
+      resolveDrop(boardResult.value, wardResult.value, { kind: 'dugout', memberId: ivy.id }, { kind: 'position', positionId: f.hanaPos }),
+    ).toEqual({ kind: 'blocked', message: 'Second Counselor requires a female member' });
+  });
+
   it('a read-only Current board is blocked by core', () => {
     const f = setup();
     const { current } = buildFixtureWard();

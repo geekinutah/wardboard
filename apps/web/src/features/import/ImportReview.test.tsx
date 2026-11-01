@@ -149,7 +149,7 @@ describe('ImportReview', () => {
       expect(screen.getByText(label)).toBeVisible();
     }
     expect(
-      screen.getByText('Names · youth/adult · callings and positions · vacancies · outside-ward callings'),
+      screen.getByText('Names · youth/adult · gender · callings and positions · vacancies · outside-ward callings'),
     ).toBeInTheDocument();
     expect(
       screen.getByText('Proposals keep their own baselines. Notes and tags carry over only for confirmed matches.'),

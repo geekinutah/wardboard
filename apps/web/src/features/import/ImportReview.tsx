@@ -34,7 +34,13 @@ const DISCARDED = [
 
 const NEW_PERSON_DETAIL = 'Not in WardBoard yet. Choose adult or youth.';
 
-const KEPT = 'Names · youth/adult · callings and positions · vacancies · outside-ward callings';
+const KEPT = 'Names · youth/adult · gender · callings and positions · vacancies · outside-ward callings';
+
+function newPersonDetail(needsCategory: boolean, needsGender: boolean): string {
+  if (needsCategory && needsGender) return 'Not in WardBoard yet. Choose adult or youth, and male or female.';
+  if (needsGender) return 'Not in WardBoard yet. Choose male or female.';
+  return NEW_PERSON_DETAIL;
+}
 
 function identityCount(count: number): string {
   return count === 1 ? '1 identity' : `${String(count)} identities`;
@@ -147,6 +153,18 @@ export function ImportReview({
     choose(row.key, { action: 'new' });
   }
 
+  function chooseCategory(row: ImportReviewRow, category: 'adult' | 'youth'): void {
+    const current = choices[row.key];
+    const gender = current?.action === 'new' ? current.gender : undefined;
+    choose(row.key, gender === undefined ? { action: 'new', category } : { action: 'new', category, gender });
+  }
+
+  function chooseGender(row: ImportReviewRow, gender: 'M' | 'F'): void {
+    const current = choices[row.key];
+    const category = current?.action === 'new' ? current.category : undefined;
+    choose(row.key, category === undefined ? { action: 'new', gender } : { action: 'new', category, gender });
+  }
+
   async function runReplace(): Promise<void> {
     if (!ready || pendingRef.current) return;
     pendingRef.current = true;
@@ -211,7 +229,11 @@ export function ImportReview({
             const noMatch = row.matchOptions.length === 0;
             const unresolved = !(row.key in decision.resolutions);
             const showCategory = row.needsCategory && (choice?.action === 'new' || noMatch);
-            const detail = noMatch && row.kind === 'new' && row.needsCategory ? NEW_PERSON_DETAIL : row.detail;
+            const showGender = row.needsGender && (choice?.action === 'new' || noMatch);
+            const detail =
+              noMatch && row.kind === 'new' && (row.needsCategory || row.needsGender)
+                ? newPersonDetail(row.needsCategory, row.needsGender)
+                : row.detail;
             const tagId = `${idBase}-tag-${String(rowIndex)}`;
             return (
               <article
@@ -232,7 +254,7 @@ export function ImportReview({
                       Needs a choice
                     </p>
                   ) : null}
-                  <p className="wb-import-muted">{noMatch && !row.needsCategory ? 'Will be added' : detail}</p>
+                  <p className="wb-import-muted">{noMatch && !row.needsCategory && !row.needsGender ? 'Will be added' : detail}</p>
                 </div>
                 <div className="wb-import-choices">
                   {row.matchOptions.map((option) => (
@@ -260,17 +282,35 @@ export function ImportReview({
                         label="Adult"
                         pressed={choice?.action === 'new' && choice.category === 'adult'}
                         onClick={() => {
-                          choose(row.key, { action: 'new', category: 'adult' });
+                          chooseCategory(row, 'adult');
                         }}
                       />
                       <ChoiceButton
                         label="Youth"
                         pressed={choice?.action === 'new' && choice.category === 'youth'}
                         onClick={() => {
-                          choose(row.key, { action: 'new', category: 'youth' });
+                          chooseCategory(row, 'youth');
                         }}
                       />
                     </>
+                  ) : null}
+                  {showGender ? (
+                    <div role="group" aria-label={`Gender for ${row.name}`}>
+                      <ChoiceButton
+                        label="Male"
+                        pressed={choice?.action === 'new' && choice.gender === 'M'}
+                        onClick={() => {
+                          chooseGender(row, 'M');
+                        }}
+                      />
+                      <ChoiceButton
+                        label="Female"
+                        pressed={choice?.action === 'new' && choice.gender === 'F'}
+                        onClick={() => {
+                          chooseGender(row, 'F');
+                        }}
+                      />
+                    </div>
                   ) : null}
                 </div>
               </article>
