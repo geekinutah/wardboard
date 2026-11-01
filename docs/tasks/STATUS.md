@@ -118,4 +118,4 @@ Candidate and discovered work that has not yet been promoted into a task contrac
 | T-116 | Persist member and calling gender on server import and operations | 6 — Import and photos | done | 2 | none |
 | T-117 | Gender requirement and mismatch controls in web UI | 4 — Desktop board | done | 1 | in `pnpm dev`, try dragging a male member onto a Relief Society seat (blocked), open Level 3 Add position and verify the Gender requirement selector, and on a phone viewport check that Move and Fill sheets list only gender-compatible destinations and candidates |
 | T-101 | Phone profile sheet and add position | 5 — Phone | in progress | 0 | iPhone at `/`: on a Draft, add a position one-handed and upload a fictional JPEG from Profile; desktop shows the note and portrait without reload; on Current, Profile saves a note and Move and Add position are absent |
-| T-099 | Import guide and operator prompt for the shipped collector | 6 — Import and photos | in progress | 0 | none |
+| T-099 | Import guide and operator prompt for the shipped collector | 6 — Import and photos | done | 1 | none |
