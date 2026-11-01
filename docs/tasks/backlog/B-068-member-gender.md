@@ -2,7 +2,7 @@
 
 **Priority:** P1  
 **Area:** data model / import / rules  
-**State:** accepted  
+**State:** resolved  
 **Found:** 2026-10-29, Mike, first-import walkthrough  
 **Promoted to:** T-114, T-115, T-116, T-117
 
