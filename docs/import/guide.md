@@ -1,19 +1,43 @@
 # WardBoard import guide
-Version: manual PDF replace. Directory collector: not shipped.
+Version: four-PDF replace and directory photo collector.
 
 An admin can follow this guide with no model service. Download four official PDFs, preview them, then replace Current.
 
 ## What this version does
 
-An admin previews four PDFs and then replaces Current. Proposals keep their own baselines. Notes and tags carry over only for a confirmed match. The app does not archive the PDFs.
+An admin can follow this guide with no model service. The four-PDF preview and replace stay. Proposals keep their own baselines. Notes and tags carry over only for a confirmed match. The app does not archive the PDFs.
 
-Directory photo collection is not shipped. Portraits are uploaded in the app, one replacement at a time. Do not invent a collector, a scraper, or a command that downloads Church files.
+Directory portraits are optional. The command is the one in **Directory photos**. Direct upload in the app still works. Do not invent a different scraper or a command that downloads Church files.
 
 ## Sign in
 
 Sign in to the Church site in your own browser, including MFA when the site asks for it. WardBoard, this guide, and any chat never ask for a password or an MFA code.
 
 Do not paste credentials into WardBoard, a collector, or a chat.
+
+## Directory photos
+
+Directory portraits are optional. From the repository root:
+
+pnpm --filter @wardboard/collector run collect -- --staging ~/wardboard-staging
+
+pnpm --filter @wardboard/collector run collect -- --staging ~/wardboard-staging --resume
+
+pnpm --filter @wardboard/collector run collect -- --staging ~/wardboard-staging --cleanup
+
+The collector opens a new Chromium window. The human signs in to the Church directory in that window, including MFA. The collector never asks for, types, reads, or stores a password, cookie, or session. Press Enter when the household list is showing. Names never appear in the output.
+
+`--staging` is required and must be a folder outside any Git repository. The collector writes only inside `<dir>/wardboard-collector/`.
+
+`--resume` continues an interrupted collection in that same folder. A collection more than 7 days old cannot be resumed.
+
+`--headless` is for automated tests only. Do not use it for a real run.
+
+Exit codes: `0` success, `1` failed or cancelled, `2` bad arguments or a refused staging folder.
+
+The bundle, in `<dir>/wardboard-collector/bundle/`, is `manifest.json` plus portrait files named by the SHA-256 of their bytes. Household images are not portraits and are not downloaded.
+
+Handoff is the app, not a second CLI. In Settings, open **Directory photos**, select `manifest.json` and every portrait image, review the matches, and confirm namesakes. First photos apply immediately. An existing portrait is replaced one photo at a time. Then run the `--cleanup` command with the same staging folder. `--cleanup` deletes only what the collector created under `wardboard-collector/`.
 
 ## Download the four reports
 
@@ -24,7 +48,7 @@ Use these official clicks. Wait until generation finishes, then download.
 - Reports → Out-of-Unit Callings → Print → Download PDF
 - Reports → Member Directory → Print → Download PDF (the printed report is titled "Member List")
 
-All four are required. The Member List sets adult or youth for people the other reports don't age. Only each name and that category are kept; gender, age, birth date, phone and email are discarded before storage.
+All four are required. The Member List supplies the youth/adult category and gender (M or F) for people the other reports don't age or classify. Members without Callings also supplies gender (M or F). Only the name, the youth/adult category, and gender (M or F) are kept; numeric age, birth date, phone, and email are discarded before storage.
 
 For the organization report, prefer Callings only, with Members and Ministering excluded where the UI allows.
 
@@ -79,13 +103,13 @@ curl --silent --show-error \
 
 ## Read the preview
 
-The JSON returns these counts: `decisions`, `absent`, `duplicates`, `inconsistentReports`, `returning`, `needsCategory`, `unfamiliar`, `keptPositions`, `matchedPositions`.
+The JSON returns these counts: `decisions`, `absent`, `duplicates`, `inconsistentReports`, `returning`, `needsCategory`, `needsGender`, `unfamiliar`, `keptPositions`, `matchedPositions`.
 
 `duplicates` other than `[]` means do not replace (`409` `{"error":"duplicate_report"}` on a second attempt). `inconsistentReports: true` means the four reports disagree and replace is refused (`409` `{"error":"inconsistent_reports"}`). Nothing is written in either case.
 
-Namesakes, resembling names, report conflicts, returning members, and a missing adult/youth category are resolved by the operator, not guessed. Each `decisions` entry has a `key`. A matched entry has `memberId`. `returning` lists `{ "key", "memberId" }` for members who are still removed. `needsCategory` lists keys that still need `adult` or `youth`. `keptPositions` is how many current positions the report does not use. `matchedPositions` is how many report rows land on an existing position.
+Namesakes, resembling names, report conflicts, returning members, and a missing adult/youth category are resolved by the operator, not guessed. Each `decisions` entry has a `key`. A matched entry has `memberId`. `returning` lists `{ "key", "memberId" }` for members who are still removed. `needsCategory` lists keys that still need `adult` or `youth`. `needsGender` lists keys that still need `M` or `F`. `keptPositions` is how many current positions the report does not use. `matchedPositions` is how many report rows land on an existing position.
 
-Discarded and never stored: phone, email, address, birth date, age, gender, record number, class rosters, ministering.
+Discarded and never stored: phone, email, address, birth date, age, record number, class rosters, ministering.
 
 Age is not a field in the preview.
 
@@ -100,6 +124,7 @@ Replace is a JSON `POST` to `/api/import/replace`. The body is the same four PDF
 - A matched person who is not in `returning` needs no entry.
 - A returning member stays removed until `confirmReturn` is true. The `memberId` must be that same id. Choosing `new` instead declines the return.
 - A key in `needsCategory` needs `new` with `adult` or `youth`. Do not guess.
+- A key listed in `needsGender` needs `"gender": "M"` or `"gender": "F"` on its `new` resolution, beside `category` when that key is also in `needsCategory`. Do not guess.
 - A namesake or a resembling name is either `match` of one listed candidate or `new`. Do not guess.
 - A report conflict is `new`, not `match`.
 

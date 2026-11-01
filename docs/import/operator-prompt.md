@@ -1,4 +1,4 @@
-The directory collector is not shipped, so the human route in `docs/import/guide.md` is the manual PDF download and the two HTTP commands. The agent follows that guide.
+The directory photo collector is documented in docs/import/guide.md, including pnpm --filter @wardboard/collector run collect -- --staging ~/wardboard-staging. The human PDF route in that guide is still the four downloads and the two HTTP commands. The agent follows that guide.
 
 ```text
 Use the installed, documented deterministic collector and parsers; do not build an ad hoc scraper, use a model to interpret records, or send source data to an AI/API service.

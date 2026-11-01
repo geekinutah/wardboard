@@ -8,6 +8,13 @@ const read = (path) => readFileSync(join(root, path), 'utf8');
 
 const CREDENTIALS = 'Do not paste credentials into WardBoard, a collector, or a chat.';
 
+const VERSION = 'Version: four-PDF replace and directory photo collector.';
+
+const COLLECT =
+  'pnpm --filter @wardboard/collector run collect -- --staging ~/wardboard-staging';
+
+const COLLECT_COMMANDS = [COLLECT, `${COLLECT} --resume`, `${COLLECT} --cleanup`];
+
 const DOWNLOADS = [
   'Callings → Callings by Organization → Print → Download PDF',
   'Reports → Members without Callings → Print → Download PDF',
@@ -58,13 +65,32 @@ function fencedBlocks(text) {
   return [...text.matchAll(/```[^\n]*\n([\s\S]*?)```/g)].map((match) => match[1]);
 }
 
+/** Trimmed lines, so a command is accepted only as its own line. */
+function wholeLines(text) {
+  return text.split('\n').map((line) => line.trim());
+}
+
 describe('import guide', () => {
-  it('the guide names this version and the missing collector', () => {
+  it('the guide names this version and the shipped collector', () => {
     const lines = read('docs/import/guide.md').split('\n');
     const heading = lines.findIndex((line) => /^#{1,6} /.test(line));
     assert.notEqual(heading, -1, 'missing heading');
     assert.equal(lines[heading], '# WardBoard import guide');
-    assert.equal(lines[heading + 1], 'Version: manual PDF replace. Directory collector: not shipped.');
+    assert.equal(lines[heading + 1], VERSION);
+  });
+
+  it('the guide names the collector commands', () => {
+    const guide = read('docs/import/guide.md');
+    const lines = wholeLines(guide);
+    for (const command of COLLECT_COMMANDS) {
+      assert.ok(lines.includes(command), `missing command line: ${command}`);
+    }
+    assert.ok(guide.includes('manifest.json'), 'missing manifest.json');
+    assert.ok(guide.includes('Directory photos'), 'missing Directory photos');
+    assert.ok(guide.includes('Names never appear'), 'missing Names never appear');
+    for (const code of ['0', '1', '2']) {
+      assert.ok(guide.includes(code), `missing exit code ${code}`);
+    }
   });
 
   it('the guide forbids pasting credentials', () => {
@@ -119,10 +145,29 @@ describe('import guide', () => {
     }
   });
 
+  it('the guide keeps member gender', () => {
+    const guide = read('docs/import/guide.md');
+    assert.ok(guide.includes('gender (M or F)'), 'missing gender (M or F)');
+    assert.ok(guide.includes('needsGender'), 'missing needsGender');
+    assert.ok(guide.includes('"gender": "M"'), 'missing "gender": "M"');
+    assert.ok(guide.includes('"gender": "F"'), 'missing "gender": "F"');
+    const start = guide.indexOf('Discarded');
+    assert.notEqual(start, -1, 'missing discarded list');
+    const line = guide.slice(start, guide.indexOf('\n', start));
+    assert.equal(line.includes('gender'), false, 'discarded line includes gender');
+  });
+
   it('the guide does not invent a collector command', () => {
     const guide = read('docs/import/guide.md');
-    for (const forbidden of ['wardboard-collector', 'TODO', 'TBD', '<command>']) {
+    for (const forbidden of ['TODO', 'TBD', '<command>', 'npx wardboard-collector']) {
       assert.equal(guide.includes(forbidden), false, `guide contains ${forbidden}`);
+    }
+    for (const block of fencedBlocks(guide)) {
+      assert.equal(
+        block.includes('churchofjesuschrist.org'),
+        false,
+        'fenced block contains churchofjesuschrist.org',
+      );
     }
   });
 
@@ -138,12 +183,13 @@ describe('import guide', () => {
     }
   });
 
-  it('the operator prompt points at the manual guide', () => {
+  it('the operator prompt points at the shipped guide', () => {
     const text = read('docs/import/operator-prompt.md');
     const fence = text.indexOf('```');
     assert.ok(fence > 0, 'missing fenced prompt');
     const above = text.slice(0, fence);
     assert.ok(above.includes('docs/import/guide.md'), 'prompt does not point at the guide');
-    assert.ok(above.includes('not shipped'), 'prompt assumes the collector is shipped');
+    assert.ok(above.includes(COLLECT), 'prompt omits the collect command');
+    assert.equal(above.includes('not shipped'), false, 'prompt still says not shipped');
   });
 });
