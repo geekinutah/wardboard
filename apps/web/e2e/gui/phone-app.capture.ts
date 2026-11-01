@@ -47,7 +47,11 @@ test('phone app at the root', async ({ page }, testInfo) => {
   await expectNoHorizontalOverflow(page);
   await shot('proposal');
 
-  await page.getByRole('navigation', { name: 'Board sections' }).getByRole('button', { name: 'Search', exact: true }).click();
+  // The proposal tab reads "Changes · N". Current's tab is exactly "Changes".
+  await page.getByRole('button', { name: /Switch board/ }).click();
+  await page.getByRole('dialog', { name: 'Boards' }).getByRole('button', { name: /^Current/ }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Current' })).toBeVisible();
+  await page.getByRole('navigation', { name: 'Board sections' }).getByRole('button', { name: 'Changes', exact: true }).click();
   const link = page.getByRole('link', { name: 'Use desktop layout' });
   await expect(link).toBeVisible();
   const box = await link.boundingBox();

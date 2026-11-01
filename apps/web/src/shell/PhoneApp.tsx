@@ -1,8 +1,12 @@
 import { useEffect, useRef, useState, type ReactElement } from 'react';
-import { diffBoards, dugout, vacancies } from '@wardboard/core';
+import { diffBoards, dugout, vacancies, type Board, type CallingGroupId } from '@wardboard/core';
 import type { ProposalSummary } from '@wardboard/server';
+import { PhoneDugout } from '../features/phone-dugout/PhoneDugout.tsx';
+import type { PhoneBoardScreen } from '../features/phone-board/PhoneBoard.tsx';
+import { PhoneSearch, type PhoneSearchTarget } from '../features/phone-search/PhoneSearch.tsx';
 import { PhoneShell, type PhoneTab } from '../features/phone-shell/PhoneShell.tsx';
 import { changeCount, headerSummary, type BoardEntry } from '../features/phone-shell/summary.ts';
+import type { CurrentInfo } from '../sync/protocol.ts';
 import { SyncBanner, useBaseline, useMe, useSync } from '../sync/react.tsx';
 import { PhoneBoardEditing } from './PhoneEditing.tsx';
 import { StartProposal } from './StartProposal.tsx';
@@ -14,6 +18,10 @@ const TAB_TITLES: Readonly<Record<Exclude<PhoneTab, 'board'>, string>> = {
   dugout: 'Dugout',
   changes: 'Changes',
 };
+
+type BoardList = { current: CurrentInfo | null; proposals: readonly ProposalSummary[] };
+
+type PendingOrg = { readonly boardId: string; readonly boardGroupId: string };
 
 function byTabOrder(a: ProposalSummary, b: ProposalSummary): number {
   if (a.tabOrder !== b.tabOrder) return a.tabOrder - b.tabOrder;
@@ -33,8 +41,51 @@ function Placeholder({ tab }: { tab: Exclude<PhoneTab, 'board'> }): ReactElement
   );
 }
 
+/** Other boards to read while Search is open, Current first, then proposal tab order. */
+function otherBoardIds(listed: BoardList, subscribedId: string): string[] {
+  const ids: string[] = [];
+  if (listed.current !== null && listed.current.boardId !== subscribedId) ids.push(listed.current.boardId);
+  for (const item of [...listed.proposals].sort(byTabOrder)) {
+    if (item.boardId !== subscribedId && !ids.includes(item.boardId)) ids.push(item.boardId);
+  }
+  return ids;
+}
+
+function boardsForSearch(active: Board, listed: BoardList | null, fetched: ReadonlyMap<string, Board>): Board[] {
+  const rest: Board[] = [];
+  if (listed?.current != null && listed.current.boardId !== active.id) {
+    const current = fetched.get(listed.current.boardId);
+    if (current !== undefined) rest.push(current);
+  }
+  if (listed !== null) {
+    for (const item of [...listed.proposals].sort(byTabOrder)) {
+      if (item.boardId === active.id) continue;
+      const found = fetched.get(item.boardId);
+      if (found !== undefined) rest.push(found);
+    }
+  }
+  return [active, ...rest];
+}
+
+/** Walk calling-group parents to a board group. A missing link or a cycle stays put. */
+function parentBoardGroupId(source: Board, callingGroup: string): string | null {
+  const seen = new Set<string>();
+  let current = callingGroup;
+  for (;;) {
+    if (seen.has(current)) return null;
+    seen.add(current);
+    if (!Object.hasOwn(source.callingGroups, current)) return null;
+    const group = source.callingGroups[current as CallingGroupId];
+    if (group === undefined) return null;
+    if (group.parent.kind === 'boardGroup') {
+      return Object.hasOwn(source.boardGroups, group.parent.id) ? group.parent.id : null;
+    }
+    current = group.parent.id;
+  }
+}
+
 export function PhoneApp(): ReactElement {
-  const { boards, board, ward, proposal, subscribedBoardId, open } = useSync();
+  const { boards, board, ward, proposal, subscribedBoardId, open, send, fetchBoard } = useSync();
   const me = useMe();
   const baseline = useBaseline();
   const currentBoard = useCurrentBoard();
@@ -43,7 +94,12 @@ export function PhoneApp(): ReactElement {
   const [activeTab, setActiveTab] = useState<PhoneTab>('board');
   const [startProposalOpen, setStartProposalOpen] = useState(false);
   const [listResetKey, setListResetKey] = useState(0);
+  const [focusMemberId, setFocusMemberId] = useState<string | null>(null);
+  const [pendingOrg, setPendingOrg] = useState<PendingOrg | null>(null);
+  const [fetchedBoards, setFetchedBoards] = useState<ReadonlyMap<string, Board>>(() => new Map());
   const openedCurrent = useRef(false);
+  const searchVisit = useRef(0);
+  const requestedBoardIds = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     if (openedCurrent.current) return;
@@ -51,6 +107,33 @@ export function PhoneApp(): ReactElement {
     openedCurrent.current = true;
     if (subscribedBoardId === null) open(boards.current.boardId);
   }, [boards, subscribedBoardId, open]);
+
+  // One getBoard per other board during this Search visit. A late reply after
+  // leaving Search must not change the Board tab or open a sheet.
+  useEffect(() => {
+    if (activeTab !== 'search' || board === null || ward === null || boards === null) return;
+    const visit = searchVisit.current;
+    const subscribedId = subscribedBoardId ?? board.id;
+    for (const id of otherBoardIds(boards, subscribedId)) {
+      if (requestedBoardIds.current.has(id)) continue;
+      requestedBoardIds.current.add(id);
+      void fetchBoard(id).then((resolved) => {
+        if (searchVisit.current !== visit || resolved === null) return;
+        setFetchedBoards((current) => {
+          if (current.get(resolved.id) === resolved) return current;
+          const next = new Map(current);
+          next.set(resolved.id, resolved);
+          return next;
+        });
+      });
+    }
+  }, [activeTab, board, ward, boards, subscribedBoardId, fetchBoard]);
+
+  useEffect(() => {
+    if (activeTab === 'search') return;
+    searchVisit.current += 1;
+    requestedBoardIds.current = new Set();
+  }, [activeTab]);
 
   const diff = proposal !== null && board !== null && baseline !== null ? diffBoards(baseline, board) : null;
   const removedCount =
@@ -88,17 +171,130 @@ export function PhoneApp(): ReactElement {
     vacant: board === null ? 0 : vacancies(board).length,
   });
 
+  const editable = proposal !== null && proposal.status === 'draft' && me !== null && baseline !== null;
+  const boardName = proposal?.name ?? 'Current';
+
+  function clearTransient(): void {
+    setFocusMemberId(null);
+    setPendingOrg(null);
+  }
+
+  function knownBoard(id: string): Board | null {
+    if (board !== null && board.id === id) return board;
+    return fetchedBoards.get(id) ?? null;
+  }
+
+  function openPerson(memberId: string): void {
+    if (ward === null || !Object.hasOwn(ward.members, memberId)) return;
+    setFocusMemberId(memberId);
+  }
+
+  function showOrganization(nextBoardId: string, boardGroupId: string): void {
+    const source = knownBoard(nextBoardId);
+    if (source === null || !Object.hasOwn(source.boardGroups, boardGroupId)) return;
+    setFocusMemberId(null);
+    setPendingOrg({ boardId: nextBoardId, boardGroupId });
+    setActiveTab('board');
+    if (subscribedBoardId !== nextBoardId) open(nextBoardId);
+  }
+
+  function selectResult(target: PhoneSearchTarget): void {
+    if (target.kind === 'person') {
+      openPerson(target.memberId);
+      return;
+    }
+    if (target.kind === 'tag') return;
+    if (target.kind === 'calling') {
+      showOrganization(target.boardId, target.boardGroupId);
+      return;
+    }
+    const source = knownBoard(target.boardId);
+    if (source === null) return;
+    if (target.groupKind === 'boardGroup') {
+      showOrganization(target.boardId, target.id);
+      return;
+    }
+    const boardGroupId = parentBoardGroupId(source, target.id);
+    if (boardGroupId === null) return;
+    showOrganization(target.boardId, boardGroupId);
+  }
+
+  function addMemberToDugout(memberId: string): void {
+    if (!editable) return;
+    void send('addToDugout', { memberId });
+  }
+
+  const organizationScreen: PhoneBoardScreen | null =
+    pendingOrg !== null && board !== null && pendingOrg.boardId === board.id
+      ? { kind: 'organization', boardGroupId: pendingOrg.boardGroupId }
+      : null;
+
+  let tabBody: ReactElement;
+  if (activeTab === 'changes') {
+    tabBody = <Placeholder tab="changes" />;
+  } else if (board === null || ward === null) {
+    tabBody = <p className="wb-phone-app-loading">Loading board…</p>;
+  } else if (activeTab === 'board') {
+    tabBody = (
+      <PhoneBoardEditing
+        key={`${subscribedBoardId ?? ''}:${String(listResetKey)}:${organizationScreen?.boardGroupId ?? ''}`}
+        board={board}
+        baseline={baseline}
+        ward={ward}
+        proposal={proposal}
+        me={me}
+        boardName={boardName}
+        {...(organizationScreen === null ? {} : { initialScreen: organizationScreen })}
+      />
+    );
+  } else if (activeTab === 'search') {
+    tabBody = (
+      <PhoneSearch
+        ward={ward}
+        activeBoard={board}
+        allBoards={boardsForSearch(board, boards, fetchedBoards)}
+        editable={editable}
+        onSelectResult={selectResult}
+        onAddToDugout={addMemberToDugout}
+      />
+    );
+  } else {
+    tabBody = <PhoneDugout board={board} ward={ward} editable={editable} onPlaceMember={openPerson} />;
+  }
+
+  const personSheet =
+    focusMemberId !== null && board !== null && ward !== null ? (
+      <PhoneBoardEditing
+        key={`person:${board.id}:${focusMemberId}`}
+        sheetOnly
+        focusMemberId={focusMemberId}
+        onSheetClose={() => {
+          setFocusMemberId(null);
+        }}
+        board={board}
+        baseline={baseline}
+        ward={ward}
+        proposal={proposal}
+        me={me}
+        boardName={boardName}
+      />
+    ) : null;
+
   return (
       <PhoneShell
         boards={entries}
         activeBoardId={subscribedBoardId ?? ''}
         summary={summary}
         activeTab={activeTab}
-        onTabChange={setActiveTab}
+        onTabChange={(tab) => {
+          setActiveTab(tab);
+          clearTransient();
+        }}
         dugoutCount={board !== null && ward !== null ? dugout(board, ward).length : 0}
         onSelectBoard={(id) => {
           open(id);
           setListResetKey((key) => key + 1);
+          clearTransient();
         }}
         onStartProposal={() => {
           setStartProposalOpen(true);
@@ -115,23 +311,8 @@ export function PhoneApp(): ReactElement {
             setStartProposalOpen(false);
           }}
         />
-        {activeTab === 'board' ? (
-          board !== null && ward !== null ? (
-            <PhoneBoardEditing
-              key={`${subscribedBoardId ?? ''}:${String(listResetKey)}`}
-              board={board}
-              baseline={baseline}
-              ward={ward}
-              proposal={proposal}
-              me={me}
-              boardName={proposal?.name ?? 'Current'}
-            />
-          ) : (
-            <p className="wb-phone-app-loading">Loading board…</p>
-          )
-        ) : (
-          <Placeholder tab={activeTab} />
-        )}
+        {tabBody}
+        {personSheet}
       </PhoneShell>
   );
 }

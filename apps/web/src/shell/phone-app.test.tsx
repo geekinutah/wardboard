@@ -1,7 +1,7 @@
 import { boardId as brandBoard, dugout, diffBoards, proposalId, vacancies, type Board } from '@wardboard/core';
 import type { ProposalSummary } from '@wardboard/server';
 import { act, render, screen, within } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import userEvent, { type UserEvent } from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { headerSummary } from '../features/phone-shell/summary.ts';
 import type { HealthClient, HealthResponse } from '../health.ts';
@@ -161,6 +161,66 @@ function openFrames(sockets: readonly FakeSocket[]): Record<string, unknown>[] {
   return typedFrames(sockets, 'subscribe');
 }
 
+function memberIdNamed(name: string): string {
+  const found = Object.values(data.ward.members).find((member) => member.name === name);
+  if (found === undefined) throw new Error(`missing member ${name}`);
+  return found.id;
+}
+
+function boardReads(sockets: readonly FakeSocket[]): { requestId: string; boardId: string }[] {
+  return typedFrames(sockets, 'getBoard').flatMap((frame) => {
+    if (typeof frame.requestId !== 'string' || typeof frame.boardId !== 'string') return [];
+    return [{ requestId: frame.requestId, boardId: frame.boardId }];
+  });
+}
+
+function opBodies(sockets: readonly FakeSocket[]): unknown[] {
+  return typedFrames(sockets, 'op').map((frame) => frame.op);
+}
+
+function sections() {
+  return within(screen.getByRole('navigation', { name: 'Board sections' }));
+}
+
+async function flush(): Promise<void> {
+  await act(async () => {
+    for (let i = 0; i < 8; i += 1) await Promise.resolve();
+  });
+}
+
+type Opened = { harness: { client: SyncClient; sockets: FakeSocket[] }; socket: FakeSocket; user: UserEvent };
+
+/** Signs in and opens the Spring adjustments board at `status`. */
+async function openProposal(status: 'draft' | 'accepted'): Promise<Opened> {
+  const user = userEvent.setup();
+  const harness = mount();
+  renderApp(harness.client);
+  const socket = goLive(harness);
+  showBoards(socket, [summary(data.proposal.id, data.proposal.name, status, 1, data.proposal.board.id)]);
+  showSnapshot(socket, data.current, null);
+  await receiveMe(socket, harness.sockets);
+  await user.click(screen.getByRole('button', { name: /Switch board/ }));
+  await user.click(
+    within(screen.getByRole('dialog', { name: 'Boards' })).getByRole('button', { name: new RegExp(data.proposal.name) }),
+  );
+  showSnapshot(socket, data.proposal.board, { ...springView(), status });
+  await receiveBaseline(socket, harness.sockets);
+  await flush();
+  return { harness, socket, user };
+}
+
+async function searchFor(user: UserEvent, query: string): Promise<void> {
+  await user.click(sections().getByRole('button', { name: /^Search$/ }));
+  await user.type(screen.getByRole('searchbox', { name: 'Search' }), query);
+}
+
+function vacantSecondCounselor(): HTMLElement | undefined {
+  return screen.getAllByRole('button').find((button) => {
+    const text = button.textContent;
+    return text.includes('Second Counselor') && text.includes('Vacant');
+  });
+}
+
 describe('PhoneApp', () => {
   it('phone app opens Current and lists boards', async () => {
     const user = userEvent.setup();
@@ -291,11 +351,218 @@ describe('PhoneApp', () => {
     const socket = goLive(harness);
     showBoards(socket, []);
     showSnapshot(socket, data.current, null);
-    for (const tab of [/^Search$/, /^Dugout · /, /^Changes/]) {
-      await user.click(within(screen.getByRole('navigation', { name: 'Board sections' })).getByRole('button', { name: tab }));
-      expect(screen.getByText("This screen isn't on phones yet.")).toBeInTheDocument();
-      expect(screen.getByRole('link', { name: 'Use desktop layout' })).toHaveAttribute('href', '/?layout=desktop');
+    const nav = within(screen.getByRole('navigation', { name: 'Board sections' }));
+
+    await user.click(nav.getByRole('button', { name: /^Search$/ }));
+    expect(screen.getByRole('searchbox', { name: 'Search' })).toBeInTheDocument();
+    expect(screen.getByText('Type a name, calling, or tag, or choose a filter.')).toBeInTheDocument();
+    expect(screen.queryByText("This screen isn't on phones yet.")).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Use desktop layout' })).not.toBeInTheDocument();
+
+    await user.click(nav.getByRole('button', { name: /^Dugout · / }));
+    expect(
+      screen.getByText('No calling in this proposal, or placed here on purpose. Not a measure of availability.'),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("This screen isn't on phones yet.")).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Use desktop layout' })).not.toBeInTheDocument();
+
+    await user.click(nav.getByRole('button', { name: /^Changes/ }));
+    expect(screen.getByText("This screen isn't on phones yet.")).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Use desktop layout' })).toHaveAttribute('href', '/?layout=desktop');
+  });
+
+  it('search before the snapshot says Loading board', async () => {
+    const user = userEvent.setup();
+    const harness = mount();
+    renderApp(harness.client);
+    const socket = goLive(harness);
+    showBoards(socket, []);
+    await user.click(sections().getByRole('button', { name: /^Search$/ }));
+    expect(screen.getByText('Loading board…')).toBeInTheDocument();
+    expect(screen.queryByText("This screen isn't on phones yet.")).not.toBeInTheDocument();
+    await user.click(sections().getByRole('button', { name: /^Dugout · / }));
+    expect(screen.getByText('Loading board…')).toBeInTheDocument();
+    expect(screen.queryByText("This screen isn't on phones yet.")).not.toBeInTheDocument();
+    showSnapshot(socket, data.current, null);
+    await user.click(sections().getByRole('button', { name: /^Search$/ }));
+    expect(screen.getByRole('searchbox', { name: 'Search' })).toBeInTheDocument();
+    expect(screen.getByText('Type a name, calling, or tag, or choose a filter.')).toBeInTheDocument();
+  });
+
+  it('a person result opens the person sheet over Search', async () => {
+    const { harness, user } = await openProposal('draft');
+    await searchFor(user, 'Bea');
+    await user.click(screen.getByRole('button', { name: /^Bea Placeholder/ }));
+    expect(screen.getByRole('dialog', { name: /^Bea Placeholder/ })).toBeInTheDocument();
+    expect(screen.getByRole('searchbox', { name: 'Search' })).toBeInTheDocument();
+    expect(opBodies(harness.sockets)).toHaveLength(0);
+    await user.click(screen.getByRole('button', { name: 'Close' }));
+    expect(screen.queryByRole('dialog', { name: /^Bea Placeholder/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('searchbox', { name: 'Search' })).toBeInTheDocument();
+  });
+
+  it('Current person sheet is read-only', async () => {
+    const user = userEvent.setup();
+    const harness = mount();
+    renderApp(harness.client);
+    const socket = goLive(harness);
+    showBoards(socket, [springSummary]);
+    showSnapshot(socket, data.current, null);
+    await receiveMe(socket, harness.sockets);
+    await searchFor(user, 'Bea');
+    await user.click(screen.getByRole('button', { name: /^Bea Placeholder/ }));
+    const sheet = screen.getByRole('dialog', { name: /^Bea Placeholder/ });
+    expect(within(sheet).queryByRole('button', { name: /^Move/ })).not.toBeInTheDocument();
+    expect(within(sheet).getByRole('heading', { name: 'Callings in Current' })).toBeInTheDocument();
+  });
+
+  it('+ Dugout sends addToDugout and does not open the sheet', async () => {
+    const { harness, socket, user } = await openProposal('draft');
+    await searchFor(user, 'Bea');
+    const add = screen.getByRole('button', { name: 'Add Bea Placeholder to dugout' });
+    await user.click(add);
+    expect(screen.queryByRole('dialog', { name: /^Bea Placeholder/ })).not.toBeInTheDocument();
+    const memberId = memberIdNamed('Bea Placeholder');
+    expect(opBodies(harness.sockets)).toEqual([{ kind: 'addToDugout', request: { memberId } }]);
+    await user.click(add);
+    expect(opBodies(harness.sockets)).toEqual([
+      { kind: 'addToDugout', request: { memberId } },
+      { kind: 'addToDugout', request: { memberId } },
+    ]);
+
+    await user.click(screen.getByRole('button', { name: /Switch board/ }));
+    await user.click(within(screen.getByRole('dialog', { name: 'Boards' })).getByRole('button', { name: /^Current/ }));
+    showSnapshot(socket, data.current, null);
+    await flush();
+    await searchFor(user, 'Bea');
+    expect(screen.getByRole('button', { name: /^Bea Placeholder/ })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Add Bea Placeholder to dugout' })).not.toBeInTheDocument();
+  });
+
+  it('a calling result opens that organization', async () => {
+    const user = userEvent.setup();
+    const harness = mount();
+    renderApp(harness.client);
+    const socket = goLive(harness);
+    showBoards(socket, []);
+    showSnapshot(socket, data.current, null);
+    await searchFor(user, 'Primary Teacher');
+    await user.click(screen.getByRole('button', { name: /^Primary Teacher(?!s)/ }));
+    expect(screen.getByRole('heading', { level: 1, name: 'Primary' })).toBeInTheDocument();
+    expect(screen.queryByRole('searchbox', { name: 'Search' })).not.toBeInTheDocument();
+  });
+
+  it('a calling group result opens its organization', async () => {
+    const user = userEvent.setup();
+    const harness = mount();
+    renderApp(harness.client);
+    const socket = goLive(harness);
+    showBoards(socket, []);
+    showSnapshot(socket, data.current, null);
+    await searchFor(user, 'Nursery');
+    await user.click(screen.getByRole('button', { name: /^Nursery[\s\S]*Group ·/ }));
+    expect(screen.getByRole('heading', { level: 1, name: 'Primary' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /^Nursery/ })).toBeInTheDocument();
+    expect(screen.queryByText('Organization not found')).not.toBeInTheDocument();
+  });
+
+  it('a tag result stays on Search', async () => {
+    const user = userEvent.setup();
+    const harness = mount();
+    renderApp(harness.client);
+    const socket = goLive(harness);
+    showBoards(socket, []);
+    showSnapshot(socket, data.current, null);
+    await searchFor(user, 'Musical');
+    await user.click(screen.getByRole('button', { name: /Musical[\s\S]*show them/ }));
+    expect(screen.getByRole('searchbox', { name: 'Search' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Tag: Musical/ })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('All scope uses a fetched proposal and a rejected board adds no alert', async () => {
+    const user = userEvent.setup();
+    const harness = mount();
+    renderApp(harness.client);
+    const socket = goLive(harness);
+    const other = summary('pr-other', 'Autumn plan', 'draft', 2, 'pr-other-board');
+    showBoards(socket, [springSummary, other]);
+    showSnapshot(socket, data.current, null);
+    await user.click(sections().getByRole('button', { name: /^Search$/ }));
+    await flush();
+
+    const reads = boardReads(harness.sockets);
+    expect(reads.map((frame) => frame.boardId).sort()).toEqual([data.proposal.board.id, 'pr-other-board'].sort());
+    expect(reads.some((frame) => frame.boardId === data.current.id)).toBe(false);
+    const springRead = reads.find((frame) => frame.boardId === data.proposal.board.id);
+    const otherRead = reads.find((frame) => frame.boardId === 'pr-other-board');
+    if (springRead === undefined || otherRead === undefined) throw new Error('missing getBoard');
+
+    await user.click(screen.getByRole('button', { name: 'All' }));
+    await user.type(screen.getByRole('searchbox', { name: 'Search' }), 'Second Counselor');
+    expect(vacantSecondCounselor()).toBeUndefined();
+
+    const beforeReply = boardReads(harness.sockets).length;
+    await act(async () => {
+      socket.receive({ type: 'board', requestId: springRead.requestId, board: data.proposal.board });
+      socket.receive({
+        type: 'rejected',
+        requestId: otherRead.requestId,
+        code: 'not_found',
+        message: 'board missing does not exist',
+      });
+      for (let i = 0; i < 8; i += 1) await Promise.resolve();
+    });
+    expect(boardReads(harness.sockets)).toHaveLength(beforeReply);
+    for (const alert of screen.queryAllByRole('alert')) {
+      expect(alert).not.toHaveTextContent('board missing does not exist');
     }
+    const vacant = vacantSecondCounselor();
+    if (vacant === undefined) throw new Error('missing vacant second counselor');
+    await user.click(vacant);
+    expect(openFrames(harness.sockets).at(-1)).toMatchObject({ boardId: data.proposal.board.id });
+    showSnapshot(socket, data.proposal.board, springView());
+    await flush();
+    expect(screen.getByRole('heading', { level: 1, name: 'Primary' })).toBeInTheDocument();
+    expect(screen.queryByRole('searchbox', { name: 'Search' })).not.toBeInTheDocument();
+    expect(boardReads(harness.sockets).filter((frame) => frame.boardId === data.proposal.board.id)).toHaveLength(1);
+  });
+
+  it('Place opens the person sheet and sends nothing', async () => {
+    const { harness, user } = await openProposal('draft');
+    await user.click(sections().getByRole('button', { name: /^Dugout · / }));
+    await user.click(screen.getByRole('button', { name: 'Place Jay Storybook' }));
+    expect(screen.getByRole('button', { name: 'Assign calling…' })).toBeInTheDocument();
+    expect(opBodies(harness.sockets)).toHaveLength(0);
+    await user.click(screen.getByRole('button', { name: 'Close' }));
+    expect(screen.getByRole('button', { name: 'Place Jay Storybook' })).toBeInTheDocument();
+  });
+
+  it('switching tabs closes the sheet', async () => {
+    const user = userEvent.setup();
+    const harness = mount();
+    renderApp(harness.client);
+    const socket = goLive(harness);
+    showBoards(socket, []);
+    showSnapshot(socket, data.current, null);
+    await searchFor(user, 'Bea');
+    await user.click(screen.getByRole('button', { name: /^Bea Placeholder/ }));
+    expect(screen.getByRole('dialog', { name: /^Bea Placeholder/ })).toBeInTheDocument();
+    await user.click(sections().getByRole('button', { name: /^Board$/ }));
+    expect(screen.queryByRole('dialog', { name: /^Bea Placeholder/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Primary,/ })).toBeInTheDocument();
+  });
+
+  it('an accepted proposal has no Place or Add to dugout', async () => {
+    const { user } = await openProposal('accepted');
+    await searchFor(user, 'Bea');
+    expect(screen.queryByRole('button', { name: 'Add Bea Placeholder to dugout' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /^Bea Placeholder/ }));
+    const sheet = screen.getByRole('dialog', { name: /^Bea Placeholder/ });
+    expect(within(sheet).queryByRole('button', { name: /^Move/ })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Close' }));
+    await user.click(sections().getByRole('button', { name: /^Dugout · / }));
+    expect(screen.queryByRole('button', { name: /^Place / })).not.toBeInTheDocument();
   });
 
   it('app chooses PhoneApp or BoardShell', () => {

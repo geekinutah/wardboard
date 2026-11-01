@@ -18,7 +18,7 @@ import {
 import type { ProposalSummary } from '@wardboard/server';
 import { act, render, screen, within } from '@testing-library/react';
 import userEvent, { type UserEvent } from '@testing-library/user-event';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { buildPreviewData } from '../preview/data.ts';
 import { SyncClient, type SyncDeps, type WebSocketLike } from '../sync/client.ts';
 import type { CurrentInfo, ProposalView } from '../sync/protocol.ts';
@@ -882,5 +882,60 @@ describe('phone board editing', () => {
     await user.click(screen.getByRole('button', { name: /Switch board/ }));
     await user.click(within(screen.getByRole('dialog', { name: 'Boards' })).getByRole('button', { name: /^Current/ }));
     expect(screen.queryByRole('dialog', { name: 'Add a position to Primary Teachers' })).not.toBeInTheDocument();
+  });
+
+  it('sheetOnly opens the person sheet and hides the organization list', async () => {
+    const user = userEvent.setup();
+    const onSheetClose = vi.fn();
+    const harness = mount();
+    render(
+      <SyncProvider client={harness.client}>
+        <PhoneBoardEditing
+          board={draft}
+          baseline={data.proposal.baseline}
+          ward={ward}
+          proposal={view('draft')}
+          me={null}
+          boardName={data.proposal.name}
+          sheetOnly
+          focusMemberId={BEA}
+          onSheetClose={onSheetClose}
+        />
+      </SyncProvider>,
+    );
+    expect(screen.getByRole('dialog', { name: /^Bea Placeholder/ })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Primary,/ })).not.toBeInTheDocument();
+    expect(onSheetClose).not.toHaveBeenCalled();
+    await user.click(screen.getByRole('button', { name: 'Close' }));
+    expect(onSheetClose).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole('dialog', { name: /^Bea Placeholder/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Primary,/ })).not.toBeInTheDocument();
+  });
+
+  it('initialScreen opens the organization without a list click', () => {
+    const primary = Object.values(draft.boardGroups).find((group) => group.name === 'Primary');
+    if (primary === undefined) throw new Error('missing Primary');
+    const props = {
+      board: draft,
+      baseline: data.proposal.baseline,
+      ward,
+      proposal: view('draft'),
+      me: null,
+      boardName: data.proposal.name,
+    };
+    const opened = render(
+      <SyncProvider client={mount().client}>
+        <PhoneBoardEditing {...props} initialScreen={{ kind: 'organization', boardGroupId: primary.id }} />
+      </SyncProvider>,
+    );
+    expect(screen.getByRole('heading', { level: 1, name: 'Primary' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Primary,/ })).not.toBeInTheDocument();
+    opened.unmount();
+    render(
+      <SyncProvider client={mount().client}>
+        <PhoneBoardEditing {...props} />
+      </SyncProvider>,
+    );
+    expect(screen.getByRole('button', { name: /^Primary,/ })).toBeInTheDocument();
   });
 });

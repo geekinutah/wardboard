@@ -20,7 +20,7 @@ import { destinationLabel, memberName, positionLabel } from '../features/dnd/lab
 import { dropContext, preflight, runDropOp, type Preflight } from '../features/dnd/resolve.ts';
 import type { DropOp } from '../features/dnd/types.ts';
 import { PhoneAddPositionSheet } from '../features/phone-board/PhoneAddPositionSheet.tsx';
-import { PhoneBoard } from '../features/phone-board/PhoneBoard.tsx';
+import { PhoneBoard, type PhoneBoardScreen } from '../features/phone-board/PhoneBoard.tsx';
 import {
   buildFillCandidates,
   buildPersonSheetModel,
@@ -124,6 +124,14 @@ export interface PhoneBoardEditingProps {
   readonly me: Me | null;
   /** 'Current' or the proposal name. */
   readonly boardName: string;
+  /** When `sheetOnly`, open this member's person sheet instead of the organization list. */
+  readonly focusMemberId?: string;
+  /** Render the person sheet without the organization list. The host unmounts when it closes. */
+  readonly sheetOnly?: boolean;
+  /** Opens the organization screen on first paint. Omitted stays on the list. */
+  readonly initialScreen?: PhoneBoardScreen;
+  /** Called once when the person sheet closes. Not called for Profile alone, and not on the first render. */
+  readonly onSheetClose?: () => void;
 }
 
 /**
@@ -131,12 +139,25 @@ export interface PhoneBoardEditingProps {
  * sheets, tap a vacancy to fill it from the dugout. Every change is one server
  * operation, confirmed the same way desktop drag and drop confirms it.
  */
-export function PhoneBoardEditing({ board, baseline, ward, proposal, me, boardName }: PhoneBoardEditingProps): ReactElement {
+export function PhoneBoardEditing({
+  board,
+  baseline,
+  ward,
+  proposal,
+  me,
+  boardName,
+  focusMemberId,
+  sheetOnly = false,
+  initialScreen,
+  onSheetClose,
+}: PhoneBoardEditingProps): ReactElement {
   const { send } = useSync();
   const client = useSyncClient();
   const editable = proposal !== null && proposal.status === 'draft' && me !== null && baseline !== null;
 
-  const [sheet, setSheet] = useState<Sheet>(NONE);
+  const [sheet, setSheet] = useState<Sheet>(() =>
+    sheetOnly && focusMemberId !== undefined ? { kind: 'person', memberId: focusMemberId } : NONE,
+  );
   const [profileMemberId, setProfileMemberId] = useState<string | null>(null);
   const profileOpenRef = useRef(false);
   profileOpenRef.current = profileMemberId !== null;
@@ -150,6 +171,17 @@ export function PhoneBoardEditing({ board, baseline, ward, proposal, me, boardNa
   const boardRef = useRef(board);
   const waitersRef = useRef<BoardWaiter[]>([]);
   const mountedRef = useRef(true);
+  const onSheetCloseRef = useRef(onSheetClose);
+  onSheetCloseRef.current = onSheetClose;
+  const sheetOnlyRef = useRef(sheetOnly);
+  sheetOnlyRef.current = sheetOnly;
+  const didAnnounceCloseRef = useRef(false);
+  const announceSheetCloseRef = useRef<() => void>(() => undefined);
+  announceSheetCloseRef.current = () => {
+    if (!sheetOnlyRef.current || didAnnounceCloseRef.current) return;
+    didAnnounceCloseRef.current = true;
+    onSheetCloseRef.current?.();
+  };
 
   useLayoutEffect(() => {
     boardRef.current = board;
@@ -201,6 +233,13 @@ export function PhoneBoardEditing({ board, baseline, ward, proposal, me, boardNa
       setProfileMemberId(null);
     }
   }, [staleSheet, editable, confirm, sending, sheet, profileMemberId]);
+
+  // A sheet-only host has no list to fall back to. A missing member closes it
+  // after paint; a real member waits for Close, Escape, or the scrim.
+  useEffect(() => {
+    if (!sheetOnly || sending) return;
+    if (sheet.kind === 'person' && personModel === null) announceSheetCloseRef.current();
+  }, [sheetOnly, sending, sheet, personModel]);
 
   /** Resolves with the synced board once it reaches `version`, or null if another board opens. */
   function committedBoard(boardId: BoardId, version: number): Promise<Board | null> {
@@ -254,7 +293,10 @@ export function PhoneBoardEditing({ board, baseline, ward, proposal, me, boardNa
       .then((ok) => {
         if (!ok || !mountedRef.current) return;
         setStatus(done);
-        if (!keepOpen) setSheet(NONE);
+        if (!keepOpen) {
+          setSheet(NONE);
+          announceSheetCloseRef.current();
+        }
       })
       .finally(() => {
         sendingRef.current = false;
@@ -320,6 +362,7 @@ export function PhoneBoardEditing({ board, baseline, ward, proposal, me, boardNa
       return;
     }
     setSheet(NONE);
+    announceSheetCloseRef.current();
   }, []);
 
   const closeProfile = useCallback(() => {
@@ -545,7 +588,7 @@ export function PhoneBoardEditing({ board, baseline, ward, proposal, me, boardNa
     ) : null;
 
   return (
-    <div className="wb-phone-editing">
+    <div className={sheetOnly ? 'wb-phone-editing wb-phone-editing-sheet-only' : 'wb-phone-editing'}>
       {status === null ? null : (
         <p className="wb-phone-editing-status" role="status">
           {status}
@@ -565,19 +608,22 @@ export function PhoneBoardEditing({ board, baseline, ward, proposal, me, boardNa
           </button>
         </div>
       )}
-      <PhoneBoard
-        board={board}
-        baseline={baseline}
-        ward={ward}
-        editable={editable}
-        onOpenPerson={(memberId) => {
-          openSheet({ kind: 'person', memberId });
-        }}
-        onOpenVacancy={(positionId) => {
-          if (editable) openSheet({ kind: 'fill', positionId });
-        }}
-        {...(editable ? { onAddPosition: (id: string) => { openAddPosition(id); } } : {})}
-      />
+      {sheetOnly ? null : (
+        <PhoneBoard
+          board={board}
+          baseline={baseline}
+          ward={ward}
+          editable={editable}
+          onOpenPerson={(memberId) => {
+            openSheet({ kind: 'person', memberId });
+          }}
+          onOpenVacancy={(positionId) => {
+            if (editable) openSheet({ kind: 'fill', positionId });
+          }}
+          {...(editable ? { onAddPosition: (id: string) => { openAddPosition(id); } } : {})}
+          {...(initialScreen === undefined ? {} : { initialScreen })}
+        />
+      )}
       {overlay === null && profileNode === null ? null : (
         <fieldset className="wb-phone-editing-sheet" disabled={sending} aria-busy={sending}>
           {overlay}

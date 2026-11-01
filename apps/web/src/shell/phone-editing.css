@@ -1,5 +1,10 @@
 @import '../design/tokens.css';
 
+/* Search and Dugout keep their own scroll. The sheet is fixed, so the host adds no box. */
+.wb-phone-editing-sheet-only {
+  display: contents;
+}
+
 /* The sheet wrapper only disables its controls while an operation is in flight. */
 .wb-phone-editing-sheet {
   display: contents;
