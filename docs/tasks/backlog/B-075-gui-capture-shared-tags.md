@@ -2,7 +2,7 @@
 
 **Priority:** P3
 **Area:** web gui capture
-**State:** accepted
+**State:** resolved
 **Found:** 2026-10-31, T-095 verification
 **Promoted to:** T-118
 

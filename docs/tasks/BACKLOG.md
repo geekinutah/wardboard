@@ -104,6 +104,7 @@ observation / review finding
 | B-072 | P2 | web import review | resolved | The import review's discarded-fields list doesn't mention gender |
 | B-073 | P2 | collector docs | candidate | Collector README still says bundle import is not available |
 | B-074 | P3 | web e2e | candidate | Start-proposal e2e matches the Current radio as a substring |
-| B-075 | P3 | web gui capture | accepted | Shared gui:capture leaves tags from earlier scenarios on later phone shots |
+| B-075 | P3 | web gui capture | resolved | Shared gui:capture leaves tags from earlier scenarios on later phone shots |
 | B-076 | P3 | web phone changes | candidate | A late phone Changes detail can leave the open proposal on "net only" |
 | B-077 | P3 | web phone shell | candidate | The Current read-only bar stays above every phone tab |
+| B-078 | P3 | web e2e | candidate | The accepted-mode e2e waits for someone else to broadcast boards |
