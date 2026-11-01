@@ -103,3 +103,4 @@ observation / review finding
 | B-071 | P2 | import | declined | A report-conflict seat stays vacant even after the conflict is resolved |
 | B-072 | P2 | web import review | resolved | The import review's discarded-fields list doesn't mention gender |
 | B-073 | P2 | collector docs | candidate | Collector README still says bundle import is not available |
+| B-074 | P3 | web e2e | candidate | Start-proposal e2e matches the Current radio as a substring |
