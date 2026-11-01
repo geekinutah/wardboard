@@ -1,44 +1,45 @@
 import { useEffect, useRef, useState, type ReactElement } from 'react';
-import { diffBoards, dugout, vacancies, type Board, type CallingGroupId } from '@wardboard/core';
+import { diffBoards, dugout, vacancies, type Board, type CallingGroupId, type Proposal } from '@wardboard/core';
 import type { ProposalSummary } from '@wardboard/server';
+import { buildPhoneChangesModel } from '../features/phone-changes/model.ts';
+import { PhoneChanges } from '../features/phone-changes/PhoneChanges.tsx';
 import { PhoneDugout } from '../features/phone-dugout/PhoneDugout.tsx';
 import type { PhoneBoardScreen } from '../features/phone-board/PhoneBoard.tsx';
 import { PhoneSearch, type PhoneSearchTarget } from '../features/phone-search/PhoneSearch.tsx';
 import { PhoneShell, type PhoneTab } from '../features/phone-shell/PhoneShell.tsx';
 import { changeCount, headerSummary, type BoardEntry } from '../features/phone-shell/summary.ts';
-import type { CurrentInfo } from '../sync/protocol.ts';
-import { SyncBanner, useBaseline, useMe, useSync } from '../sync/react.tsx';
+import type { CurrentInfo, ProposalView } from '../sync/protocol.ts';
+import { SyncBanner, useBaseline, useMe, useSync, useSyncClient } from '../sync/react.tsx';
 import { PhoneBoardEditing } from './PhoneEditing.tsx';
 import { StartProposal } from './StartProposal.tsx';
 import { useCurrentBoard, useRemovedState } from './board-levels.tsx';
 import './phone-app.css';
 
-const TAB_TITLES: Readonly<Record<Exclude<PhoneTab, 'board'>, string>> = {
-  search: 'Search',
-  dugout: 'Dugout',
-  changes: 'Changes',
-};
-
 type BoardList = { current: CurrentInfo | null; proposals: readonly ProposalSummary[] };
 
 type PendingOrg = { readonly boardId: string; readonly boardGroupId: string };
+
+type StatusAlert = { readonly proposalId: string; readonly message: string };
 
 function byTabOrder(a: ProposalSummary, b: ProposalSummary): number {
   if (a.tabOrder !== b.tabOrder) return a.tabOrder - b.tabOrder;
   return a.id.localeCompare(b.id, 'en');
 }
 
-function Placeholder({ tab }: { tab: Exclude<PhoneTab, 'board'> }): ReactElement {
-  const headingId = `wb-phone-app-${tab}-heading`;
-  return (
-    <section className="wb-phone-app-placeholder" aria-labelledby={headingId}>
-      <h2 id={headingId}>{TAB_TITLES[tab]}</h2>
-      <p>This screen isn&apos;t on phones yet.</p>
-      <a className="wb-phone-app-placeholder-link" href="/?layout=desktop">
-        Use desktop layout
-      </a>
-    </section>
-  );
+/** The core proposal `buildPhoneChangesModel` needs. `createdAt` stays empty until `getProposal` answers. */
+function changesProposal(view: ProposalView, baseline: Board, board: Board, createdAt: string): Proposal {
+  return {
+    id: view.id,
+    name: view.name,
+    rationale: view.rationale,
+    status: view.status,
+    accepted: null,
+    baseline,
+    board,
+    tabOrder: 0,
+    createdAt,
+    updatedAt: '',
+  };
 }
 
 /** Other boards to read while Search is open, Current first, then proposal tab order. */
@@ -85,6 +86,7 @@ function parentBoardGroupId(source: Board, callingGroup: string): string | null 
 }
 
 export function PhoneApp(): ReactElement {
+  const client = useSyncClient();
   const { boards, board, ward, proposal, subscribedBoardId, open, send, fetchBoard } = useSync();
   const me = useMe();
   const baseline = useBaseline();
@@ -97,9 +99,16 @@ export function PhoneApp(): ReactElement {
   const [focusMemberId, setFocusMemberId] = useState<string | null>(null);
   const [pendingOrg, setPendingOrg] = useState<PendingOrg | null>(null);
   const [fetchedBoards, setFetchedBoards] = useState<ReadonlyMap<string, Board>>(() => new Map());
+  const [changeDetail, setChangeDetail] = useState<{ readonly proposalId: string; readonly createdAt: string } | null>(
+    null,
+  );
+  const [statusAlert, setStatusAlert] = useState<StatusAlert | null>(null);
   const openedCurrent = useRef(false);
   const searchVisit = useRef(0);
   const requestedBoardIds = useRef<Set<string>>(new Set());
+  const changesVisit = useRef(0);
+  const requestedDetailIds = useRef<Set<string>>(new Set());
+  const statusBusy = useRef(false);
 
   useEffect(() => {
     if (openedCurrent.current) return;
@@ -133,6 +142,27 @@ export function PhoneApp(): ReactElement {
     if (activeTab === 'search') return;
     searchVisit.current += 1;
     requestedBoardIds.current = new Set();
+  }, [activeTab]);
+
+  // One getProposal per open proposal id during this Changes visit. A late reply
+  // after leaving Changes, or a detail for another id, must not change the subtitle.
+  useEffect(() => {
+    if (activeTab !== 'changes' || proposal === null) return;
+    const proposalId = proposal.id;
+    if (requestedDetailIds.current.has(proposalId)) return;
+    requestedDetailIds.current.add(proposalId);
+    const visit = changesVisit.current;
+    void client.getProposal(proposalId).then((result) => {
+      if (changesVisit.current !== visit || !result.ok || result.proposal.id !== proposalId) return;
+      setChangeDetail({ proposalId, createdAt: result.proposal.createdAt });
+    });
+  }, [activeTab, proposal, client]);
+
+  useEffect(() => {
+    if (activeTab === 'changes') return;
+    changesVisit.current += 1;
+    requestedDetailIds.current = new Set();
+    setChangeDetail(null);
   }, [activeTab]);
 
   const diff = proposal !== null && board !== null && baseline !== null ? diffBoards(baseline, board) : null;
@@ -177,6 +207,20 @@ export function PhoneApp(): ReactElement {
   function clearTransient(): void {
     setFocusMemberId(null);
     setPendingOrg(null);
+  }
+
+  function changeStatus(status: 'accepted' | 'draft'): void {
+    if (me === null || proposal === null || statusBusy.current) return;
+    const proposalId = proposal.id;
+    statusBusy.current = true;
+    void client.setProposalStatus(proposalId, status).then((result) => {
+      statusBusy.current = false;
+      if (!result.ok && result.message !== '') {
+        setStatusAlert({ proposalId, message: result.message });
+        return;
+      }
+      setStatusAlert(null);
+    });
   }
 
   function knownBoard(id: string): Board | null {
@@ -229,11 +273,36 @@ export function PhoneApp(): ReactElement {
       ? { kind: 'organization', boardGroupId: pendingOrg.boardGroupId }
       : null;
 
+  const changesAlert =
+    statusAlert !== null && proposal !== null && statusAlert.proposalId === proposal.id ? statusAlert.message : null;
+
   let tabBody: ReactElement;
-  if (activeTab === 'changes') {
-    tabBody = <Placeholder tab="changes" />;
-  } else if (board === null || ward === null) {
+  if (board === null || ward === null) {
     tabBody = <p className="wb-phone-app-loading">Loading board…</p>;
+  } else if (activeTab === 'changes' && proposal !== null && (baseline === null || currentBoard === null)) {
+    tabBody = <p className="wb-phone-app-loading">Loading board…</p>;
+  } else if (activeTab === 'changes' && proposal !== null && baseline !== null && currentBoard !== null) {
+    const createdAt = changeDetail !== null && changeDetail.proposalId === proposal.id ? changeDetail.createdAt : '';
+    const reopen = me !== null && proposal.status === 'accepted' ? () => { changeStatus('draft'); } : undefined;
+    tabBody = (
+      <>
+        {changesAlert !== null ? <p role="alert">{changesAlert}</p> : null}
+        <PhoneChanges
+          model={buildPhoneChangesModel(changesProposal(proposal, baseline, board, createdAt), currentBoard, ward)}
+          onAccept={() => {
+            changeStatus('accepted');
+          }}
+          {...(reopen === undefined ? {} : { onReopen: reopen })}
+        />
+      </>
+    );
+  } else if (activeTab === 'changes') {
+    tabBody = (
+      <PhoneChanges
+        model={null}
+        onAccept={() => undefined}
+      />
+    );
   } else if (activeTab === 'board') {
     tabBody = (
       <PhoneBoardEditing

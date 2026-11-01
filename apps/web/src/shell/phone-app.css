@@ -5,6 +5,25 @@
   font-family: var(--wb-font-sans, system-ui, sans-serif);
 }
 
+/* The bottom tabs are fixed. Hold Changes to the viewport so its footer stays in the main's content box, above that bar. */
+.wb-phone-shell:has(.wb-phone-changes) {
+  height: 100vh;
+  max-height: 100vh;
+}
+
+.wb-phone-shell-main:has(.wb-phone-changes) {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.wb-phone-shell-main > .wb-phone-changes {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: auto;
+}
+
 .wb-phone-app-placeholder {
   padding: 24px 16px;
   display: flex;

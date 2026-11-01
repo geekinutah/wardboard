@@ -1,6 +1,6 @@
 import { boardId as brandBoard, dugout, diffBoards, proposalId, vacancies, type Board } from '@wardboard/core';
 import type { ProposalSummary } from '@wardboard/server';
-import { act, render, screen, within } from '@testing-library/react';
+import { act, cleanup, render, screen, within } from '@testing-library/react';
 import userEvent, { type UserEvent } from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { headerSummary } from '../features/phone-shell/summary.ts';
@@ -146,6 +146,50 @@ async function receiveBaseline(socket: FakeSocket, sockets: readonly FakeSocket[
   });
 }
 
+async function receiveBoard(
+  socket: FakeSocket,
+  sockets: readonly FakeSocket[],
+  boardId: string,
+  board: Board,
+): Promise<void> {
+  const frame = boardReads(sockets).find((item) => item.boardId === boardId);
+  if (frame === undefined) throw new Error(`missing getBoard ${boardId}`);
+  await act(async () => {
+    socket.receive({ type: 'board', requestId: frame.requestId, board });
+    await Promise.resolve();
+  });
+}
+
+const DETAIL_CREATED_AT = '2026-01-04T00:00:00.000Z';
+
+function detailProposal(createdAt = DETAIL_CREATED_AT) {
+  return {
+    id: data.proposal.id,
+    name: data.proposal.name,
+    status: 'draft' as const,
+    rationale: data.proposal.rationale,
+    baselineBoardId: data.proposal.baseline.id,
+    boardId: data.proposal.board.id,
+    createdAt,
+    updatedAt: createdAt,
+    accepted: null,
+  };
+}
+
+async function replyTo(
+  socket: FakeSocket,
+  sockets: readonly FakeSocket[],
+  type: string,
+  body: Record<string, unknown>,
+): Promise<void> {
+  const frame = typedFrames(sockets, type).at(-1);
+  if (frame === undefined || typeof frame.requestId !== 'string') throw new Error(`missing ${type}`);
+  await act(async () => {
+    socket.receive({ ...body, requestId: frame.requestId });
+    await Promise.resolve();
+  });
+}
+
 async function receiveMe(socket: FakeSocket, sockets: readonly FakeSocket[]): Promise<void> {
   await act(async () => {
     socket.receive({
@@ -190,21 +234,27 @@ async function flush(): Promise<void> {
 
 type Opened = { harness: { client: SyncClient; sockets: FakeSocket[] }; socket: FakeSocket; user: UserEvent };
 
-/** Signs in and opens the Spring adjustments board at `status`. */
-async function openProposal(status: 'draft' | 'accepted'): Promise<Opened> {
+/** Opens the Spring adjustments board at `status`. Signs in and loads Current unless told not to. */
+async function openProposal(
+  status: 'draft' | 'accepted',
+  options: { readonly signIn?: boolean; readonly answerCurrent?: boolean } = {},
+): Promise<Opened> {
+  const signIn = options.signIn ?? true;
+  const answerCurrent = options.answerCurrent ?? true;
   const user = userEvent.setup();
   const harness = mount();
   renderApp(harness.client);
   const socket = goLive(harness);
   showBoards(socket, [summary(data.proposal.id, data.proposal.name, status, 1, data.proposal.board.id)]);
   showSnapshot(socket, data.current, null);
-  await receiveMe(socket, harness.sockets);
+  if (signIn) await receiveMe(socket, harness.sockets);
   await user.click(screen.getByRole('button', { name: /Switch board/ }));
   await user.click(
     within(screen.getByRole('dialog', { name: 'Boards' })).getByRole('button', { name: new RegExp(data.proposal.name) }),
   );
   showSnapshot(socket, data.proposal.board, { ...springView(), status });
-  await receiveBaseline(socket, harness.sockets);
+  if (answerCurrent) await receiveBaseline(socket, harness.sockets);
+  else await receiveBoard(socket, harness.sockets, data.proposal.baseline.id, data.proposal.baseline);
   await flush();
   return { harness, socket, user };
 }
@@ -344,7 +394,7 @@ describe('PhoneApp', () => {
     expect(screen.getByRole('dialog', { name: 'Start a proposal' })).toBeInTheDocument();
   });
 
-  it('placeholder tabs link to the desktop layout', async () => {
+  it('search and dugout stay on the phone and current changes has no proposal', async () => {
     const user = userEvent.setup();
     const harness = mount();
     renderApp(harness.client);
@@ -367,8 +417,11 @@ describe('PhoneApp', () => {
     expect(screen.queryByRole('link', { name: 'Use desktop layout' })).not.toBeInTheDocument();
 
     await user.click(nav.getByRole('button', { name: /^Changes/ }));
-    expect(screen.getByText("This screen isn't on phones yet.")).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Use desktop layout' })).toHaveAttribute('href', '/?layout=desktop');
+    expect(
+      screen.getByText('Current is the baseline reference board and has no proposed changes.'),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("This screen isn't on phones yet.")).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Use desktop layout' })).not.toBeInTheDocument();
   });
 
   it('search before the snapshot says Loading board', async () => {
@@ -563,6 +616,137 @@ describe('PhoneApp', () => {
     await user.click(screen.getByRole('button', { name: 'Close' }));
     await user.click(sections().getByRole('button', { name: /^Dugout · / }));
     expect(screen.queryByRole('button', { name: /^Place / })).not.toBeInTheDocument();
+  });
+
+  it('Current changes has no proposal and does not fetch one', async () => {
+    const user = userEvent.setup();
+    const harness = mount();
+    renderApp(harness.client);
+    const socket = goLive(harness);
+    showBoards(socket, [springSummary]);
+    showSnapshot(socket, data.current, null);
+    await flush();
+    await user.click(sections().getByRole('button', { name: /^Changes$/ }));
+    expect(
+      screen.getByText('Current is the baseline reference board and has no proposed changes.'),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Accept proposal' })).not.toBeInTheDocument();
+    expect(typedFrames(harness.sockets, 'getProposal')).toHaveLength(0);
+    expect(typedFrames(harness.sockets, 'setProposalStatus')).toHaveLength(0);
+  });
+
+  it('a draft lists the net changes before the detail returns', async () => {
+    const { harness, socket, user } = await openProposal('draft');
+    await user.click(sections().getByRole('button', { name: /^Changes/ }));
+    expect(screen.getByText('Ivy Notreal')).toBeInTheDocument();
+    expect(screen.getByText('Spring adjustments \u00B7 net only')).toBeInTheDocument();
+    const frames = typedFrames(harness.sockets, 'getProposal');
+    expect(frames).toHaveLength(1);
+    expect(frames[0]).toMatchObject({ type: 'getProposal', proposalId: data.proposal.id });
+    await replyTo(socket, harness.sockets, 'getProposal', { type: 'proposalDetail', proposal: detailProposal() });
+    await flush();
+    expect(screen.getByText('Spring adjustments vs. its Jan 4 baseline \u00B7 net only')).toBeInTheDocument();
+    expect(typedFrames(harness.sockets, 'getProposal')).toHaveLength(1);
+  });
+
+  it('a rejected proposal detail does not alert', async () => {
+    const { harness, socket, user } = await openProposal('draft');
+    await user.click(sections().getByRole('button', { name: /^Changes/ }));
+    expect(screen.getByText('Spring adjustments \u00B7 net only')).toBeInTheDocument();
+    await replyTo(socket, harness.sockets, 'getProposal', {
+      type: 'rejected',
+      code: 'not_found',
+      message: 'no such proposal',
+    });
+    await flush();
+    expect(screen.getByText('Spring adjustments \u00B7 net only')).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.queryByText('no such proposal')).not.toBeInTheDocument();
+    expect(typedFrames(harness.sockets, 'getProposal')).toHaveLength(1);
+  });
+
+  it('Accept sends setProposalStatus accepted', async () => {
+    const { harness, socket, user } = await openProposal('draft');
+    await user.click(sections().getByRole('button', { name: /^Changes/ }));
+    const accept = screen.getByRole('button', { name: 'Accept proposal' });
+    await user.click(accept);
+    await user.click(accept);
+    const sent = typedFrames(harness.sockets, 'setProposalStatus');
+    expect(sent).toHaveLength(1);
+    expect(sent[0]).toMatchObject({ type: 'setProposalStatus', proposalId: data.proposal.id, status: 'accepted' });
+    await replyTo(socket, harness.sockets, 'setProposalStatus', { type: 'statusChanged', status: 'accepted' });
+    await flush();
+    expect(screen.getByRole('button', { name: 'Accept proposal' })).toBeInTheDocument();
+    expect(screen.queryByText('Accepted \u00B7 read-only')).not.toBeInTheDocument();
+    showSnapshot(socket, data.proposal.board, { ...springView(), status: 'accepted' });
+    await flush();
+    expect(screen.getByText('Accepted \u00B7 read-only')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Return to Draft' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Accept proposal' })).not.toBeInTheDocument();
+  });
+
+  it('a refused accept stays on the draft', async () => {
+    const { harness, socket, user } = await openProposal('draft');
+    await user.click(sections().getByRole('button', { name: /^Changes/ }));
+    await user.click(screen.getByRole('button', { name: 'Accept proposal' }));
+    await replyTo(socket, harness.sockets, 'setProposalStatus', {
+      type: 'rejected',
+      code: 'removed_items',
+      message: 'Resolve the 1 removed item to accept',
+    });
+    await flush();
+    expect(screen.getByRole('alert')).toHaveTextContent('Resolve the 1 removed item to accept');
+    expect(screen.getByRole('alert')).toHaveTextContent(/^Resolve the 1 removed item to accept$/);
+    expect(screen.getByRole('button', { name: 'Accept proposal' })).toBeInTheDocument();
+    expect(screen.queryByText('Accepted \u00B7 read-only')).not.toBeInTheDocument();
+  });
+
+  it('a signed-out accept sends nothing', async () => {
+    const { harness, user } = await openProposal('draft', { signIn: false });
+    await user.click(sections().getByRole('button', { name: /^Changes/ }));
+    const accept = screen.getByRole('button', { name: 'Accept proposal' });
+    expect(accept).toBeEnabled();
+    await user.click(accept);
+    expect(typedFrames(harness.sockets, 'setProposalStatus')).toHaveLength(0);
+  });
+
+  it('Return to Draft sends setProposalStatus draft', async () => {
+    const signedIn = await openProposal('accepted');
+    await signedIn.user.click(sections().getByRole('button', { name: /^Changes/ }));
+    const reopen = screen.getByRole('button', { name: 'Return to Draft' });
+    await signedIn.user.click(reopen);
+    await signedIn.user.click(reopen);
+    const sent = typedFrames(signedIn.harness.sockets, 'setProposalStatus');
+    expect(sent).toHaveLength(1);
+    expect(sent[0]).toMatchObject({ type: 'setProposalStatus', proposalId: data.proposal.id, status: 'draft' });
+    await replyTo(signedIn.socket, signedIn.harness.sockets, 'setProposalStatus', {
+      type: 'statusChanged',
+      status: 'draft',
+    });
+    await flush();
+    expect(screen.getByText('Accepted \u00B7 read-only')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Accept proposal' })).not.toBeInTheDocument();
+    showSnapshot(signedIn.socket, data.proposal.board, { ...springView(), status: 'draft' });
+    await flush();
+    expect(screen.getByRole('button', { name: 'Accept proposal' })).toBeInTheDocument();
+    expect(screen.queryByText('Accepted \u00B7 read-only')).not.toBeInTheDocument();
+
+    cleanup();
+    const signedOut = await openProposal('accepted', { signIn: false });
+    await signedOut.user.click(sections().getByRole('button', { name: /^Changes/ }));
+    expect(screen.getByText('Accepted \u00B7 read-only')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Return to Draft' })).not.toBeInTheDocument();
+  });
+
+  it('changes waits for the Current board', async () => {
+    const { harness, socket, user } = await openProposal('draft', { answerCurrent: false });
+    await user.click(sections().getByRole('button', { name: /^Changes/ }));
+    expect(screen.getByText('Loading board…')).toBeInTheDocument();
+    expect(screen.queryByText('Ivy Notreal')).not.toBeInTheDocument();
+    await receiveBoard(socket, harness.sockets, data.current.id, data.current);
+    await flush();
+    expect(screen.getByText('Ivy Notreal')).toBeInTheDocument();
+    expect(screen.queryByText('Loading board…')).not.toBeInTheDocument();
   });
 
   it('app chooses PhoneApp or BoardShell', () => {

@@ -52,10 +52,10 @@ test('phone app at the root', async ({ page }, testInfo) => {
   await page.getByRole('dialog', { name: 'Boards' }).getByRole('button', { name: /^Current/ }).click();
   await expect(page.getByRole('heading', { level: 1, name: 'Current' })).toBeVisible();
   await page.getByRole('navigation', { name: 'Board sections' }).getByRole('button', { name: 'Changes', exact: true }).click();
-  const link = page.getByRole('link', { name: 'Use desktop layout' });
-  await expect(link).toBeVisible();
-  const box = await link.boundingBox();
-  expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
+  await expect(
+    page.getByText('Current is the baseline reference board and has no proposed changes.'),
+  ).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Use desktop layout' })).toHaveCount(0);
   await expectNoHorizontalOverflow(page);
-  await shot('placeholder');
+  await shot('changes-current');
 });
