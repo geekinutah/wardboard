@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { chromium, errors, type Browser, type BrowserContext, type Page } from 'playwright';
+import { chromium, errors, type Browser, type Page } from 'playwright';
 import type { DirectoryConfig } from './config.ts';
 import {
   bundleDirOf,
@@ -77,6 +77,52 @@ export function portraitExtension(bytes: Uint8Array): 'jpg' | 'png' | undefined 
   if (startsWith(JPEG)) return 'jpg';
   if (startsWith(PNG)) return 'png';
   return undefined;
+}
+
+/** WebP portraits are drawn to a JPEG in the page. The stored file stays JPEG. */
+function isWebp(bytes: Uint8Array): boolean {
+  return (
+    bytes.length > 12 &&
+    bytes[0] === 0x52 &&
+    bytes[1] === 0x49 &&
+    bytes[2] === 0x46 &&
+    bytes[3] === 0x46 &&
+    bytes[8] === 0x57 &&
+    bytes[9] === 0x45 &&
+    bytes[10] === 0x42 &&
+    bytes[11] === 0x50
+  );
+}
+
+async function webpToJpeg(page: Page, bytes: Buffer): Promise<Buffer | undefined> {
+  const dataUrl = await page.evaluate(async (encoded: string) => {
+    const binary = atob(encoded);
+    const raw = new Uint8Array(binary.length);
+    for (let index = 0; index < binary.length; index += 1) raw[index] = binary.charCodeAt(index);
+    const bitmap = await createImageBitmap(new Blob([raw], { type: 'image/webp' }));
+    const canvas = document.createElement('canvas');
+    canvas.width = bitmap.width;
+    canvas.height = bitmap.height;
+    const context2d = canvas.getContext('2d');
+    if (context2d === null) return null;
+    context2d.drawImage(bitmap, 0, 0);
+    return canvas.toDataURL('image/jpeg', 0.92);
+  }, bytes.toString('base64'));
+  if (dataUrl === null || !dataUrl.startsWith('data:image/jpeg;base64,')) return undefined;
+  return Buffer.from(dataUrl.slice('data:image/jpeg;base64,'.length), 'base64');
+}
+
+async function acceptPortrait(
+  page: Page,
+  bytes: Buffer,
+): Promise<{ bytes: Buffer; extension: 'jpg' | 'png' } | undefined> {
+  const direct = portraitExtension(bytes);
+  if (direct !== undefined) return { bytes, extension: direct };
+  if (!isWebp(bytes)) return undefined;
+  const jpeg = await webpToJpeg(page, bytes);
+  if (jpeg === undefined) return undefined;
+  const extension = portraitExtension(jpeg);
+  return extension === undefined ? undefined : { bytes: jpeg, extension };
 }
 
 const byText = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
@@ -232,11 +278,35 @@ export async function collect(options: CollectOptions): Promise<CollectResult> {
     }
     const current: State = state;
 
-    // From here on the page never loads images itself: the only image bytes
-    // fetched are the portraits requested below, and household images never.
+    // Household photos are never downloaded. Member portraits load in the page,
+    // so the directory's own session is what requests them, and their bytes are
+    // kept. Every other image, including the signed-in profile picture, loads
+    // normally so the window is not blank.
+    const memberImages = new Map<string, Promise<Buffer | undefined>>();
     await context.route('**/*', (route) => {
-      const handled = route.request().resourceType() === 'image' ? route.abort() : route.continue();
-      handled.catch(() => undefined);
+      const request = route.request();
+      if (request.resourceType() !== 'image') {
+        route.continue().catch(() => undefined);
+        return;
+      }
+      const url = request.url();
+      if (url.includes('/photos/households/')) {
+        route.abort().catch(() => undefined);
+        return;
+      }
+      if (!url.includes('/photos/members/')) {
+        route.continue().catch(() => undefined);
+        return;
+      }
+      const pending = request
+        .response()
+        .then(async (response) => {
+          if (response === null || !response.ok()) return undefined;
+          return Buffer.from(await response.body());
+        })
+        .catch(() => undefined);
+      memberImages.set(new URL(url).href, pending);
+      route.continue().catch(() => undefined);
     });
 
     const savePortrait = async (bytes: Buffer, extension: 'jpg' | 'png'): Promise<string> => {
@@ -252,19 +322,31 @@ export async function collect(options: CollectOptions): Promise<CollectResult> {
     };
 
     const fetchPortrait = async (
-      context: BrowserContext,
+      page: Page,
       url: string,
     ): Promise<{ bytes: Buffer; extension: 'jpg' | 'png' } | undefined> => {
-      for (let attempt = 0; attempt <= config.retries.image; attempt += 1) {
+      const key = new URL(url).href;
+      const loaded = memberImages.get(key);
+      // The page's image request is the first attempt. Further attempts use the
+      // context only when that response was missing or not a portrait.
+      const first = loaded === undefined ? undefined : await loaded;
+      if (first !== undefined) {
+        const accepted = await acceptPortrait(page, first);
+        if (accepted !== undefined) return accepted;
+      }
+      const extra = loaded === undefined ? config.retries.image + 1 : config.retries.image;
+      for (let attempt = 0; attempt < extra; attempt += 1) {
         checkAbort();
         try {
           const response = await abortable(
             context.request.get(url, { timeout: config.timeouts.navigationMs, failOnStatusCode: false }),
           );
-          const bytes = response.ok() ? await response.body() : undefined;
+          const bytes = response.ok() ? Buffer.from(await response.body()) : undefined;
           await response.dispose();
-          const extension = bytes === undefined ? undefined : portraitExtension(bytes);
-          if (bytes !== undefined && extension !== undefined) return { bytes, extension };
+          if (bytes !== undefined) {
+            const accepted = await acceptPortrait(page, bytes);
+            if (accepted !== undefined) return accepted;
+          }
         } catch (error) {
           if (error instanceof Cancelled) throw error;
         }
@@ -306,7 +388,7 @@ export async function collect(options: CollectOptions): Promise<CollectResult> {
         }
         const fetched =
           url !== undefined && (url.protocol === 'https:' || url.protocol === 'http:')
-            ? await fetchPortrait(context, url.href)
+            ? await fetchPortrait(page, url.href)
             : undefined;
         if (fetched === undefined) {
           log(MESSAGES.imageFailed);

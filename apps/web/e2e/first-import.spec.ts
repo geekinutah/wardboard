@@ -45,6 +45,13 @@ test('with no Current the app opens the import workflow and the first import cre
 
   await page.goto(`${server.url}/`);
   await expect(page.getByRole('heading', { level: 1, name: 'Set up WardBoard' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 2, name: 'Restore a backup' })).toBeVisible();
+  const restore = page.getByRole('button', { name: 'Restore from file…' });
+  await expect(restore).toBeVisible();
+  if (phone) {
+    const box = await restore.boundingBox();
+    expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
+  }
   await expect(page.getByLabel('Organizations and callings')).toBeVisible();
   await expect(page.getByLabel('Members without callings')).toBeVisible();
   await expect(page.getByLabel('Out-of-unit callings')).toBeVisible();

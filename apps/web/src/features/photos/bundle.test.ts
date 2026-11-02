@@ -88,6 +88,37 @@ describe('matchBundlePortraits', () => {
     });
   });
 
+  it('matches a directory First Last name to a ward Last, First name', () => {
+    const members: readonly WardMemberForMatching[] = [
+      { id: 'm-1', name: 'Smith, John Adam', photoRef: null, removedDate: null },
+      { id: 'm-2', name: 'Van Dyke, Mary', photoRef: null, removedDate: null },
+      { id: 'm-3', name: 'Doe, Jane', photoRef: null, removedDate: null },
+    ];
+    const portraits: readonly UploadedBundlePortrait[] = [
+      { name: 'John Adam Smith', file: 'john.jpg', photoRef: 'john-ref.jpg', duplicateName: false },
+      { name: 'Mary Van Dyke', file: 'mary.jpg', photoRef: 'mary-ref.jpg', duplicateName: false },
+      { name: 'Doe, Jane', file: 'jane.jpg', photoRef: 'jane-ref.jpg', duplicateName: false },
+    ];
+
+    const matches = matchBundlePortraits(members, portraits);
+    expect(matches.map((match) => (match.kind === 'matched' ? match.member.memberId : match.kind))).toEqual([
+      'm-1',
+      'm-2',
+      'm-3',
+    ]);
+  });
+
+  it('does not match a shorter given name to a different person with the same last name', () => {
+    const members: readonly WardMemberForMatching[] = [
+      { id: 'm-1', name: 'Smith, John Adam', photoRef: null, removedDate: null },
+    ];
+    const portraits: readonly UploadedBundlePortrait[] = [
+      { name: 'John Smith', file: 'john.jpg', photoRef: 'john-ref.jpg', duplicateName: false },
+    ];
+
+    expect(matchBundlePortraits(members, portraits)[0]).toMatchObject({ kind: 'unmatched' });
+  });
+
   it('marks multiple active ward members with the same name as ambiguous with all candidates', () => {
     const members: readonly WardMemberForMatching[] = [
       { id: 'm-2', name: 'Chris Evans', photoRef: 'chris2.jpg', removedDate: null },

@@ -6,7 +6,7 @@ export interface PhotoBundleManifestPortrait {
 
 export interface PhotoBundleManifestMissing {
   readonly name: string;
-  readonly reason: 'none' | 'household';
+  readonly reason: 'none' | 'household' | 'failed';
 }
 
 export interface PhotoBundleManifest {
@@ -85,6 +85,28 @@ export function normalizeBundleName(name: string): string {
   return name.trim().replace(/\s+/g, ' ').toLowerCase();
 }
 
+/**
+ * Keys for the same person written either as "Last, First Middle" (the member
+ * list) or "First Middle Last" (the directory). A two-word last name is tried
+ * only when the final word alone does not match.
+ */
+function nameKeys(name: string): readonly string[] {
+  const key = normalizeBundleName(name);
+  const comma = key.indexOf(', ');
+  if (comma !== -1) {
+    const last = key.slice(0, comma);
+    const given = key.slice(comma + 2).split(' ').filter((token) => token.length > 0);
+    return [`${last}\u0000${[...given].sort().join(' ')}`];
+  }
+  const words = key.split(' ').filter((token) => token.length > 0);
+  if (words.length === 0) return [''];
+  const keys = [`${words[words.length - 1] ?? ''}\u0000${[...words.slice(0, -1)].sort().join(' ')}`];
+  if (words.length >= 3) {
+    keys.push(`${words.slice(-2).join(' ')}\u0000${[...words.slice(0, -2)].sort().join(' ')}`);
+  }
+  return keys;
+}
+
 export function matchBundlePortraits(
   members: readonly WardMemberForMatching[],
   portraits: readonly UploadedBundlePortrait[],
@@ -93,10 +115,12 @@ export function matchBundlePortraits(
   const membersByName = new Map<string, BundleCandidateMember[]>();
 
   for (const m of activeMembers) {
-    const norm = normalizeBundleName(m.canonicalName ?? m.name);
-    const list = membersByName.get(norm) ?? [];
-    list.push({ memberId: m.id, name: m.name, photoRef: m.photoRef });
-    membersByName.set(norm, list);
+    const candidate = { memberId: m.id, name: m.name, photoRef: m.photoRef };
+    for (const key of nameKeys(m.canonicalName ?? m.name)) {
+      const list = membersByName.get(key) ?? [];
+      list.push(candidate);
+      membersByName.set(key, list);
+    }
   }
 
   for (const list of membersByName.values()) {
@@ -109,13 +133,21 @@ export function matchBundlePortraits(
 
   const portraitNameCounts = new Map<string, number>();
   for (const p of portraits) {
-    const norm = normalizeBundleName(p.name);
+    const norm = nameKeys(p.name)[0] ?? '';
     portraitNameCounts.set(norm, (portraitNameCounts.get(norm) ?? 0) + 1);
   }
 
   return portraits.map((p, index): BundlePortraitMatch => {
-    const norm = normalizeBundleName(p.name);
-    const matchingMembers = membersByName.get(norm) ?? [];
+    const keys = nameKeys(p.name);
+    let matchingMembers: BundleCandidateMember[] = [];
+    for (const key of keys) {
+      const found = membersByName.get(key);
+      if (found !== undefined && found.length > 0) {
+        matchingMembers = found;
+        break;
+      }
+    }
+    const norm = keys[0] ?? '';
 
     if (matchingMembers.length === 0) {
       return {

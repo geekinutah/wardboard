@@ -108,3 +108,5 @@ observation / review finding
 | B-076 | P3 | web phone changes | candidate | A late phone Changes detail can leave the open proposal on "net only" |
 | B-077 | P3 | web phone shell | candidate | The Current read-only bar stays above every phone tab |
 | B-078 | P3 | web e2e | candidate | The accepted-mode e2e waits for someone else to broadcast boards |
+| B-079 | P1 | tools/collector | candidate | The live directory does not match the directory-v1 selectors |
+| B-080 | P2 | tools/collector | candidate | An unsupported directory layout is reported as one message |

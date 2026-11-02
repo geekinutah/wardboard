@@ -269,7 +269,10 @@ describe('config', () => {
 
   it('the shipped config is valid and points at the directory over https', async () => {
     const config = await loadConfig(new URL('../config/directory.json', import.meta.url).pathname);
-    expect(config.layoutVersion).toBe('directory-v1');
+    expect(config.layoutVersion).toBe('directory-v2');
+    expect(config.selectors.householdLink).toContain("/households/");
+    expect(config.selectors.memberPortrait).toContain("/photos/members/");
+    expect(config.selectors.householdImage).toContain("/photos/households/");
     expect(new URL(config.startUrl).protocol).toBe('https:');
     expect(config.retries.image).toBeLessThanOrEqual(5);
   });

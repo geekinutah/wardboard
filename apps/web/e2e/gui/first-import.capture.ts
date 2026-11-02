@@ -54,6 +54,9 @@ test('first import on the real server', async ({ page }, testInfo) => {
   await expect(heading).toBeVisible();
   await expectNotClipped(heading);
   await expectNotClipped(page.locator('.wb-first-import-text'));
+  await expect(page.getByRole('heading', { level: 2, name: 'Restore a backup' })).toBeVisible();
+  await expectNotClipped(page.getByRole('heading', { level: 2, name: 'Restore a backup' }));
+  await expectTargetsAtLeast44(page.getByRole('button', { name: 'Restore from file…' }));
 
   await page.getByLabel('Organizations and callings').setInputFiles(path.join(REPORTS, 'organizations-and-callings.pdf'));
   await page.getByLabel('Members without callings').setInputFiles(path.join(REPORTS, 'members-without-callings.pdf'));

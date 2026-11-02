@@ -1,4 +1,5 @@
-import { act, render, screen, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../App.tsx';
 import type { HealthClient, HealthResponse } from '../health.ts';
@@ -110,6 +111,7 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  vi.restoreAllMocks();
   window.history.replaceState(null, '', '/');
 });
 
@@ -120,7 +122,10 @@ describe('first import', () => {
     showBoards(connect(ADMIN), false);
 
     expect(screen.getByRole('heading', { level: 1, name: 'Set up WardBoard' })).toBeInTheDocument();
-    expect(screen.getByText("There's no Current board yet. Import the ward's four LCR reports to create it.")).toBeInTheDocument();
+    expect(
+      screen.getByText("There's no Current board yet. Import the ward's four LCR reports, or restore a backup."),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: 'Restore a backup' })).toBeInTheDocument();
     const main = screen.getByRole('main');
     for (const label of LABELS) expect(within(main).getByLabelText(label)).toBeInTheDocument();
   });
@@ -131,7 +136,11 @@ describe('first import', () => {
     showBoards(connect(EDITOR), false);
 
     expect(screen.getByRole('heading', { level: 1, name: 'Set up WardBoard' })).toBeInTheDocument();
-    expect(screen.getByText("WardBoard has no Current board yet. Ask an Admin to import the ward's reports.")).toBeInTheDocument();
+    expect(
+      screen.getByText("WardBoard has no Current board yet. Ask an Admin to import the ward's reports or restore a backup."),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Restore a backup' })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Backup file')).not.toBeInTheDocument();
     for (const label of LABELS) expect(screen.queryByLabelText(label)).not.toBeInTheDocument();
     expect(fetchCalls.filter((url) => url.includes('/api/import/'))).toEqual([]);
   });
@@ -170,6 +179,51 @@ describe('first import', () => {
 
     expect(screen.queryByRole('heading', { name: 'Set up WardBoard' })).not.toBeInTheDocument();
     expect(screen.getByRole('navigation', { name: 'Board sections' })).toBeInTheDocument();
+  });
+
+  it('an Admin can restore a backup when there is no Current', async () => {
+    const user = userEvent.setup();
+    const assign = vi.fn();
+    vi.spyOn(window, 'location', 'get').mockReturnValue({ pathname: '/', assign } as unknown as Location);
+    const summary = {
+      createdAt: '2026-07-01T00:00:00.000Z',
+      schemaVersion: 1,
+      members: 41,
+      proposals: 3,
+      users: 2,
+      photos: 12,
+      hasCurrent: true,
+    };
+    const fetchStub = vi.fn<typeof fetch>((input) => {
+      const body =
+        typeof input === 'string' && input.endsWith('mode=apply') ? { restored: true, summary } : { summary };
+      return Promise.resolve(new Response(JSON.stringify(body), { status: 200, headers: { 'content-type': 'application/json' } }));
+    });
+    vi.stubGlobal('fetch', fetchStub);
+    layoutMock.value = 'desktop';
+    render(<App healthClient={pendingHealth} />);
+    showBoards(connect(ADMIN), false);
+
+    expect(screen.getByRole('heading', { level: 2, name: 'Restore a backup' })).toBeInTheDocument();
+    const file = new File(['fictional backup'], 'ward.backup', { type: 'application/octet-stream' });
+    fireEvent.change(screen.getByLabelText('Backup file'), { target: { files: [file] } });
+
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByText('41 members')).toBeInTheDocument();
+    expect(assign).not.toHaveBeenCalled();
+
+    await user.click(within(dialog).getByRole('button', { name: 'Replace all data' }));
+    await waitFor(() => {
+      expect(assign).toHaveBeenCalledWith('/');
+    });
+    expect(fetchStub.mock.calls.map((call) => call[0])).toEqual([
+      '/api/admin/restore?mode=dry-run',
+      '/api/admin/restore?mode=apply',
+    ]);
+    const apply = fetchStub.mock.calls[1]?.[1];
+    expect(apply?.method).toBe('POST');
+    expect(apply?.body).toBe(file);
+    expect(apply?.credentials).toBe('same-origin');
   });
 
   it('Settings stays reachable without a Current', () => {

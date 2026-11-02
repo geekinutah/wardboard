@@ -135,11 +135,13 @@ function householdList(households: readonly Household[]): string {
 
 function householdPage(household: Household): string {
   const image =
-    household.image === undefined ? '' : `<img class="household-photo" alt="" src="/photos/${household.image}?ref=CANARY-SRC-H">`;
+    household.image === undefined
+      ? ''
+      : `<img class="household-photo" alt="" src="/photos/households/${household.image}?ref=CANARY-SRC-H">`;
   const members = household.members
     .map((m) => {
       const portrait =
-        m.photo === undefined ? '' : `<img class="member-portrait" alt="" src="/photos/${m.photo}?ref=CANARY-SRC-M">`;
+        m.photo === undefined ? '' : `<img class="member-portrait" alt="" src="/photos/members/${m.photo}?ref=CANARY-SRC-M">`;
       // Odd whitespace in the name proves it is trimmed and collapsed.
       const spaced = m.name.replace(' ', ' \n   ');
       return `<li class="member" data-record="CANARY-MRN-0002">${portrait}<span class="member-name">  ${spaced} </span>
@@ -196,7 +198,7 @@ export async function startDirectoryServer(options: DirectoryServerOptions = {})
       send(res, req, 403, 'text/plain', 'Forbidden');
       return;
     }
-    const photo = /^\/photos\/([a-z-]+\.(?:png|jpg))$/.exec(url.pathname);
+    const photo = /^\/photos\/(?:members|households)\/([a-z-]+\.(?:png|jpg|webp))$/.exec(url.pathname);
     if (photo !== null) {
       const file = photo[1] ?? '';
       const count = (photoCounts.get(file) ?? 0) + 1;

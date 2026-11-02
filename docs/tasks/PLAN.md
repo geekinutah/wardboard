@@ -125,3 +125,13 @@ scripts/verify.sh    The single quality gate
 | ID | Title | Depends on | Scope | Done when |
 |---|---|---|---|---|
 | T-063 | Tailscale and Mac Studio runbook | T-006 | `docker/`, `docs/deploy.md` | Compose setup reachable only over Tailscale; install, upgrade, backup and restore steps for the Mac Studio |
+
+## Milestone 8 — Directory photos from Settings
+
+Mike approved this on 2026-11-01. These rows are the starting point for contracts. They are not contracted, and they do not appear in `STATUS.md` until a controller claims one and writes `docs/tasks/T-###-*.md`. The sign-in window opens on the computer running WardBoard. Children under 11 stay unmatched. The command-line collector stays.
+
+| ID | Title | Depends on | Scope | Done when |
+|---|---|---|---|---|
+| T-119 | Admin photo-collection job | T-061, T-098 | `apps/server/src/photo-collection/`, `apps/server/test/photo-collection/`, the collector package export the server calls | `POST /api/admin/photo-collection` starts one `collect()` job in `<dataDir>/collector-staging` (mode `0700`, outside `photos/`, so backups omit it). `GET` reports `idle`, `needs-sign-in`, `running`, `review`, or `failed`, plus the latest progress line. `POST .../continue` releases `waitForSignIn`. A second start while a job is running is refused. Signed-out and Editor requests are refused. Cancel aborts the job and deletes that staging directory. A finished job reads the bundle from disk through the existing sanitize path and returns the review payload. Tests inject the collector; they do not open the Church directory |
+| T-120 | Settings collect and review | T-119 | `apps/web/src/shell/PhotoBundleSection.tsx`, its stylesheet and test | An Admin sees **Collect from the directory**. The page tells them to sign in on this computer, **Continue** calls the continue route, and the progress line updates from `GET`. A `review` result opens the existing match screen with no file selection. **Import photos** still applies first photos and one-at-a-time replacements. Cancel, successful import, and a failed run leave no staging directory. The file picker remains under a closed **Import an existing bundle** disclosure and still reviews a chosen bundle. An Editor does not see Collect |
+| T-121 | Import guide for Settings collection | T-120 | `docs/import/guide.md` and its structural test | The guide's primary directory-photo steps are the Settings action, including where the sign-in window opens, Continue, review, and cleanup. The command-line collector is the documented fallback. A structural check fails if the Settings steps or the fallback command are removed |

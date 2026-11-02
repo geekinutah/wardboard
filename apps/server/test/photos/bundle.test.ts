@@ -367,6 +367,30 @@ describe('POST /api/photos/bundle', () => {
     expect(await storedNames(started.dataDir)).toEqual([]);
   });
 
+  it('accepts a collector bundle whose missing portraits failed to download', async () => {
+    const started = await startEditor();
+    const base = JSON.parse(validBundle().json) as PhotoBundleRequest;
+    const payload = {
+      ...base,
+      manifest: {
+        ...base.manifest,
+        missing: [{ name: 'Fay Failing', reason: 'failed' }],
+      },
+    };
+    const res = await call(
+      started.server.port,
+      'POST',
+      '/api/photos/bundle',
+      { origin: BASE_ORIGIN, 'content-type': 'application/json' },
+      JSON.stringify(payload),
+    );
+    expect(res.status).toBe(200);
+    const body = JSON.parse(res.body.toString('utf8')) as PhotoBundleResponse;
+    expect(body.portraits).toHaveLength(2);
+    expect(body.missing).toEqual([{ name: 'Fay Failing', reason: 'failed' }]);
+    expect(await storedNames(started.dataDir)).toHaveLength(2);
+  });
+
   it('rejects invalid manifest, hash mismatch, or corrupt image without storing any photo', async () => {
     const started = await startEditor();
     const base = validBundle();

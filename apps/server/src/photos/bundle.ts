@@ -17,7 +17,7 @@ export interface PhotoBundleRequest {
     }[];
     readonly missing: readonly {
       readonly name: string;
-      readonly reason: 'none' | 'household';
+      readonly reason: 'none' | 'household' | 'failed';
     }[];
     readonly skippedHousehold: number;
   };
@@ -34,7 +34,7 @@ export interface PhotoBundleResponse {
   }[];
   readonly missing: readonly {
     readonly name: string;
-    readonly reason: 'none' | 'household';
+    readonly reason: 'none' | 'household' | 'failed';
   }[];
   readonly skippedHousehold: number;
 }
@@ -82,7 +82,7 @@ function validateAndSanitize(body: unknown): ValidatedBundle | null {
     if (!isObject(item)) return null;
     if (!hasExactKeys(item, ['name', 'reason'])) return null;
     if (typeof item.name !== 'string' || item.name.trim().length === 0) return null;
-    if (item.reason !== 'none' && item.reason !== 'household') return null;
+    if (item.reason !== 'none' && item.reason !== 'household' && item.reason !== 'failed') return null;
   }
 
   const referencedFiles = new Set<string>();

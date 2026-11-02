@@ -164,11 +164,13 @@ describe('a full run over the fictional directory', () => {
     // client that skips the request layer (node:net, http2, tls) is caught too.
     expect(sockets.length).toBeGreaterThan(0);
     for (const socket of sockets) expect(socket, 'TCP connection').toBe(fixtureHost);
-    // Both observers really saw this run: page navigations in the browser, and
-    // the collector's portrait fetches through context.request in this process.
+    // Page navigations and member-portrait loads happen in the browser. The
+    // browser's own session requests those portraits; retries still use the
+    // context from this process.
     expect(browser.some((url) => new URL(url).pathname === '/households')).toBe(true);
     expect(browser.some((url) => new URL(url).pathname === '/households/0')).toBe(true);
-    expect(node.some((url) => new URL(url).pathname === '/photos/ada.png')).toBe(true);
+    expect(browser.some((url) => new URL(url).pathname === '/photos/members/ada.png')).toBe(true);
+    expect(node.some((url) => new URL(url).pathname === '/photos/members/gus.jpg')).toBe(true);
     // Every request the fixture server answered was seen by an observer.
     const seenPaths = new Set([...node, ...browser].map((url) => `${new URL(url).pathname}${new URL(url).search}`));
     expect(server.requests.length).toBeGreaterThan(5);
@@ -235,6 +237,32 @@ describe('portrait validation', () => {
         expect(bytes.length, name).toBeLessThanOrEqual(5 * MiB);
         expect(bytes.toString('latin1'), name).not.toContain('CANARY-SIGNIN-PAGE');
       }
+    } finally {
+      await server.close();
+      await removeTemp(staging);
+    }
+  });
+
+  it('stores a WebP member portrait as JPEG', async () => {
+    const webp = Buffer.from(
+      'UklGRhYCAABXRUJQVlA4WAoAAAAgAAAAAQAAAQAASUNDUMgBAAAAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADZWUDggKAAAAJABAJ0BKgIAAgABQCYliAJ0ugADmAD++ajv7U2Kqed36FGyiXzAAAA=',
+      'base64',
+    );
+    const server = await startDirectoryServer({
+      households: [{ name: 'Fictional Household Web', members: [{ name: 'Wynn Picture', photo: 'wynn.webp' }] }],
+      photos: { 'wynn.webp': { type: 'image/webp', body: webp } },
+    });
+    const staging = await tempStaging();
+    try {
+      const run = await runCollector(staging, await fixtureConfig(server));
+      expect(run.result).toMatchObject({ status: 'done', exitCode: 0 });
+      const { manifest } = await readManifest(staging);
+      expect(manifest.portraits).toHaveLength(1);
+      expect(manifest.portraits[0]?.name).toBe('Wynn Picture');
+      expect(manifest.portraits[0]?.file.endsWith('.jpg')).toBe(true);
+      const saved = await readFile(join(bundleDir(staging), manifest.portraits[0]?.file ?? ''));
+      expect([...saved.subarray(0, 3)]).toEqual([0xff, 0xd8, 0xff]);
+      expect(server.photoRequests('wynn.webp')).toBe(1);
     } finally {
       await server.close();
       await removeTemp(staging);

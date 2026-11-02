@@ -83,10 +83,12 @@ and exits 1; fix the permissions and run `--cleanup` again.
 
 ## Limits
 
-- **The selectors are unverified.** `config/directory.json` holds a best guess
-  at the real directory's page structure. If a run stops with
-  `Unsupported directory layout (expected directory-v1). Nothing was imported.`,
-  the selectors need updating; the collector never guesses.
+- **The selectors follow the directory map.** `config/directory.json` is
+  `directory-v2`: household links under `/households/`, member links under
+  `/members/`, member photos under `/photos/members/`, and the household photo
+  under `/photos/households/`. If a run stops with
+  `Unsupported directory layout (expected directory-v2). Nothing was imported.`,
+  the page no longer matches that shape. The collector never guesses.
 - **Bringing a bundle into WardBoard is not available yet.** For now the
   collector only produces the bundle. Uploading a portrait to a member in the
   app works independently.
