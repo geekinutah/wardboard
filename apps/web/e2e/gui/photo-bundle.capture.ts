@@ -79,8 +79,16 @@ test('photo bundle gui capture', async ({ page }, testInfo) => {
 
   const section = page.locator('.wb-photo-bundle-section');
   await expect(section.getByRole('heading', { name: 'Directory photos', level: 2 })).toBeVisible();
+  await expect(section.getByRole('button', { name: 'Collect from the directory' })).toBeVisible();
+  const disclosure = section.getByRole('button', { name: 'Import an existing bundle' });
+  await expect(disclosure).toHaveAttribute('aria-expanded', 'false');
+  await section.scrollIntoViewIfNeeded();
+  await expectNoHorizontalOverflow(page);
+  await expectTargetsAtLeast44(section.locator('button'));
+  await shot('collect');
 
-  // 1. Upload bundle and view matches screen
+  // 1. Upload bundle and view matches screen. Do not click Collect.
+  await disclosure.click();
   await section.getByLabel('Photo bundle files').setInputFiles([
     { name: 'manifest.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(manifest)) },
     { name: pngFileName, mimeType: 'image/png', buffer: PNG },
@@ -102,6 +110,7 @@ test('photo bundle gui capture', async ({ page }, testInfo) => {
 
   // 2. Upload replacement bundle to capture comparison dialog
   await section.getByRole('button', { name: 'Import another bundle' }).click();
+  await section.getByRole('button', { name: 'Import an existing bundle' }).click();
   const replaceManifest = {
     format: 'wardboard-photo-bundle',
     version: 1,

@@ -404,7 +404,10 @@ describe('Settings route', () => {
     ];
 
     for (const testCase of cases) {
-      const fetchStub = vi.fn<typeof fetch>(() => testCase.reply());
+      const fetchStub = vi.fn<typeof fetch>((input) => {
+        if (requestUrl(input) === '/api/admin/photo-collection') return Promise.resolve(idleCollection());
+        return testCase.reply();
+      });
       vi.stubGlobal('fetch', fetchStub);
       const { client, unmount } = await renderRoute(ADMIN);
 
@@ -418,12 +421,20 @@ describe('Settings route', () => {
         expect(screen.queryByRole('dialog'), testCase.name).not.toBeInTheDocument();
         expect(screen.getByRole('alert'), testCase.name).toHaveTextContent(testCase.expectText);
       }
-      expect(fetchStub, testCase.name).toHaveBeenCalledTimes(1);
-      const [url, init] = fetchStub.mock.calls[0] ?? [];
+      const restoreCalls = fetchStub.mock.calls.filter(
+        (call) => requestUrl(call[0]) === '/api/admin/restore?mode=dry-run',
+      );
+      expect(restoreCalls, testCase.name).toHaveLength(1);
+      const [url, init] = restoreCalls[0] ?? [];
       expect(url, testCase.name).toBe('/api/admin/restore?mode=dry-run');
       expect(init?.method, testCase.name).toBe('POST');
       expect(init?.body, testCase.name).toBe(file);
       expect(init?.credentials, testCase.name).toBe('same-origin');
+      for (const call of fetchStub.mock.calls) {
+        if (requestUrl(call[0]) === '/api/admin/photo-collection') {
+          expect(call[1]?.body, testCase.name).not.toBe(file);
+        }
+      }
 
       act(() => {
         client.stop();
@@ -439,7 +450,9 @@ describe('Settings route', () => {
     const fakeLocation = { pathname: '/settings', assign } as unknown as Location;
     vi.spyOn(window, 'location', 'get').mockReturnValue(fakeLocation);
     const fetchStub = vi.fn<typeof fetch>((input) => {
-      const body = typeof input === 'string' && input.endsWith('mode=apply') ? { restored: true, summary: SUMMARY } : { summary: SUMMARY };
+      const url = requestUrl(input);
+      if (url === '/api/admin/photo-collection') return Promise.resolve(idleCollection());
+      const body = url.endsWith('mode=apply') ? { restored: true, summary: SUMMARY } : { summary: SUMMARY };
       return Promise.resolve(
         new Response(JSON.stringify(body), { status: 200, headers: { 'content-type': 'application/json' } }),
       );
@@ -456,11 +469,28 @@ describe('Settings route', () => {
     await waitFor(() => {
       expect(assign).toHaveBeenCalledWith('/');
     });
-    expect(fetchStub).toHaveBeenCalledTimes(2);
-    const [url, init] = fetchStub.mock.calls[1] ?? [];
-    expect(url).toBe('/api/admin/restore?mode=apply');
-    expect(init?.method).toBe('POST');
-    expect(init?.body).toBe(file);
-    expect(init?.credentials).toBe('same-origin');
+    const restoreCalls = fetchStub.mock.calls.filter((call) => requestUrl(call[0]).startsWith('/api/admin/restore'));
+    expect(restoreCalls).toHaveLength(2);
+    const apply = restoreCalls.find((call) => requestUrl(call[0]) === '/api/admin/restore?mode=apply');
+    expect(apply?.[0]).toBe('/api/admin/restore?mode=apply');
+    expect(apply?.[1]?.method).toBe('POST');
+    expect(apply?.[1]?.body).toBe(file);
+    expect(apply?.[1]?.credentials).toBe('same-origin');
+    for (const call of fetchStub.mock.calls) {
+      if (requestUrl(call[0]) === '/api/admin/photo-collection') expect(call[1]?.body).not.toBe(file);
+    }
   });
 });
+
+function requestUrl(input: RequestInfo | URL): string {
+  if (typeof input === 'string') return input;
+  if (input instanceof URL) return input.href;
+  return input.url;
+}
+
+function idleCollection(): Response {
+  return new Response(JSON.stringify({ status: 'idle', progress: '' }), {
+    status: 200,
+    headers: { 'content-type': 'application/json' },
+  });
+}

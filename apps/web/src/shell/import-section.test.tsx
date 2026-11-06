@@ -132,10 +132,27 @@ type Call = { url: string; body: Record<string, unknown> };
 
 type Reply = { status: number; body?: unknown } | 'throw';
 
+function requestUrl(input: RequestInfo | URL): string {
+  if (typeof input === 'string') return input;
+  if (input instanceof URL) return input.href;
+  return input.url;
+}
+
+function idleCollection(): Promise<Response> {
+  return Promise.resolve(
+    new Response(JSON.stringify({ status: 'idle', progress: '' }), {
+      status: 200,
+      headers: { 'content-type': 'application/json' },
+    }),
+  );
+}
+
 function stubFetch(replies: { preview?: Reply; replace?: Reply }): Call[] {
   const calls: Call[] = [];
   const fake = vi.fn((input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
-    const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+    const url = requestUrl(input);
+    // Settings GETs collection status on mount. That request is not an import.
+    if (url === '/api/admin/photo-collection') return idleCollection();
     const parsed: unknown = typeof init?.body === 'string' ? JSON.parse(init.body) : {};
     calls.push({ url, body: isRecord(parsed) ? parsed : {} });
     const reply = url.endsWith('/preview') ? (replies.preview ?? { status: 200, body: PREVIEW }) : (replies.replace ?? { status: 200, body: { matched: 1, created: 0, removed: 2 } });
@@ -233,7 +250,9 @@ describe('Import section in Settings', () => {
     await renderSettings(ADMIN);
     await openReview(user);
     expect(calls).toHaveLength(1);
-    const call = calls[0];
+    const previews = calls.filter((call) => call.url === '/api/import/preview');
+    expect(previews).toHaveLength(1);
+    const call = previews[0];
     expect(call?.url).toBe('/api/import/preview');
     expect(call?.body).toEqual({
       organizations: btoa(CONTENTS[0]),
@@ -264,8 +283,10 @@ describe('Import section in Settings', () => {
     await user.click(screen.getByRole('button', { name: 'Replace Current' }));
     await waitFor(() => {
       expect(calls).toHaveLength(2);
+      expect(calls.filter((call) => call.url === '/api/import/replace')).toHaveLength(1);
     });
-    expect(calls[1]?.body).toEqual({
+    const replace = calls.find((call) => call.url === '/api/import/replace');
+    expect(replace?.body).toEqual({
       organizations: btoa(CONTENTS[0]),
       withoutCallings: btoa(CONTENTS[1]),
       outOfUnit: btoa(CONTENTS[2]),
@@ -323,7 +344,7 @@ describe('Import section in Settings', () => {
     await user.upload(screen.getByLabelText(LABELS[3]), pdf(NAMES[3], CONTENTS[3]));
     await user.click(previewButton());
     expect(await screen.findByRole('alert')).toHaveTextContent(READ_FAILURE);
-    expect(calls).toHaveLength(0);
+    expect(calls.filter((call) => call.url.includes('/api/import/'))).toHaveLength(0);
     expect(screen.getByLabelText(LABELS[0])).toBeInTheDocument();
   });
 

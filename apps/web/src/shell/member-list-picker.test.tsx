@@ -131,10 +131,27 @@ async function renderSettings(me: Me, current: { version: number } | null = { ve
 
 type Call = { url: string; body: Record<string, unknown> };
 
+function requestUrl(input: RequestInfo | URL): string {
+  if (typeof input === 'string') return input;
+  if (input instanceof URL) return input.href;
+  return input.url;
+}
+
+function idleCollection(): Promise<Response> {
+  return Promise.resolve(
+    new Response(JSON.stringify({ status: 'idle', progress: '' }), {
+      status: 200,
+      headers: { 'content-type': 'application/json' },
+    }),
+  );
+}
+
 function stubFetch(): Call[] {
   const calls: Call[] = [];
   const fake = vi.fn((input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
-    const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+    const url = requestUrl(input);
+    // Settings GETs collection status on mount. That request is not an import.
+    if (url === '/api/admin/photo-collection') return idleCollection();
     const parsed: unknown = typeof init?.body === 'string' ? JSON.parse(init.body) : {};
     calls.push({ url, body: isRecord(parsed) ? parsed : {} });
     const reply = url.endsWith('/preview') ? PREVIEW : { matched: 0, created: 1, removed: 0 };
@@ -197,8 +214,9 @@ describe('Member list picker', () => {
 
     await user.click(previewButton());
     await screen.findByRole('heading', { name: 'Review before replacing Current' });
-    expect(calls[0]?.url).toBe('/api/import/preview');
-    expect(calls[0]?.body).toEqual({
+    const preview = calls.find((call) => call.url === '/api/import/preview');
+    expect(preview?.url).toBe('/api/import/preview');
+    expect(preview?.body).toEqual({
       organizations: btoa(CONTENTS[0]),
       withoutCallings: btoa(CONTENTS[1]),
       outOfUnit: btoa(CONTENTS[2]),
@@ -208,9 +226,11 @@ describe('Member list picker', () => {
     await user.click(screen.getByRole('button', { name: 'Replace Current' }));
     await waitFor(() => {
       expect(calls).toHaveLength(2);
+      expect(calls.filter((call) => call.url === '/api/import/replace')).toHaveLength(1);
     });
-    expect(calls[1]?.url).toBe('/api/import/replace');
-    expect(calls[1]?.body.memberList).toBe(btoa(CONTENTS[3]));
+    const replace = calls.find((call) => call.url === '/api/import/replace');
+    expect(replace?.url).toBe('/api/import/replace');
+    expect(replace?.body.memberList).toBe(btoa(CONTENTS[3]));
   });
 
   it('the review shows the member list source', () => {

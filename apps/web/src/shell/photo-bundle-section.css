@@ -250,3 +250,42 @@
   white-space: pre-wrap;
   word-break: break-all;
 }
+
+.wb-photo-bundle-signin {
+  margin: 0;
+  max-width: 100%;
+  color: var(--wb-ink, #18212b);
+  font-size: 14px;
+  line-height: 1.4;
+  overflow-wrap: break-word;
+}
+
+.wb-photo-bundle-progress {
+  margin: 0;
+  max-width: 100%;
+  color: var(--wb-ink-2, #3a444f);
+  font-size: 14px;
+  line-height: 1.4;
+  overflow-wrap: break-word;
+}
+
+.wb-photo-bundle-collect-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  min-width: 0;
+}
+
+.wb-photo-bundle-collect-actions .wb-button,
+.wb-photo-bundle-disclosure {
+  max-width: 100%;
+  white-space: normal;
+  text-align: center;
+}
+
+.wb-photo-bundle-file-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}

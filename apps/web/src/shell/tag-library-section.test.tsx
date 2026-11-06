@@ -1,7 +1,7 @@
 import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { deleteTag, type Ward } from '@wardboard/core';
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { tagsScenario } from '../features/tags/fixtures.ts';
 import { SyncClient, type SyncDeps, type WebSocketLike } from '../sync/client.ts';
 import type { Me } from '../sync/protocol.ts';
@@ -119,6 +119,33 @@ async function renderRoute(me: Me, ward: Ward | null): Promise<{ socket: FakeSoc
   await screen.findByRole('heading', { name: 'Settings', level: 1 });
   return { socket };
 }
+
+function requestUrl(input: RequestInfo | URL): string {
+  if (typeof input === 'string') return input;
+  if (input instanceof URL) return input.href;
+  return input.url;
+}
+
+beforeEach(() => {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn((input: RequestInfo | URL) => {
+      if (requestUrl(input) === '/api/admin/photo-collection') {
+        return Promise.resolve(
+          new Response(JSON.stringify({ status: 'idle', progress: '' }), {
+            status: 200,
+            headers: { 'content-type': 'application/json' },
+          }),
+        );
+      }
+      return Promise.reject(new TypeError('unexpected fetch'));
+    }),
+  );
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
 function pushWard(socket: FakeSocket, ward: Ward): void {
   act(() => {
@@ -248,7 +275,7 @@ describe('Settings Tags section', () => {
       });
     });
     const dialog = screen.getByRole('dialog');
-    expect(await screen.findByRole('alert')).toHaveTextContent("Couldn't count where it's used: No such tag.");
+    expect(await within(dialog).findByRole('alert')).toHaveTextContent("Couldn't count where it's used: No such tag.");
     expect(within(dialog).getByRole('button', { name: 'Delete tag' })).toBeDisabled();
     await user.click(within(dialog).getByRole('button', { name: 'Cancel' }));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();

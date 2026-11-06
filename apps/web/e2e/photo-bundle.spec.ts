@@ -71,9 +71,13 @@ test('photo bundle import flow in Settings', async ({ page }, testInfo) => {
   await page.goto(`${server.url}/settings`);
   const section = page.locator('.wb-photo-bundle-section');
   await expect(section.getByRole('heading', { name: 'Directory photos', level: 2 })).toBeVisible();
+  await expect(section.getByRole('button', { name: 'Collect from the directory' })).toBeVisible();
   await checkOverflow();
 
-  // 1. Upload initial bundle
+  // 1. Upload initial bundle. The disclosure starts closed; do not start a live collection.
+  const disclosure = section.getByRole('button', { name: 'Import an existing bundle' });
+  await expect(disclosure).toHaveAttribute('aria-expanded', 'false');
+  await disclosure.click();
   await section.getByLabel('Photo bundle files').setInputFiles([
     { name: 'manifest.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(manifest)) },
     { name: pngFileName, mimeType: 'image/png', buffer: PNG },
@@ -109,6 +113,7 @@ test('photo bundle import flow in Settings', async ({ page }, testInfo) => {
   const anotherBtn = section.getByRole('button', { name: 'Import another bundle' });
   await expect(anotherBtn).toBeVisible();
   await anotherBtn.click();
+  await section.getByRole('button', { name: 'Import an existing bundle' }).click();
 
   const replaceManifest = {
     format: 'wardboard-photo-bundle',
