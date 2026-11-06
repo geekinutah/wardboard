@@ -124,3 +124,4 @@ Candidate and discovered work that has not yet been promoted into a task contrac
 | T-118 | Clear data between GUI capture scenarios | — (test infrastructure, off-roadmap) | done | 1 | none |
 | T-119 | Admin photo-collection job | 8 — Directory photos from Settings | done | 1 | none |
 | T-120 | Settings collect and review | 8 — Directory photos from Settings | done | 3 | on the WardBoard computer, as Admin, Collect from the directory and sign in yourself in the window that opens there; Continue; do not type the Church password into WardBoard or a phone |
+| T-121 | Import guide for Settings collection | 8 — Directory photos from Settings | in progress | 0 | none |
