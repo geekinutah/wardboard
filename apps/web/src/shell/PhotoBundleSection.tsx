@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ChangeEvent, type ReactElement } from 'react';
+import type { Ward } from '@wardboard/core';
 import { Button } from '../design/Button.tsx';
 import { assignPhoto } from '../features/photos/assignPhoto.ts';
 import {
@@ -61,6 +62,15 @@ interface CompareReviewItem {
   readonly photoRef: string;
 }
 
+function membersForMatching(current: Ward): WardMemberForMatching[] {
+  return Object.values(current.members).map((member) => ({
+    id: member.id,
+    name: member.name,
+    photoRef: member.photoRef,
+    removedDate: member.removedDate,
+  }));
+}
+
 function defaultFetch(...args: Parameters<typeof fetch>): ReturnType<typeof fetch> {
   return window.fetch(...args);
 }
@@ -100,6 +110,7 @@ export function PhotoBundleSection({
   const [continuing, setContinuing] = useState(false);
   const [starting, setStarting] = useState(false);
   const [bundleSource, setBundleSource] = useState<BundleSource | null>(null);
+  const [rosterReady, setRosterReady] = useState(false);
 
   const fetchRef = useRef(fetchImpl);
   const scheduleRef = useRef(schedule);
@@ -114,6 +125,8 @@ export function PhotoBundleSection({
   const sourceRef = useRef<BundleSource | null>(null);
   const stepRef = useRef<Step>('select');
   const readCollectionRef = useRef<() => Promise<void>>(async () => {});
+  const pendingRoster = useRef<boolean>(false);
+  const heldBundle = useRef<PhotoBundleResponse | null>(null);
 
   fetchRef.current = fetchImpl;
   scheduleRef.current = schedule;
@@ -145,20 +158,22 @@ export function PhotoBundleSection({
 
   function openBundle(bundle: PhotoBundleResponse, source: BundleSource): void {
     const current = wardRef.current;
-    const wardMembers: WardMemberForMatching[] = current
-      ? Object.values(current.members).map((member) => ({
-          id: member.id,
-          name: member.name,
-          photoRef: member.photoRef,
-          removedDate: member.removedDate,
-        }))
-      : [];
+    heldBundle.current = bundle;
     setSource(source);
     setBundleResponse(bundle);
-    setMatches(matchBundlePortraits(wardMembers, bundle.portraits));
     setSelections({});
     setDuplicateTargetError(false);
     setLoading(false);
+    if (current === null) {
+      pendingRoster.current = true;
+      setRosterReady(false);
+      setMatches([]);
+      goToStep('matches');
+      return;
+    }
+    pendingRoster.current = false;
+    setRosterReady(true);
+    setMatches(matchBundlePortraits(membersForMatching(current), bundle.portraits));
     goToStep('matches');
   }
 
@@ -311,6 +326,17 @@ export function PhotoBundleSection({
     };
   }, [me?.role]);
 
+  useEffect(() => {
+    if (ward === null || !pendingRoster.current) return;
+    const bundle = heldBundle.current;
+    if (bundle === null) return;
+    pendingRoster.current = false;
+    setRosterReady(true);
+    setMatches(matchBundlePortraits(membersForMatching(ward), bundle.portraits));
+    setSelections({});
+    setDuplicateTargetError(false);
+  }, [ward]);
+
   function handleFileChange(e: ChangeEvent<HTMLInputElement>): void {
     const chosen = e.target.files ? Array.from(e.target.files) : [];
     setFiles(chosen);
@@ -324,6 +350,9 @@ export function PhotoBundleSection({
 
   function handleStartOver(): void {
     const collected = sourceRef.current === 'collection';
+    pendingRoster.current = false;
+    heldBundle.current = null;
+    setRosterReady(false);
     setSource(null);
     goToStep('select');
     setFiles([]);
@@ -463,6 +492,7 @@ export function PhotoBundleSection({
   }
 
   async function handleImport(): Promise<void> {
+    if (ward === null || !rosterReady) return;
     const resolved = resolveBundleSelections(matches, selections);
     if (!resolved.ok) {
       if (resolved.reason === 'duplicate_target') {
@@ -473,13 +503,11 @@ export function PhotoBundleSection({
 
     setLoading(true);
     const incoming = resolved.incoming;
-    const wardMembers: PhotoMember[] = ward
-      ? Object.values(ward.members).map((m) => ({
-          id: m.id,
-          name: m.name,
-          photoRef: m.photoRef,
-        }))
-      : [];
+    const wardMembers: PhotoMember[] = Object.values(ward.members).map((m) => ({
+      id: m.id,
+      name: m.name,
+      photoRef: m.photoRef,
+    }));
 
     const plan = planPhotoBatch(wardMembers, incoming);
     if (!plan.ok) {
@@ -510,7 +538,7 @@ export function PhotoBundleSection({
     for (const memberId of plan.compare) {
       const inc = incoming.find((i) => i.memberId === memberId);
       if (inc === undefined) continue;
-      const currentMember = ward ? (ward.members as Record<string, { photoRef: string | null }>)[memberId] : undefined;
+      const currentMember = (ward.members as Record<string, { photoRef: string | null }>)[memberId];
       compareList.push({
         memberId,
         memberName: inc.memberName,
@@ -538,7 +566,7 @@ export function PhotoBundleSection({
   const allAmbiguousSelected = ambiguousMatches.every(
     (m) => selections[m.index] !== undefined && selections[m.index] !== '',
   );
-  const canImport = allAmbiguousSelected && !duplicateTargetError;
+  const canImport = rosterReady && ward !== null && allAmbiguousSelected && !duplicateTargetError;
 
   const skippedHousehold = bundleResponse?.skippedHousehold ?? 0;
   const householdNote =

@@ -582,6 +582,52 @@ describe('PhotoBundleSection', () => {
     expect(screen.queryByRole('button', { name: 'Review photo bundle' })).not.toBeInTheDocument();
   });
 
+  it('a review payload waits for the ward before it matches', async () => {
+    const setup = setupClient();
+    const ward = makeWard([{ id: 'm-helen', name: 'Helen Fixture', photoRef: null }]);
+    const fetchImpl = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
+      const parts = requestParts(input, init);
+      if (parts.method === 'GET' && parts.url === COLLECTION) {
+        return jsonResponse(200, {
+          status: 'review',
+          progress: '',
+          bundle: {
+            portraits: [
+              { name: 'Helen Fixture', file: 'helen.png', photoRef: 'helen-ref.png', duplicateName: false },
+            ],
+            missing: [],
+            skippedHousehold: 0,
+          },
+        });
+      }
+      if (parts.method === 'POST' && parts.url === CANCEL) {
+        return jsonResponse(200, { status: 'idle' });
+      }
+      throw new Error(`unexpected ${parts.method} ${parts.url}`);
+    });
+    render(
+      <SyncProvider client={setup.client}>
+        <PhotoBundleSection fetchImpl={fetchImpl} />
+      </SyncProvider>,
+    );
+    deliverHello(setup.socket, ADMIN, null, setup.client);
+
+    expect(await screen.findByRole('heading', { level: 3, name: 'Review photo matches' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Import photos' })).toBeDisabled();
+    expect(screen.queryByText('Not in ward — skipped')).not.toBeInTheDocument();
+    expect(callsTo(fetchImpl, 'POST', CANCEL)).toBe(0);
+
+    act(() => {
+      setup.socket.receive({ type: 'ward', ward });
+    });
+
+    expect(await screen.findByText('First photo')).toBeInTheDocument();
+    expect(screen.getByText('Helen Fixture')).toBeInTheDocument();
+    expect(screen.queryByText('Not in ward — skipped')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Import photos' })).toBeEnabled();
+    expect(callsTo(fetchImpl, 'POST', CANCEL)).toBe(0);
+  });
+
   it('importing a collected bundle cancels the job and skips the cleanup command', async () => {
     const user = userEvent.setup();
     const setup = setupClient();
