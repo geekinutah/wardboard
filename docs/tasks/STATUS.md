@@ -122,4 +122,4 @@ Candidate and discovered work that has not yet been promoted into a task contrac
 | T-095 | Phone search and dugout tabs | 5 — Phone | done | 1 | iPhone at `/`: Search and Dugout replace the placeholder; filter with a chip; scroll and tap a person and Place one-handed; the sheet sits over that tab |
 | T-096 | Phone changes tab and Accept | 5 — Phone | done | 1 | iPhone at `/`: on a Draft, open Changes, expand and collapse a section, and confirm the Accept bar sits above the bottom tabs and works with one hand |
 | T-118 | Clear data between GUI capture scenarios | — (test infrastructure, off-roadmap) | done | 1 | none |
-| T-119 | Admin photo-collection job | 8 — Directory photos from Settings | in progress | 0 | none |
+| T-119 | Admin photo-collection job | 8 — Directory photos from Settings | done | 1 | none |
