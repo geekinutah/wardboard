@@ -8,7 +8,7 @@ const read = (path) => readFileSync(join(root, path), 'utf8');
 
 const CREDENTIALS = 'Do not paste credentials into WardBoard, a collector, or a chat.';
 
-const VERSION = 'Version: four-PDF replace and directory photo collector.';
+const VERSION = 'Version: four-PDF replace and Settings directory photo collection.';
 
 const COLLECT =
   'pnpm --filter @wardboard/collector run collect -- --staging ~/wardboard-staging';
@@ -90,6 +90,63 @@ describe('import guide', () => {
     assert.ok(guide.includes('Names never appear'), 'missing Names never appear');
     for (const code of ['0', '1', '2']) {
       assert.ok(guide.includes(code), `missing exit code ${code}`);
+    }
+  });
+
+  it("the guide's primary photo steps are Settings", () => {
+    const photos = section(read('docs/import/guide.md'), 'Directory photos');
+    for (const phrase of [
+      'Collect from the directory',
+      'Continue',
+      'A phone does not show that window',
+      'Import an existing bundle',
+    ]) {
+      assert.ok(photos.includes(phrase), `Directory photos omits ${phrase}`);
+    }
+
+    const settingsSteps = [
+      'An Admin opens Settings and uses **Collect from the directory**.',
+      'The sign-in window opens on the computer running WardBoard.',
+      'A phone does not show that window.',
+      'The Admin signs in there, then presses **Continue** in Settings.',
+      'Review opens without choosing files.',
+      'First photos apply immediately.',
+      'An existing portrait is replaced one photo at a time.',
+      'Cancel, a failed run, and a finished import remove the temporary collection files.',
+      'An Editor does not see **Collect from the directory**.',
+      'Both roles can still open **Import an existing bundle**, select `manifest.json` and the portrait files, and review.',
+    ];
+    let from = 0;
+    for (const sentence of settingsSteps) {
+      const at = photos.indexOf(sentence, from);
+      assert.notEqual(at, -1, `missing or reordered Settings step: ${sentence}`);
+      from = at + sentence.length;
+    }
+
+    const commandAt = photos.indexOf(COLLECT);
+    assert.notEqual(commandAt, -1, 'missing fallback command');
+    assert.ok(
+      photos.indexOf('Collect from the directory') < commandAt,
+      'Collect from the directory is not before the fallback command',
+    );
+    assert.ok(
+      photos.indexOf(settingsSteps[settingsSteps.length - 1]) < commandAt,
+      'Settings steps are not before the fallback command',
+    );
+
+    const lines = wholeLines(photos);
+    for (const command of COLLECT_COMMANDS) {
+      assert.ok(lines.includes(command), `missing command line: ${command}`);
+    }
+
+    const split = lines.findIndex((line) => line === 'Command-line fallback');
+    assert.notEqual(split, -1, 'missing Command-line fallback line');
+    const before = lines.slice(0, split).join('\n');
+    const after = lines.slice(split + 1).join('\n');
+    assert.equal(before.includes('--cleanup'), false, 'Settings steps mention --cleanup');
+    assert.ok(after.includes('--cleanup'), 'fallback omits --cleanup');
+    for (const command of COLLECT_COMMANDS) {
+      assert.ok(after.includes(command), `fallback command is not after Command-line fallback: ${command}`);
     }
   });
 

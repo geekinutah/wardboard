@@ -1,5 +1,5 @@
 # WardBoard import guide
-Version: four-PDF replace and directory photo collector.
+Version: four-PDF replace and Settings directory photo collection.
 
 An admin can follow this guide with no model service. Download four official PDFs, preview them, then replace Current.
 
@@ -7,7 +7,7 @@ An admin can follow this guide with no model service. Download four official PDF
 
 An admin can follow this guide with no model service. The four-PDF preview and replace stay. Proposals keep their own baselines. Notes and tags carry over only for a confirmed match. The app does not archive the PDFs.
 
-Directory portraits are optional. The command is the one in **Directory photos**. Direct upload in the app still works. Do not invent a different scraper or a command that downloads Church files.
+Directory portraits are optional. An Admin collects them from Settings. The steps are in **Directory photos**, and the command-line collector is the fallback when Settings cannot open the window. Direct upload in the app still works. Do not invent a different scraper or a command that downloads Church files.
 
 ## Sign in
 
@@ -17,7 +17,15 @@ Do not paste credentials into WardBoard, a collector, or a chat.
 
 ## Directory photos
 
-Directory portraits are optional. From the repository root:
+Directory portraits are optional. An Admin opens Settings and uses **Collect from the directory**. The sign-in window opens on the computer running WardBoard. A phone does not show that window. Another computer does not show that window either. The Admin signs in there, then presses **Continue** in Settings. Sign-in includes MFA when the site asks for it. WardBoard never asks for a password. Settings shows progress while the collection runs.
+
+Review opens without choosing files. First photos apply immediately. An existing portrait is replaced one photo at a time. Cancel, a failed run, and a finished import remove the temporary collection files.
+
+An Editor does not see **Collect from the directory**. Both roles can still open **Import an existing bundle**, select `manifest.json` and the portrait files, and review.
+
+Command-line fallback
+
+Use this when Settings cannot open the window: the server has no collector, or the data directory is inside a Git checkout. From the repository root:
 
 pnpm --filter @wardboard/collector run collect -- --staging ~/wardboard-staging
 
@@ -37,7 +45,7 @@ Exit codes: `0` success, `1` failed or cancelled, `2` bad arguments or a refused
 
 The bundle, in `<dir>/wardboard-collector/bundle/`, is `manifest.json` plus portrait files named by the SHA-256 of their bytes. Household images are not portraits and are not downloaded.
 
-Handoff is the app, not a second CLI. In Settings, open **Directory photos**, select `manifest.json` and every portrait image, review the matches, and confirm namesakes. First photos apply immediately. An existing portrait is replaced one photo at a time. Then run the `--cleanup` command with the same staging folder. `--cleanup` deletes only what the collector created under `wardboard-collector/`.
+Handoff is the app, not a second CLI. In Settings, open **Import an existing bundle**, select `manifest.json` and every portrait image, review the matches, and confirm namesakes. First photos apply immediately. An existing portrait is replaced one photo at a time. Then run the `--cleanup` command with the same staging folder. `--cleanup` deletes only what the collector created under `wardboard-collector/`.
 
 ## Download the four reports
 
