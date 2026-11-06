@@ -14,6 +14,12 @@ May change:
 - `apps/web/src/shell/photo-bundle-section.test.tsx`
 - `apps/web/e2e/photo-bundle.spec.ts` (open the disclosure before the existing file steps; do not start a live collection)
 - `apps/web/e2e/gui/photo-bundle.capture.ts` (same, plus one screenshot of the collect control before the disclosure is opened)
+- `apps/web/src/shell/import-section.test.tsx`
+- `apps/web/src/shell/member-list-picker.test.tsx`
+- `apps/web/src/shell/settings-route.test.tsx`
+- `apps/web/src/shell/tag-library-section.test.tsx`
+
+Those four test files render Settings as an Admin. The mount `GET /api/admin/photo-collection` is now a real request. Update only the fetch stubs and the assertions that assumed Settings made no photo-collection request. Do not change import, restore, or tag production code, and do not drop their behavior assertions.
 
 Must not change:
 - `apps/server/**`, `tools/collector/**`, `packages/**`, `docker/**`
@@ -82,7 +88,7 @@ The capture takes a screenshot named `collect-<project>.png` after **Collect fro
 
 | # | Check | Command | Expected result |
 |---|---|---|---|
-| 1 | Section behavior | `pnpm --filter web exec vitest run src/shell/photo-bundle-section.test.tsx` | exit 0, and the new tests below pass |
+| 1 | Section behavior | `pnpm --filter web exec vitest run src/shell/photo-bundle-section.test.tsx src/shell/import-section.test.tsx src/shell/member-list-picker.test.tsx src/shell/settings-route.test.tsx src/shell/tag-library-section.test.tsx` | exit 0, including the new tests below and the existing import, restore, and tag assertions |
 | 2 | File-import e2e | from `apps/web`, `../../scripts/e2e-slot.pl playwright test -c e2e/playwright.config.ts e2e/photo-bundle.spec.ts` | exit 0 |
 | 3 | GUI capture | `pnpm --filter web run gui:capture` | exit 0. This is the only capture run. It includes e2e, so do not also run `test:e2e`. |
 | 4 | Quality gate | `./scripts/verify.sh` | exit 0. Run this after capture, not at the same time. |
@@ -103,6 +109,15 @@ Update the existing file-picker tests so they open **Import an existing bundle**
 | `a failed collection shows the message and cancels once` | `GET` `{status:'failed', progress:'', message:'Choose a staging folder outside any Git repository.'}` shows that message and posts cancel once; the injected schedule is not asked to poll again | polling forever, or hiding the server message |
 | `an unavailable collector is a fixed alert` | `POST` status `503` shows `Directory collection is not available on this server.` | launching a browser from the page |
 | `the file disclosure still reviews a chosen bundle` | the existing upload path still reaches **Review photo matches** after the disclosure is opened | breaking T-098 while adding Collect |
+
+## Settings tests that already render an Admin
+
+The mount GET uses `fetch`. These files stub that global and then assert on the first call or the first alert:
+
+- `import-section.test.tsx` records every fetch and expects the preview URL. Answer `GET /api/admin/photo-collection` with status `200` and `{"status":"idle","progress":""}`. Assert the preview and replace calls by URL. Keep the encoded-body assertions.
+- `member-list-picker.test.tsx` does the same for preview. Same idle response. Assert the preview call by URL.
+- `settings-route.test.tsx` counts restore fetches and reads `mock.calls[0]` as the dry-run. Ignore the collection GET when counting and when reading the restore URL, method, body, and `credentials`. The collection GET must not be given the backup file. The dry-run and apply assertions stay.
+- `tag-library-section.test.tsx` uses `findByRole('alert')` for the tag usage refusal. A failed collection GET also renders an alert. Answer the collection GET with the idle JSON so that alert is absent. Assert the tag message on the alert inside the delete dialog.
 
 ## Edge cases (each needs a test)
 - Editor never calls the admin routes.
