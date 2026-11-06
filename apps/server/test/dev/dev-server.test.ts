@@ -5,6 +5,7 @@ import { FIXTURE_MEMBER_NAMES } from '@wardboard/core/fixtures';
 import { afterAll, describe, expect, it } from 'vitest';
 import { isSafeResetPath, parseDevPort, seedFixtureDataDir, startDevServer } from '../../dev/index.ts';
 import { databasePath, migrate, openDatabase } from '../../src/db/index.ts';
+import type { CollectOptions } from '../../src/photo-collection/index.ts';
 import { openStore, type Store } from '../../src/store/index.ts';
 
 /** Every temp directory this file creates, removed in afterAll. */
@@ -160,5 +161,87 @@ describe('parseDevPort', () => {
     expect(() => parseDevPort('0')).toThrow();
     expect(() => parseDevPort('70000')).toThrow();
     expect(() => parseDevPort('abc')).toThrow();
+  });
+});
+
+const devDirectoryConfig = {
+  layoutVersion: 'directory-v2',
+  startUrl: 'https://directory.example.test/',
+  selectors: {
+    householdList: 'a.households',
+    householdLink: 'a.household',
+    householdName: 'h1',
+    householdImage: 'img.household',
+    memberEntry: 'div.member',
+    memberName: 'a.member',
+    memberPortrait: 'img.member',
+    signedOut: 'form.signin',
+  },
+  timeouts: { navigationMs: 30_000, elementMs: 10_000 },
+  retries: { image: 1 },
+};
+
+describe('dev photo collector', () => {
+  it('dev server passes the loaded collector into the job', async () => {
+    const dataDir = await makeTempDir();
+    const webDir = await makeWebDir();
+    let loaderCalls = 0;
+    let seenHeadless: boolean | undefined;
+    let enteredResolve: () => void = () => undefined;
+    const entered = new Promise<void>((resolve) => {
+      enteredResolve = resolve;
+    });
+    const running = await startDevServer({
+      dataDir,
+      port: 0,
+      webDir,
+      loadCollector: () => {
+        loaderCalls += 1;
+        return Promise.resolve({
+          config: devDirectoryConfig,
+          collect: (options: CollectOptions) => {
+            seenHeadless = options.browser.headless;
+            enteredResolve();
+            return Promise.resolve({ status: 'refused' as const, exitCode: 2 as const, message: 'stopped' });
+          },
+        });
+      },
+    });
+    try {
+      expect(loaderCalls).toBe(1);
+      const response = await fetch(`${running.url}/api/admin/photo-collection`, {
+        method: 'POST',
+        headers: { origin: 'http://127.0.0.1' },
+      });
+      expect(response.status).toBe(200);
+      expect(await response.json()).toEqual({ status: 'running' });
+      await entered;
+      expect(seenHeadless).toBe(false);
+    } finally {
+      await running.close();
+    }
+  });
+
+  it('a collector that fails to load leaves the dev server up', async () => {
+    const dataDir = await makeTempDir();
+    const webDir = await makeWebDir();
+    const running = await startDevServer({
+      dataDir,
+      port: 0,
+      webDir,
+      loadCollector: () => Promise.reject(new Error('collector package is absent')),
+    });
+    try {
+      const health = await fetch(`${running.url}/api/health`);
+      expect(health.status).toBe(200);
+      const response = await fetch(`${running.url}/api/admin/photo-collection`, {
+        method: 'POST',
+        headers: { origin: 'http://127.0.0.1' },
+      });
+      expect(response.status).toBe(503);
+      expect(await response.json()).toEqual({ error: 'collector_unavailable' });
+    } finally {
+      await running.close();
+    }
   });
 });

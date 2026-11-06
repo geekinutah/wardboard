@@ -155,11 +155,22 @@ export async function handleBundleUpload(
     return;
   }
 
-  const validated = validateAndSanitize(body);
-  if (validated === null) {
+  const response = await importPhotoBundle(photos, body);
+  if (response === null) {
     sendJson(res, 400, '{"error":"invalid_bundle"}', method);
     return;
   }
+
+  sendJson(res, 200, JSON.stringify(response), method);
+}
+
+/** Validates every file, then stores. Returns null without writing when any file is rejected. */
+export async function importPhotoBundle(
+  photos: PhotoStore,
+  body: unknown,
+): Promise<PhotoBundleResponse | null> {
+  const validated = validateAndSanitize(body);
+  if (validated === null) return null;
 
   const refByFile = new Map<string, string>();
   for (const [file, sanitized] of validated.sanitizedByFile.entries()) {
@@ -167,7 +178,7 @@ export async function handleBundleUpload(
     refByFile.set(file, ref);
   }
 
-  const response: PhotoBundleResponse = {
+  return {
     portraits: validated.manifest.portraits.map((portrait) => ({
       name: portrait.name,
       file: portrait.file,
@@ -177,6 +188,4 @@ export async function handleBundleUpload(
     missing: validated.manifest.missing,
     skippedHousehold: validated.manifest.skippedHousehold,
   };
-
-  sendJson(res, 200, JSON.stringify(response), method);
 }

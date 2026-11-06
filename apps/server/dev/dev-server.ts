@@ -5,7 +5,10 @@ import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { fixtureIdentityProvider, startServer, type RunningServer } from '../src/index.ts';
+import type { StartServerOptions } from '../src/server.ts';
 import { seedFixtureDataDir, type SeededState } from './seed-data-dir.ts';
+
+type LoadedCollector = NonNullable<StartServerOptions['photoCollector']>;
 
 export type DevServerOptions = {
   dataDir: string;
@@ -14,6 +17,8 @@ export type DevServerOptions = {
   reset?: boolean;
   /** Seed the fictional fixture ward when no Current exists. Default true. */
   seed?: boolean;
+  /** Loads `{ collect, config }`. The default imports `@wardboard/collector`. */
+  loadCollector?: () => Promise<LoadedCollector>;
 };
 
 export type DevRunningServer = RunningServer & { seeded: SeededState | 'unseeded' };
@@ -26,6 +31,35 @@ const DEFAULT_DEV_PORT = 5180;
 
 /** The repository root: this file lives in `<repo>/apps/server/dev/`. */
 const repoRoot = path.resolve(import.meta.dirname, '..', '..', '..');
+
+/** A variable specifier keeps the collector's DOM types out of the server typecheck. */
+const COLLECTOR_PACKAGE = '@wardboard/collector';
+const directoryConfigPath = path.join(repoRoot, 'tools', 'collector', 'config', 'directory.json');
+
+type CollectorModule = {
+  collect: LoadedCollector['collect'];
+  loadConfig: (file: string) => Promise<LoadedCollector['config']>;
+};
+
+function isCollectorModule(value: unknown): value is CollectorModule {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'collect' in value &&
+    typeof value.collect === 'function' &&
+    'loadConfig' in value &&
+    typeof value.loadConfig === 'function'
+  );
+}
+
+async function defaultLoadCollector(): Promise<LoadedCollector> {
+  const specifier: string = COLLECTOR_PACKAGE;
+  const loaded = (await import(specifier)) as unknown;
+  if (!isCollectorModule(loaded)) {
+    throw new Error('Photo collector package did not load.');
+  }
+  return { collect: loaded.collect, config: await loaded.loadConfig(directoryConfigPath) };
+}
 
 /**
  * `path.resolve` plus symlink resolution over the longest existing prefix.
@@ -104,6 +138,12 @@ export async function startDevServer(options: DevServerOptions): Promise<DevRunn
   } else {
     seeded = seedFixtureDataDir(options.dataDir);
   }
+  let photoCollector: LoadedCollector | undefined;
+  try {
+    photoCollector = await (options.loadCollector ?? defaultLoadCollector)();
+  } catch {
+    photoCollector = undefined;
+  }
   const server = await startServer(
     {
       dataDir: options.dataDir,
@@ -115,6 +155,7 @@ export async function startDevServer(options: DevServerOptions): Promise<DevRunn
     },
     {
       identityProvider: fixtureIdentityProvider({ login: DEV_ADMIN_LOGIN, displayName: DEV_ADMIN_NAME }),
+      ...(photoCollector === undefined ? {} : { photoCollector }),
     },
   );
   return { ...server, seeded };

@@ -12,6 +12,7 @@ import {
   type IdentityProvider,
 } from './identity/index.ts';
 import { handleImportRequest } from './import/index.ts';
+import { createPhotoCollection, handlePhotoCollectionRequest, type PhotoCollector } from './photo-collection/index.ts';
 import { createPhotoStore, handlePhotoRequest, type PhotoStore } from './photos/index.ts';
 import { openStore } from './store/index.ts';
 import { createOperationChannel, type OperationChannel } from './ws/channel.ts';
@@ -22,6 +23,7 @@ export type StartServerOptions = {
   ids?: () => string;
   maxBackupBytes?: number;
   log?: (line: string) => void;
+  photoCollector?: PhotoCollector;
 };
 
 function parseIpv6(host: string): number[] | null {
@@ -274,6 +276,7 @@ async function handleRequest(
     ids: () => string;
     log?: (line: string) => void;
   },
+  photoCollection: ReturnType<typeof createPhotoCollection>,
 ): Promise<void> {
   const method = req.method ?? 'GET';
   if (req.url === undefined) {
@@ -332,6 +335,24 @@ async function handleRequest(
       appOrigin: new URL(config.baseUrl).origin,
       listenOrigin,
       onRestored: backup.onRestored,
+    });
+    return;
+  }
+
+  if (
+    pathname === '/api/admin/photo-collection' ||
+    pathname === '/api/admin/photo-collection/continue' ||
+    pathname === '/api/admin/photo-collection/cancel'
+  ) {
+    await handlePhotoCollectionRequest({
+      req,
+      res,
+      method,
+      pathname,
+      role: resolved.user.role,
+      appOrigin: new URL(config.baseUrl).origin,
+      listenOrigin,
+      job: photoCollection,
     });
     return;
   }
@@ -419,6 +440,13 @@ export async function startServer(
     const appOrigin = new URL(config.baseUrl).origin;
     const maxBackupBytes = options?.maxBackupBytes ?? MAX_BACKUP_BYTES;
     const log = options?.log;
+    const photoCollection = createPhotoCollection({
+      dataDir: config.dataDir,
+      photos,
+      collector: options?.photoCollector,
+      clock,
+      ...(log === undefined ? {} : { log }),
+    });
     let listenOrigin = '';
     channel = createOperationChannel({ store, access, clock, ids });
     const operationChannel = channel;
@@ -447,6 +475,7 @@ export async function startServer(
           ids,
           ...(log === undefined ? {} : { log }),
         },
+        photoCollection,
       ).catch(() => {
         if (res.headersSent || res.writableEnded) {
           res.destroy();
@@ -529,6 +558,7 @@ export async function startServer(
       close: () => {
         closing ??= (async () => {
           try {
+            await photoCollection.shutdown();
             operationChannel.terminate();
             await closeServer(listening);
           } finally {
