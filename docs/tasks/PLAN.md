@@ -128,7 +128,7 @@ scripts/verify.sh    The single quality gate
 
 ## Milestone 8 — Directory photos from Settings
 
-Mike approved this on 2026-11-01. These rows are the starting point for contracts. They are not contracted, and they do not appear in `STATUS.md` until a controller claims one and writes `docs/tasks/T-###-*.md`. The sign-in window opens on the computer running WardBoard. Children under 11 stay unmatched. The command-line collector stays.
+Mike approved this on 2026-11-01. T-119, T-120, and T-121 are done; `docs/tasks/STATUS.md` is the execution record. The sign-in window opens on the computer running WardBoard. Children under 11 stay unmatched. The command-line collector stays.
 
 | ID | Title | Depends on | Scope | Done when |
 |---|---|---|---|---|
