@@ -110,3 +110,4 @@ observation / review finding
 | B-078 | P3 | web e2e | candidate | The accepted-mode e2e waits for someone else to broadcast boards |
 | B-079 | P1 | tools/collector | candidate | The live directory does not match the directory-v1 selectors |
 | B-080 | P2 | tools/collector | candidate | An unsupported directory layout is reported as one message |
+| B-081 | P3 | web phone shell | candidate | The account role label is clipped on the phone Settings screenshots |
